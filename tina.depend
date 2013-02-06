@@ -1,0 +1,1366 @@
+# depslib dependency file v1.0
+1346595922 source:/home/tzw/Develop/tina/token.c
+	<stdio.h>
+	<stdlib.h>
+	<ctype.h>
+	<string.h>
+	"tina.h"
+	"loader.h"
+	"token.h"
+	"api.h"
+	"function.h"
+
+1346595922 /home/tzw/Develop/tina/tina.h
+
+1345985437 /home/tzw/Develop/tina/loader.h
+	<stdlib.h>
+
+1346513156 /home/tzw/Develop/tina/token.h
+	"type.h"
+
+1346595922 /home/tzw/Develop/tina/type.h
+
+1346595922 /home/tzw/Develop/tina/api.h
+	"var.h"
+
+1346398813 /home/tzw/Develop/tina/var.h
+	"tina.h"
+	"token.h"
+
+1346165892 /home/tzw/Develop/tina/function.h
+	"type.h"
+
+1346595922 source:/home/tzw/Develop/tina/preprocess.c
+	<stdlib.h>
+	<stdio.h>
+	"preprocess.h"
+	"loader.h"
+
+1345991364 /home/tzw/Develop/tina/preprocess.h
+
+1346595922 source:/home/tzw/Develop/tina/build.c
+	<stdio.h>
+	<stdlib.h>
+	"tina.h"
+	"type.h"
+	"build.h"
+	"loader.h"
+	"preprocess.h"
+	"token.h"
+	"var.h"
+	"function.h"
+
+1345971197 /home/tzw/Develop/tina/build.h
+
+1346595828 source:/home/tzw/Develop/tina/return.c
+	<stdlib.h>
+	<stdio.h>
+	<string.h>
+	"return.h"
+	"il.h"
+	"expression.h"
+
+1345985237 /home/tzw/Develop/tina/return.h
+
+1346334152 /home/tzw/Develop/tina/il.h
+	"var.h"
+
+1346595922 /home/tzw/Develop/tina/expression.h
+	"tina.h"
+	"var.h"
+
+1346595922 source:/home/tzw/Develop/tina/var.c
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+	"tina.h"
+	"var.h"
+	"vm.h"
+	"token.h"
+	"expression.h"
+	"function.h"
+	"il.h"
+
+1346399783 /home/tzw/Develop/tina/vm.h
+	"type.h"
+
+1346595922 source:/home/tzw/Develop/tina/loader.c
+	<stdio.h>
+	<stdlib.h>
+	"loader.h"
+
+1346595922 source:/home/tzw/Develop/tina/while.c
+	<stdio.h>
+	<stdlib.h>
+	"il.h"
+	"tina.h"
+	"token.h"
+	"while.h"
+	"expression.h"
+	"var.h"
+	"print.h"
+	"return.h"
+	"if.h"
+	"for.h"
+
+1345988162 /home/tzw/Develop/tina/while.h
+
+1345984524 /home/tzw/Develop/tina/print.h
+
+1346589774 /home/tzw/Develop/tina/if.h
+
+1346502434 /home/tzw/Develop/tina/for.h
+
+1346595904 source:/home/tzw/Develop/tina/expression.c
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+	"api.h"
+	"token.h"
+	"expression.h"
+	"var.h"
+	"il.h"
+	"assert.h"
+	"function.h"
+
+1346595922 source:/home/tzw/Develop/tina/function.c
+	<stdlib.h>
+	<stdio.h>
+	<string.h>
+	"print.h"
+	"type.h"
+	"expression.h"
+	"function.h"
+	"var.h"
+	"il.h"
+	"return.h"
+	"while.h"
+	"if.h"
+	"for.h"
+
+1346894529 source:/home/tzw/Develop/tina/vm.c
+	<stdio.h>
+	<assert.h>
+	"vm.h"
+	"var.h"
+	<stdlib.h>
+
+1346595922 source:/home/tzw/Develop/tina/print.c
+	<stdlib.h>
+	<stdio.h>
+	"tina.h"
+	"il.h"
+	"token.h"
+	"var.h"
+	"expression.h"
+
+1346595922 source:/home/tzw/Develop/tina/for.c
+	"for.h"
+	<stdlib.h>
+	<stdio.h>
+	"il.h"
+	"tina.h"
+	"token.h"
+	"while.h"
+	"expression.h"
+	"var.h"
+	"print.h"
+	"return.h"
+	"if.h"
+
+1346595922 source:/home/tzw/Develop/tina/if.c
+	<stdlib.h>
+	<stdio.h>
+	"tina.h"
+	"print.h"
+	"token.h"
+	"if.h"
+	"var.h"
+	"expression.h"
+	"il.h"
+	"while.h"
+	"return.h"
+	"for.h"
+
+1346595922 source:/home/tzw/Develop/tina/api.c
+	<stdlib.h>
+	<stdio.h>
+	<string.h>
+	"api.h"
+
+1346894842 source:/home/tzw/Develop/tina/main.c
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+	"tina.h"
+	"function.h"
+	"il.h"
+
+1346894599 source:/home/tzw/Develop/tina/il.c
+	<stdio.h>
+	<assert.h>
+	<stdlib.h>
+	<string.h>
+	"il.h"
+	"var.h"
+	"vm.h"
+	"function.h"
+	"api.h"
+	"return.h"
+
+1357643835 source:d:\tina\api.c
+	<stdlib.h>
+	<stdio.h>
+	<string.h>
+	"api.h"
+	"type.h"
+	"for.h"
+	"module.h"
+
+1357642377 d:\tina\api.h
+	"var.h"
+
+1350549949 d:\tina\var.h
+	"tina.h"
+	"token.h"
+
+1357642529 d:\tina\tina.h
+	"type.h"
+
+1357641731 d:\tina\token.h
+	"type.h"
+
+1351699073 d:\tina\type.h
+
+1357642650 source:d:\tina\build.c
+	<stdio.h>
+	<stdlib.h>
+	"tina.h"
+	"type.h"
+	"build.h"
+	"loader.h"
+	"preprocess.h"
+	"token.h"
+	"var.h"
+	"function.h"
+	"module.h"
+
+1350306126 d:\tina\build.h
+
+1350306161 d:\tina\loader.h
+	<stdlib.h>
+
+1350306165 d:\tina\preprocess.h
+
+1352955880 d:\tina\function.h
+	"type.h"
+
+1357642272 source:d:\tina\expression.c
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+	"api.h"
+	"token.h"
+	"expression.h"
+	"var.h"
+	"il.h"
+	"assert.h"
+	"function.h"
+	"module.h"
+	<math.h>
+
+1350532515 d:\tina\expression.h
+	"tina.h"
+	"var.h"
+
+1350550982 d:\tina\il.h
+	"var.h"
+
+1351164513 source:d:\tina\for.c
+	"for.h"
+	<stdlib.h>
+	<stdio.h>
+	"il.h"
+	"tina.h"
+	"token.h"
+	"while.h"
+	"expression.h"
+	"var.h"
+	"print.h"
+	"return.h"
+	"if.h"
+	"function.h"
+
+1350910968 d:\tina\for.h
+
+1350911105 d:\tina\while.h
+
+1350306169 d:\tina\print.h
+
+1350306174 d:\tina\return.h
+
+1350911094 d:\tina\if.h
+
+1357643835 source:d:\tina\function.c
+	<stdlib.h>
+	<stdio.h>
+	<string.h>
+	"print.h"
+	"type.h"
+	"expression.h"
+	"function.h"
+	"var.h"
+	"il.h"
+	"return.h"
+	"while.h"
+	"if.h"
+	"for.h"
+	"module.h"
+
+1351086445 source:d:\tina\if.c
+	<stdlib.h>
+	<stdio.h>
+	"tina.h"
+	"print.h"
+	"token.h"
+	"if.h"
+	"var.h"
+	"expression.h"
+	"il.h"
+	"while.h"
+	"return.h"
+	"for.h"
+	"function.h"
+
+1351690500 source:d:\tina\loader.c
+	<stdio.h>
+	<stdlib.h>
+	"loader.h"
+
+1357641692 source:d:\tina\main.c
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+	"tina.h"
+	"function.h"
+	"il.h"
+	"struct.h"
+
+1350306088 source:d:\tina\preprocess.c
+	<stdlib.h>
+	<stdio.h>
+	"preprocess.h"
+	"loader.h"
+
+1350306091 source:d:\tina\print.c
+	<stdlib.h>
+	<stdio.h>
+	"tina.h"
+	"il.h"
+	"token.h"
+	"var.h"
+	"expression.h"
+
+1350306095 source:d:\tina\return.c
+	<stdlib.h>
+	<stdio.h>
+	<string.h>
+	"return.h"
+	"il.h"
+	"expression.h"
+
+1357642272 source:d:\tina\token.c
+	<stdio.h>
+	<stdlib.h>
+	<ctype.h>
+	<string.h>
+	"tina.h"
+	"loader.h"
+	"token.h"
+	"api.h"
+	"assert.h"
+	"function.h"
+	"module.h"
+
+1357644360 source:d:\tina\var.c
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+	"tina.h"
+	"var.h"
+	"vm.h"
+	"token.h"
+	"expression.h"
+	"function.h"
+	"il.h"
+	"struct.h"
+
+1350306198 d:\tina\vm.h
+	"type.h"
+
+1350474300 source:d:\tina\vm.c
+	<stdio.h>
+	<assert.h>
+	"vm.h"
+	"var.h"
+	<stdlib.h>
+	<string.h>
+
+1351086445 source:d:\tina\while.c
+	<stdio.h>
+	<stdlib.h>
+	"il.h"
+	"tina.h"
+	"token.h"
+	"while.h"
+	"expression.h"
+	"var.h"
+	"print.h"
+	"return.h"
+	"if.h"
+	"for.h"
+	"function.h"
+
+1357642463 source:d:\tina\il.c
+	<stdio.h>
+	<assert.h>
+	<stdlib.h>
+	<string.h>
+	"il.h"
+	"var.h"
+	"vm.h"
+	"function.h"
+	"api.h"
+	"return.h"
+	"array.h"
+
+1357639948 source:d:\tina\class.c
+	"class.h"
+	<string.h>
+	<stdio.h>
+	<stdlib.h>
+	"tina.h"
+	"api.h"
+	"var.h"
+	"class.h"
+	"token.h"
+	"type.h"
+	"function.h"
+	"il.h"
+	"module.h"
+
+1352893250 d:\tina\class.h
+	"type.h"
+
+1357642463 source:d:\tina\array.c
+	"array.h"
+	"var.h"
+	"api.h"
+	<assert.h>
+	<stdlib.h>
+
+1357642463 d:\tina\array.h
+	"type.h"
+
+1357643835 d:\tina\module.h
+
+1357643835 source:d:\tina\module.c
+	"module.h"
+	"token.h"
+	"struct.h"
+	"function.h"
+
+1352960814 source:d:\tina - 副本\api.c
+	<stdlib.h>
+	<stdio.h>
+	<string.h>
+	"api.h"
+	"type.h"
+	"for.h"
+	"module.h"
+
+1352461274 d:\tina - 副本\api.h
+	"var.h"
+
+1350549949 d:\tina - 副本\var.h
+	"tina.h"
+	"token.h"
+
+1352460712 d:\tina - 副本\tina.h
+	"type.h"
+
+1351699073 d:\tina - 副本\type.h
+
+1352957605 d:\tina - 副本\token.h
+	"type.h"
+
+1350910968 d:\tina - 副本\for.h
+
+1352959682 d:\tina - 副本\module.h
+
+1352723667 source:d:\tina - 副本\array.c
+	"array.h"
+	"var.h"
+	"api.h"
+	<assert.h>
+	<stdlib.h>
+
+1352808516 d:\tina - 副本\array.h
+	"type.h"
+
+1352959358 source:d:\tina - 副本\build.c
+	<stdio.h>
+	<stdlib.h>
+	"tina.h"
+	"type.h"
+	"build.h"
+	"loader.h"
+	"preprocess.h"
+	"token.h"
+	"var.h"
+	"function.h"
+	"module.h"
+
+1350306126 d:\tina - 副本\build.h
+
+1350306161 d:\tina - 副本\loader.h
+	<stdlib.h>
+
+1350306165 d:\tina - 副本\preprocess.h
+
+1352955880 d:\tina - 副本\function.h
+	"type.h"
+
+1352961122 source:d:\tina - 副本\class.c
+	"class.h"
+	<string.h>
+	<stdio.h>
+	<stdlib.h>
+	"tina.h"
+	"api.h"
+	"var.h"
+	"class.h"
+	"token.h"
+	"type.h"
+	"function.h"
+	"il.h"
+	"module.h"
+
+1352893250 d:\tina - 副本\class.h
+	"type.h"
+
+1350550982 d:\tina - 副本\il.h
+	"var.h"
+
+1352953243 source:d:\tina - 副本\expression.c
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+	"api.h"
+	"token.h"
+	"expression.h"
+	"var.h"
+	"il.h"
+	"assert.h"
+	"function.h"
+	"module.h"
+	<math.h>
+
+1350532515 d:\tina - 副本\expression.h
+	"tina.h"
+	"var.h"
+
+1351164513 source:d:\tina - 副本\for.c
+	"for.h"
+	<stdlib.h>
+	<stdio.h>
+	"il.h"
+	"tina.h"
+	"token.h"
+	"while.h"
+	"expression.h"
+	"var.h"
+	"print.h"
+	"return.h"
+	"if.h"
+	"function.h"
+
+1350911105 d:\tina - 副本\while.h
+
+1350306169 d:\tina - 副本\print.h
+
+1350306174 d:\tina - 副本\return.h
+
+1350911094 d:\tina - 副本\if.h
+
+1352960158 source:d:\tina - 副本\function.c
+	<stdlib.h>
+	<stdio.h>
+	<string.h>
+	"print.h"
+	"type.h"
+	"expression.h"
+	"function.h"
+	"var.h"
+	"il.h"
+	"return.h"
+	"while.h"
+	"if.h"
+	"for.h"
+	"module.h"
+
+1351086445 source:d:\tina - 副本\if.c
+	<stdlib.h>
+	<stdio.h>
+	"tina.h"
+	"print.h"
+	"token.h"
+	"if.h"
+	"var.h"
+	"expression.h"
+	"il.h"
+	"while.h"
+	"return.h"
+	"for.h"
+	"function.h"
+
+1352519615 source:d:\tina - 副本\il.c
+	<stdio.h>
+	<assert.h>
+	<stdlib.h>
+	<string.h>
+	"il.h"
+	"var.h"
+	"vm.h"
+	"function.h"
+	"api.h"
+	"return.h"
+	"array.h"
+
+1350306198 d:\tina - 副本\vm.h
+	"type.h"
+
+1351690500 source:d:\tina - 副本\loader.c
+	<stdio.h>
+	<stdlib.h>
+	"loader.h"
+
+1352950549 source:d:\tina - 副本\main.c
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+	"tina.h"
+	"function.h"
+	"il.h"
+	"class.h"
+
+1350306088 source:d:\tina - 副本\preprocess.c
+	<stdlib.h>
+	<stdio.h>
+	"preprocess.h"
+	"loader.h"
+
+1350306091 source:d:\tina - 副本\print.c
+	<stdlib.h>
+	<stdio.h>
+	"tina.h"
+	"il.h"
+	"token.h"
+	"var.h"
+	"expression.h"
+
+1350306095 source:d:\tina - 副本\return.c
+	<stdlib.h>
+	<stdio.h>
+	<string.h>
+	"return.h"
+	"il.h"
+	"expression.h"
+
+1352960102 source:d:\tina - 副本\token.c
+	<stdio.h>
+	<stdlib.h>
+	<ctype.h>
+	<string.h>
+	"tina.h"
+	"loader.h"
+	"token.h"
+	"api.h"
+	"assert.h"
+	"function.h"
+	"module.h"
+
+1352471371 source:d:\tina - 副本\var.c
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+	"tina.h"
+	"var.h"
+	"vm.h"
+	"token.h"
+	"expression.h"
+	"function.h"
+	"il.h"
+	"class.h"
+
+1350474300 source:d:\tina - 副本\vm.c
+	<stdio.h>
+	<assert.h>
+	"vm.h"
+	"var.h"
+	<stdlib.h>
+	<string.h>
+
+1351086445 source:d:\tina - 副本\while.c
+	<stdio.h>
+	<stdlib.h>
+	"il.h"
+	"tina.h"
+	"token.h"
+	"while.h"
+	"expression.h"
+	"var.h"
+	"print.h"
+	"return.h"
+	"if.h"
+	"for.h"
+	"function.h"
+
+1357642670 d:\tina\struct.h
+	"type.h"
+
+1357643835 source:d:\tina\struct.c
+	"struct.h"
+	<string.h>
+	<stdio.h>
+	<stdlib.h>
+	"tina.h"
+	"api.h"
+	"var.h"
+	"token.h"
+	"type.h"
+	"function.h"
+	"il.h"
+	"module.h"
+
+1359118611 source:d:\hacking\tina\api.c
+	<stdlib.h>
+	<stdio.h>
+	<string.h>
+	"api.h"
+	"type.h"
+	"for.h"
+	"module.h"
+
+1359118621 d:\hacking\tina\api.h
+	"var.h"
+	"def.h"
+
+1359196249 d:\hacking\tina\var.h
+	"tina.h"
+	"token.h"
+	"def.h"
+
+1360121894 d:\hacking\tina\tina.h
+	"type.h"
+	"def.h"
+
+1359127459 d:\hacking\tina\type.h
+
+1359286015 d:\hacking\tina\token.h
+	"type.h"
+	"def.h"
+
+1358948855 d:\hacking\tina\for.h
+	"def.h"
+
+1358952623 d:\hacking\tina\module.h
+	"def.h"
+
+1357644709 source:d:\hacking\tina\array.c
+	"array.h"
+	"var.h"
+	"api.h"
+	<assert.h>
+	<stdlib.h>
+
+1358948844 d:\hacking\tina\array.h
+	"type.h"
+	"def.h"
+
+1359284959 source:d:\hacking\tina\build.c
+	<stdio.h>
+	<stdlib.h>
+	"tina.h"
+	"type.h"
+	"build.h"
+	"loader.h"
+	"preprocess.h"
+	"token.h"
+	"var.h"
+	"function.h"
+	"module.h"
+
+1358948847 d:\hacking\tina\build.h
+	"def.h"
+
+1358948875 d:\hacking\tina\loader.h
+	"def.h"
+	<stdlib.h>
+
+1358948884 d:\hacking\tina\preprocess.h
+	"def.h"
+
+1360123716 d:\hacking\tina\function.h
+	"type.h"
+	"def.h"
+
+1359894469 source:d:\hacking\tina\expression.c
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+	"api.h"
+	"token.h"
+	"expression.h"
+	"var.h"
+	"il.h"
+	"assert.h"
+	"function.h"
+	"module.h"
+	<math.h>
+
+1359894469 d:\hacking\tina\expression.h
+	"def.h"
+	"tina.h"
+	"var.h"
+
+1359275032 d:\hacking\tina\il.h
+	"var.h"
+	"def.h"
+
+1359275032 source:d:\hacking\tina\for.c
+	"for.h"
+	<stdlib.h>
+	<stdio.h>
+	"il.h"
+	"tina.h"
+	"token.h"
+	"while.h"
+	"expression.h"
+	"var.h"
+	"print.h"
+	"return.h"
+	"if.h"
+	"function.h"
+
+1358948916 d:\hacking\tina\while.h
+	"def.h"
+
+1358948886 d:\hacking\tina\print.h
+	"def.h"
+
+1358948897 d:\hacking\tina\return.h
+	"def.h"
+
+1358948863 d:\hacking\tina\if.h
+	"def.h"
+
+1359257939 source:d:\hacking\tina\function.c
+	<stdlib.h>
+	<stdio.h>
+	<string.h>
+	"print.h"
+	"type.h"
+	"expression.h"
+	"function.h"
+	"var.h"
+	"il.h"
+	"return.h"
+	"while.h"
+	"if.h"
+	"for.h"
+	"module.h"
+
+1359275032 source:d:\hacking\tina\if.c
+	<stdlib.h>
+	<stdio.h>
+	"tina.h"
+	"print.h"
+	"token.h"
+	"if.h"
+	"var.h"
+	"expression.h"
+	"il.h"
+	"while.h"
+	"return.h"
+	"for.h"
+	"function.h"
+
+1359339468 source:d:\hacking\tina\il.c
+	<stdio.h>
+	<assert.h>
+	<stdlib.h>
+	<string.h>
+	"il.h"
+	"var.h"
+	"vm.h"
+	"function.h"
+	"api.h"
+	"return.h"
+	"script_array.h"
+
+1358948913 d:\hacking\tina\vm.h
+	"type.h"
+	"def.h"
+
+1357644710 source:d:\hacking\tina\loader.c
+	<stdio.h>
+	<stdlib.h>
+	"loader.h"
+
+1359339446 source:d:\hacking\tina\main.c
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+	"tina.h"
+	"module.h"
+	"function.h"
+	"il.h"
+	"script_struct.h"
+	"renegade.h"
+	"api.h"
+
+1358948900 d:\hacking\tina\struct.h
+	"type.h"
+	"def.h"
+
+1359284959 source:d:\hacking\tina\module.c
+	"module.h"
+	"token.h"
+	"script_struct.h"
+	"function.h"
+
+1357644710 source:d:\hacking\tina\preprocess.c
+	<stdlib.h>
+	<stdio.h>
+	"preprocess.h"
+	"loader.h"
+
+1359275032 source:d:\hacking\tina\print.c
+	<stdlib.h>
+	<stdio.h>
+	"tina.h"
+	"il.h"
+	"token.h"
+	"var.h"
+	"expression.h"
+
+1359275003 source:d:\hacking\tina\return.c
+	<stdlib.h>
+	<stdio.h>
+	<string.h>
+	"return.h"
+	"il.h"
+	"expression.h"
+
+1357644709 source:d:\hacking\tina\struct.c
+	"struct.h"
+	<string.h>
+	<stdio.h>
+	<stdlib.h>
+	"tina.h"
+	"api.h"
+	"var.h"
+	"token.h"
+	"type.h"
+	"function.h"
+	"il.h"
+	"module.h"
+
+1359286007 source:d:\hacking\tina\token.c
+	<stdio.h>
+	<stdlib.h>
+	<ctype.h>
+	<string.h>
+	"tina.h"
+	"loader.h"
+	"token.h"
+	"api.h"
+	"assert.h"
+	"function.h"
+	"module.h"
+
+1359258893 source:d:\hacking\tina\var.c
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+	"tina.h"
+	"var.h"
+	"vm.h"
+	"token.h"
+	"expression.h"
+	"function.h"
+	"il.h"
+	"script_struct.h"
+
+1359128116 source:d:\hacking\tina\vm.c
+	<stdio.h>
+	<assert.h>
+	"vm.h"
+	"var.h"
+	<stdlib.h>
+	<string.h>
+
+1359275032 source:d:\hacking\tina\while.c
+	<stdio.h>
+	<stdlib.h>
+	"il.h"
+	"tina.h"
+	"token.h"
+	"while.h"
+	"expression.h"
+	"var.h"
+	"print.h"
+	"return.h"
+	"if.h"
+	"for.h"
+	"function.h"
+
+1358853339 d:\hacking\tina\renegade.h
+	<stdbool.h>
+
+1359013156 d:\hacking\tina\def.h
+	<stdlib.h>
+	<stdio.h>
+
+1359171289 source:d:\hacking\tina\module_rng.c
+	"module_rng.h"
+	"module.h"
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+	"tina.h"
+	"var.h"
+	"function.h"
+	"il.h"
+	"script_struct.h"
+	"renegade.h"
+	"api.h"
+	<windows.h>
+
+1358952623 d:\hacking\tina\module_rng.h
+	"def.h"
+
+1358948844 d:\hacking\tina\script_array.h
+	"type.h"
+	"def.h"
+
+1359127681 source:d:\hacking\tina\script_array.c
+	"script_array.h"
+	"var.h"
+	"api.h"
+	<assert.h>
+	<stdlib.h>
+
+1359118626 d:\hacking\tina\script_struct.h
+	"type.h"
+	"def.h"
+
+1359284959 source:d:\hacking\tina\script_struct.c
+	"script_struct.h"
+	<string.h>
+	<stdio.h>
+	<stdlib.h>
+	"tina.h"
+	"api.h"
+	"var.h"
+	"token.h"
+	"type.h"
+	"function.h"
+	"il.h"
+	"module.h"
+
+1360141059 source:d:\hacking\tina\src\api.c
+	<stdlib.h>
+	<stdio.h>
+	<string.h>
+	"api.h"
+	"type.h"
+	"for.h"
+	"module.h"
+
+1360141059 d:\hacking\tina\src\api.h
+	"var.h"
+	"def.h"
+
+1359196249 d:\hacking\tina\src\var.h
+	"tina.h"
+	"token.h"
+	"def.h"
+
+1360141106 d:\hacking\tina\src\tina.h
+	"type.h"
+	"def.h"
+
+1359127459 d:\hacking\tina\src\type.h
+
+1359013156 d:\hacking\tina\src\def.h
+	<stdlib.h>
+	<stdio.h>
+
+1359286015 d:\hacking\tina\src\token.h
+	"type.h"
+	"def.h"
+
+1358948855 d:\hacking\tina\src\for.h
+	"def.h"
+
+1358952623 d:\hacking\tina\src\module.h
+	"def.h"
+
+1360142178 source:d:\hacking\tina\src\build.c
+	<stdio.h>
+	<stdlib.h>
+	"tina.h"
+	"type.h"
+	"build.h"
+	"loader.h"
+	"preprocess.h"
+	"token.h"
+	"var.h"
+	"function.h"
+	"module.h"
+
+1360121803 d:\hacking\tina\src\build.h
+	"def.h"
+
+1358948875 d:\hacking\tina\src\loader.h
+	"def.h"
+	<stdlib.h>
+
+1358948884 d:\hacking\tina\src\preprocess.h
+	"def.h"
+
+1360123716 d:\hacking\tina\src\function.h
+	"type.h"
+	"def.h"
+
+1360155974 source:d:\hacking\tina\src\expression.c
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+	"api.h"
+	"token.h"
+	"expression.h"
+	"var.h"
+	"il.h"
+	"assert.h"
+	"function.h"
+	"module.h"
+	<math.h>
+
+1359894469 d:\hacking\tina\src\expression.h
+	"def.h"
+	"tina.h"
+	"var.h"
+
+1359275032 d:\hacking\tina\src\il.h
+	"var.h"
+	"def.h"
+
+1359275032 source:d:\hacking\tina\src\for.c
+	"for.h"
+	<stdlib.h>
+	<stdio.h>
+	"il.h"
+	"tina.h"
+	"token.h"
+	"while.h"
+	"expression.h"
+	"var.h"
+	"print.h"
+	"return.h"
+	"if.h"
+	"function.h"
+
+1358948916 d:\hacking\tina\src\while.h
+	"def.h"
+
+1358948886 d:\hacking\tina\src\print.h
+	"def.h"
+
+1358948897 d:\hacking\tina\src\return.h
+	"def.h"
+
+1358948863 d:\hacking\tina\src\if.h
+	"def.h"
+
+1360123716 source:d:\hacking\tina\src\function.c
+	<stdlib.h>
+	<stdio.h>
+	<string.h>
+	"print.h"
+	"type.h"
+	"expression.h"
+	"function.h"
+	"var.h"
+	"il.h"
+	"return.h"
+	"while.h"
+	"if.h"
+	"for.h"
+	"module.h"
+
+1359275032 source:d:\hacking\tina\src\if.c
+	<stdlib.h>
+	<stdio.h>
+	"tina.h"
+	"print.h"
+	"token.h"
+	"if.h"
+	"var.h"
+	"expression.h"
+	"il.h"
+	"while.h"
+	"return.h"
+	"for.h"
+	"function.h"
+
+1360121894 source:d:\hacking\tina\src\il.c
+	<stdio.h>
+	<assert.h>
+	<stdlib.h>
+	<string.h>
+	"il.h"
+	"var.h"
+	"vm.h"
+	"function.h"
+	"api.h"
+	"return.h"
+	"script_array.h"
+
+1358948913 d:\hacking\tina\src\vm.h
+	"type.h"
+	"def.h"
+
+1360155845 d:\hacking\tina\src\script_array.h
+	"type.h"
+	"def.h"
+
+1360142598 source:d:\hacking\tina\src\loader.c
+	<stdio.h>
+	<stdlib.h>
+	"loader.h"
+
+1360123716 source:d:\hacking\tina\src\module.c
+	"module.h"
+	"token.h"
+	"script_struct.h"
+	"function.h"
+
+1359118626 d:\hacking\tina\src\script_struct.h
+	"type.h"
+	"def.h"
+
+1357644710 source:d:\hacking\tina\src\preprocess.c
+	<stdlib.h>
+	<stdio.h>
+	"preprocess.h"
+	"loader.h"
+
+1359275032 source:d:\hacking\tina\src\print.c
+	<stdlib.h>
+	<stdio.h>
+	"tina.h"
+	"il.h"
+	"token.h"
+	"var.h"
+	"expression.h"
+
+1359275003 source:d:\hacking\tina\src\return.c
+	<stdlib.h>
+	<stdio.h>
+	<string.h>
+	"return.h"
+	"il.h"
+	"expression.h"
+
+1360156173 source:d:\hacking\tina\src\script_array.c
+	"script_array.h"
+	"var.h"
+	"api.h"
+	<assert.h>
+	<stdlib.h>
+
+1360143449 source:d:\hacking\tina\src\script_struct.c
+	"script_struct.h"
+	<string.h>
+	<stdio.h>
+	<stdlib.h>
+	"tina.h"
+	"api.h"
+	"var.h"
+	"token.h"
+	"type.h"
+	"function.h"
+	"il.h"
+	"module.h"
+
+1360141191 source:d:\hacking\tina\src\tina.c
+	"tina.h"
+
+1360143394 source:d:\hacking\tina\src\token.c
+	<stdio.h>
+	<stdlib.h>
+	<ctype.h>
+	<string.h>
+	"tina.h"
+	"loader.h"
+	"token.h"
+	"api.h"
+	"assert.h"
+	"function.h"
+	"module.h"
+
+1359258893 source:d:\hacking\tina\src\var.c
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+	"tina.h"
+	"var.h"
+	"vm.h"
+	"token.h"
+	"expression.h"
+	"function.h"
+	"il.h"
+	"script_struct.h"
+
+1359128116 source:d:\hacking\tina\src\vm.c
+	<stdio.h>
+	<assert.h>
+	"vm.h"
+	"var.h"
+	<stdlib.h>
+	<string.h>
+
+1359275032 source:d:\hacking\tina\src\while.c
+	<stdio.h>
+	<stdlib.h>
+	"il.h"
+	"tina.h"
+	"token.h"
+	"while.h"
+	"expression.h"
+	"var.h"
+	"print.h"
+	"return.h"
+	"if.h"
+	"for.h"
+	"function.h"
+
+1360150513 source:d:\hacking\tina\src\main.c
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+	"tina.h"
+

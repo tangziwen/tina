@@ -1,0 +1,38 @@
+module Animal
+{
+struct Mammal
+{
+	function Eat()
+	{
+	print "Eat";
+	}
+	function Sleep()
+	{
+	print "Sleep";
+	}
+}
+struct Dog mix Mammal
+{
+	var age;
+	function Eat()
+	{
+	print "dog Eat";
+	}
+	function Dog(its_age)
+	{
+	self.age=its_age;
+	}
+	function ShowAge()
+	{
+	print self.age;
+	}
+}
+}
+using Animal;
+function main()
+{
+var puppy =Dog(3);
+puppy.Eat();
+puppy.Sleep();
+puppy.ShowAge();
+}

@@ -1,0 +1,9 @@
+function main()
+{
+var a=array(100);
+	for(var i=0;i<100;i+=1)
+	{
+	a[i]=i;
+	print a[i];
+	}
+}

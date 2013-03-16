@@ -1,1 +1,0 @@
-cbp2make -in tina.cbp -out Makefile --all-os

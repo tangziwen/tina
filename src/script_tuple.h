@@ -16,60 +16,19 @@ PURPOSE.
 发布此程序是希望它有助于您,但是作者对其不做任何担保,即使是商业上或
 合于特定用途的隐式担保亦无
 *********************tzw <tzwtangziwen@gmail.com>******************************/
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include "tina.h"
-//#define NDEBUG
-#include "debug.h"
+#ifndef TINA_ARRAY_H
+#define TINA_ARRAY_H
+#include "type.h"
+#include "def.h"
+/*获得数组指定元素的值*/
+Var tuple_GetValue(Var array_obj,int index );
+/*数组初始化*/
+void tuple_init();
 
-
-
-void SayHello()
-{
-	printf("holla you boy\n");
-}
-
-
-/*解释器主函数*/
-/*如果未加说明则解释执行本地的test.tina脚本*/
-int main ( int argc,char * argv[] )
-{
-	Tina_Init();
-	switch(argc)
-	{
-	case 1:
-		PRINT("please input file");
-		test( /*for quick test*/
-			Tina_Build ("test.tina");
-			Tina_Run ( "main" );
-		);
-		PRINT("hahaha");
-		break;
-	case 2:
-		Tina_Build (argv[1]);
-		Tina_Run ( "main" );
-		break;
-	default:
-		STOP("INVALID ARG!");
-		break;
-	}
-	exit(EXIT_SUCCESS);
-	return 0;
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+/*为数组的指定元素赋值*/
+void tuple_SetValue(Var array_obj,int index ,Var new_value);
+void TupleRefCountIncrease(void * ptr);
+void TupleRefCountDecrease(void * ptr);
+/*清除数组临时对象池*/
+void tuple_CleanTmpPool();
+#endif /* TINA_ARRAY_H*/

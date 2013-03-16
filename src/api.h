@@ -27,42 +27,42 @@ typedef struct api_func_t
 {
 	char file_name[API_FUNC_NAME_MAX];
 	void (*func_ptr)();
-	int tag;//给用户使用的一个标记量
+	int tag;/*给用户使用的一个标记量*/
 } API_Func;
 
 
 
 API_Func API_func_list[API_MAX];
 
-//传入API的实参列表
+/*传入API的实参列表*/
 Var API_argument_list[API_MAX_ARG];
 
-//向虚拟机中注册一个函数,输入它在脚本中的别名,以及它的函数指针,以及参数个数
-//函数的样式为 void API_FUNC ();
+/*向虚拟机中注册一个函数,输入它在脚本中的别名,以及它的函数指针,以及参数个数*/
+/*函数的样式为 void API_FUNC ();*/
 int Tina_API_Register( const char * func_name,void (*func_ptr)(),int tag);
 
-//搜索该字符串是否为一个API函数
-//若是,则返回其索引,若不是则返回 -1
+/*搜索该字符串是否为一个API函数*/
+/*若是,则返回其索引,若不是则返回 -1*/
 int API_Search(const char * the_string);
 
-//执行API函数,并以Var型返回该API的返回值
+/*执行API函数,并以Var型返回该API的返回值*/
 Var API_InovkeByIndex(int index);
 
-//设置当前执行的参数的个数
+/*设置当前执行的参数的个数*/
 void API_SetArgCount(int arg_count);
 
-//返回当前的API参数的个数
+/*返回当前的API参数的个数*/
 int API_GetArgCount();
 
-//获得指定的API参数
+/*获得指定的API参数*/
 Var API_GetArg(int index);
 
-//搜索字符串所指示的结构体类型是否存在，若存在返回其
-//构造API
+/*搜索字符串所指示的结构体类型是否存在，若存在返回其*/
+/*构造API*/
 int API_Search_cnstructor(char * struct_name);
 
 
 
-//提供一个快速注册同名函数的方法
+/*提供一个快速注册同名函数的方法*/
 #define Tina_API_REG( FUNC_REG) Tina_API_Register ( #FUNC_REG , FUNC_REG , 0 )
 #endif

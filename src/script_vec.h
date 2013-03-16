@@ -16,19 +16,29 @@ PURPOSE.
 发布此程序是希望它有助于您,但是作者对其不做任何担保,即使是商业上或
 合于特定用途的隐式担保亦无
 *********************tzw <tzwtangziwen@gmail.com>******************************/
-#ifndef TINA_IF_H
-#define TINA_IF_H
+#ifndef TINA_VECTOR_H
+#define TINA_VECTOR_H
+#include "type.h"
 #include "def.h"
-/*解析if语句,要求当前pos的初始位置从*/
-/*if这个标号之后开始,他会修改原有的位置到整个:*/
-/*if(..)*/
-/*{.......}*/
-/*else*/
-/*{.......}*/
-/*if代码块结束的位置之后*/
-void if_parse(int * pos,int layer,int break_label,int continue_label,int mode);
+/*获得数组指定元素的值*/
+Var vector_GetValue(Var array_obj,int index );
+/*数组初始化*/
+void vector_init();
 
-/*解析else分语句*/
-void if_else_parse(int *pos,int layer,int break_label,int continue_label,int mode);
-
+/*为数组的指定元素赋值*/
+void vector_SetValue(Var array_obj,int index ,Var new_value);
+void VectorRefCountIncrease(void * ptr);
+void VectorRefCountDecrease(void * ptr);
+/*清除数组临时对象池*/
+void vector_CleanTmpPool();
+/*以指定字符串作为资源，创建一个向量，该向量的各个维度为字符串中的各字符，成员包括末尾的终结符*/
+void * vector_CreateByString(const char * str);
+/*打印一个向量的所有成员*/
+void vector_Print(Var vec);
+/*获得指定向量维护的类型*/
+int vector_GetType(Var vec);
+/*获得指定向量所存在的成员个数*/
+int vector_GetSize(Var vec);
+/*将一个向量的元素，若其维护的值为VAR_TYPE_CHAR的话，转移至一个char型数组里。该空间有使用者回收*/
+char * vector_ToString(Var vec);
 #endif

@@ -41,7 +41,7 @@ PURPOSE.
 #define TOKEN_TYPE_WHILE 3
 #define TOKEN_TYPE_SYMBOL 4
 #define TOKEN_TYPE_NUM 5
-#define TOKEN_TYPE_STR 6
+#define TOKEN_TYPE_MESSAGE 6 /*消息*/
 #define TOKEN_TYPE_OP 7
 #define TOKEN_TYPE_LEFT_BRACE 8
 #define TOKEN_TYPE_RIGHT_BRACE 9
@@ -72,6 +72,10 @@ PURPOSE.
 #define TOKEN_TYPE_MODULE 34
 #define TOKEN_TYPE_USING 35
 #define TOKEN_TYPE_STRUCT_NAME 36
+#define TOKEN_TYPE_DELETE 37 /*销毁*/
+#define TOKEN_TYPE_CHAR 38
+#define TOKEN_TYPE_STRING 39
+
 /*从当前位置(pos)解析一个词法标记，并将词法标记的相关信息存储进t_k所指向的TokenInfo对象里
  解 析之后，当前位置会向后跳跃一个词法标记               *
  我们假设整个待输入的缓存中的词法是无错的(即不存在无效的词法单元)*/

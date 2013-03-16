@@ -20,12 +20,12 @@ PURPOSE.
 #define TINA_TYPE_H
 
 #define ENV_GLOBAL -1
-#define CLASS_PUBLIC   0
-#define CLASS_PRIVATE   1
+#define STRUCT_PUBLIC   0
+#define STRUCT_PRIVATE   1
 
 
-#define CLASS_NOT_SEALED  0
-#define CLASS_SEALED 1
+#define STRUCT_NOT_SEALED  0
+#define STRUCT_SEALED 1
 //环境索引
 extern  int env_index;
 //the maximun token's name size
@@ -37,6 +37,7 @@ typedef struct token_info_t
 	int type;
 	char content[TOKEN_NAME_SIZE ];
 	char * str;//专门为字符串变量准备的指针
+    void* literal_handle;
 } TokenInfo;
 
 
@@ -44,20 +45,23 @@ typedef struct token_info_t
 #define FUNC_API  1
 struct func_info
 {
-int func_type;
-int func_index;
-int args;
+	int func_type;
+	int func_index;
+	int args;
 };
 
 struct var_content
 {
-	int type;
+    char type;
+    union {
 	int int_value;
 	double real_value;
 	void * handle_value;
 	int bool_value;
 	struct func_info func;
 	char *str;
+    char char_value;
+    };
 };
 
 typedef struct

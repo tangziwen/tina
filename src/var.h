@@ -23,47 +23,47 @@ PURPOSE.
 #include "def.h"
 #define GLOBAL_VAR_MAX 64
 
-#define VAR_TYPE_VOID 0
+#define VAR_TYPE_NILL 0
 #define VAR_TYPE_INT 1
 #define VAR_TYPE_HANDLE 2
 #define VAR_TYPE_BOOL 3
-#define VAR_TYPE_NULL 4 //空类型用于在表达式只剩一个值或变量或函数的时候,如:a ,则将其转换为a+null;
-#define VAR_TYPE_STR 5 //字符串型变量
-#define VAR_TYPE_REF 6
-#define VAR_TYPE_ARRAY 7
-#define VAR_TYPE_REAL 8
-#define VAR_TYPE_FUNC 9 //函数指针类型
-#define VAR_TYPE_STRUCT_NAME 10 //函数名
-
-//null只能作为右操作数,a+null返回a的值
-
-
+#define VAR_TYPE_REF 4
+#define VAR_TYPE_TUPLE 5 /*元组类型*/
+#define VAR_TYPE_REAL 6
+#define VAR_TYPE_FUNC 7 /*函数指针类型*/
+#define VAR_TYPE_STRUCT_NAME 8  /*函数名*/
+#define VAR_TYPE_VECTOR 9
+#define VAR_TYPE_CHAR 10 /*字符类型*/
+#define VAR_TYPE_MESSAGE 11
+/*null只能作为右操作数,a+null返回a的值*/
 
 
-///通过名字查找当前被扫描函数的局部变量的索引/通过变量获得它的类型名称.
+
+
+/*/通过名字查找当前被扫描函数的局部变量的索引/通过变量获得它的类型名称.*/
 int var_get_local_index(const char *var_name,int layer);
 
-//获得当前被扫描函数的局部变量的个数
+/*获得当前被扫描函数的局部变量的个数*/
 int get_vars_count();
 
-//销毁最内层的变量
+/*销毁最内层的变量*/
 void destory_layer();
 
-//新建一个层次
+/*新建一个层次*/
 void create_layer();
 
-//获得当前的数值,以浮点型计
+/*获得当前的数值,以浮点型计*/
 double get_value(int index);
 
 double var_get_value(Var a);
 
-//计算两数相加
+/*计算两数相加*/
 Var var_add(Var a,Var b);
-//两数相减
+/*两数相减*/
 Var var_minus(Var a,Var b);
-//两数相乘
+/*两数相乘*/
 Var var_multiple(Var a,Var b);
-//两数相除
+/*两数相除*/
 Var var_divide(Var a, Var b);
 
 Var var_large(Var a,Var b);
@@ -85,32 +85,34 @@ Var var_and(Var a, Var b);
 Var var_or(Var a, Var b);
 
 Var var_point_to(Var a,Var b);
-//设置当前函数
+/*设置当前函数*/
 void func_set_current(Function * func);
-//变量模块初始化
+/*变量模块初始化*/
 void var_parse_local(int *pos,int arg_counts);
 
-//解引用变量,变量的类型必须为VAR_TYPE_REF
-Var * var_derefer(Var ref);
 
-//获得Var变量的浮点值
+/*获得Var变量的浮点值*/
 double var_GetDouble(Var a);
-//获得Var变量的整型值
+/*获得Var变量的整型值*/
 int var_GetInt(Var a);
-//获得Var变量的字符串值
-char * var_GetStr(Var a);
-//获得变量的布尔值
+/*获得变量的布尔值*/
 int var_GetBool(Var a);
-//获得变量的值类型
+/*获得变量的字符值*/
+char var_GetChar(Var a);
+/*获得变量的值类型*/
 int var_GetType(Var a);
-//设置Var变量的实数值，如果其不为实数，类型将会强制转换
+/*设置Var变量的实数值，如果其不为实数，类型将会强制转换*/
 void var_SetReal(Var *a,double value);
-//设置Var变量的整数值，如果其不为整数，类型将会强制转换
+/*设置Var变量的整数值，如果其不为整数，类型将会强制转换*/
 void var_SetInt(Var *a,int value);
-//设置Var变量的布尔值，如果其不为布尔，类型将会强制转换
+/*设置Var变量的布尔值，如果其不为布尔，类型将会强制转换*/
 void var_SetBool(Var *a,int value);
-//在stdout里打印Var变量的值，注意不带换行
+/*在stdout里打印Var变量的值，注意不带换行*/
 void var_Print(Var a);
-
-
+/*设置一个指定的Var变量的值类型为Nil*/
+void var_SetNil(Var *a);
+/*将指定的Var变量转换成API形式*/
+void var_SetAPI(Var *a ,int API_index);
+/*设置Var变量的字符值，如果其不为字符，类型将会强制转换*/
+void var_SetChar(Var *a,int ch);
 #endif

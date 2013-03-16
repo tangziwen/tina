@@ -23,17 +23,17 @@ PURPOSE.
 #include "token.h"
 #include "var.h"
 #include "expression.h"
-static int is_int(char * str)
+static int IsInteger(char * str)
 {
 	int i=0;
 	while(str[i]!='\0')
+	{
+		if(str[i]>'9' || str[i]<'0')
 		{
-			if(str[i]>'9' || str[i]<'0')
-				{
-					return -1;
-				}
-			i++;
+			return -1;
 		}
+		i++;
+	}
 	return 1;
 }
 

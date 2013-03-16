@@ -31,9 +31,13 @@ typedef struct
 	int api_index;
 } struct_info;
 
-typedef struct
+typedef struct struct_chunk_t
 {
+	int ref_count;/*引用计数器*/
 	Var member[100];
+	struct struct_chunk_t *tmp_pre;
+	struct struct_chunk_t * tmp_next;
+	int member_count;
 } struct_chunk;
 
 void struct_init();
@@ -45,10 +49,15 @@ int get_accessbility_of_member(int ID,int member_id);
 void struct_ParseDeclare(int * pos);
 void struct_ParseDefine(int * pos);
 int get_class_id(const char * name);
-void AddMember(int ID,Var value,int accessibility,int is_sealed);
 void SetMember(int ID ,int member_id,Var value);
+/*引用计数自增一*/
+void StructRefCountIncrease(void * handle);
+/*引用计数自减一*/
+void StructRefCountDecrease(void * handle);
+
 //获得类的成员
 Var GetMember(int ID ,int member_id);
-
+/*清空临时对象池*/
+void struct_CleanTmpPool();
 Var * GetPrototypeMemberAddress(char * struct_name,char * struct_member_name);
 #endif

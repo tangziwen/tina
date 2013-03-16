@@ -1,3 +1,6 @@
+#ifndef DEBUG_H_INCLUDED
+#define DEBUG_H_INCLUDED
+
 /************************************************************************************
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -10,66 +13,21 @@ warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 PURPOSE.
 
 此程序为自由软件,你可以在遵循由自由软件基金会发布的GPL 通用公共许可
-证第三或更高版本的约束下再发布和(或)修改
+证第三或更高版本的约束下再发布和(或)修改遵循GPL v3或更新的版本,
 (对GPL许可证的细节有疑问可参看位于gpl-CN.txt里的非官方翻译)
 
-发布此程序是希望它有助于您,但是作者对其不做任何担保,即使是商业上或
+此程序的发布是希望它有助于您,但是作者对其不做任何担保,即使是商业上或
 合于特定用途的隐式担保亦无
 *********************tzw <tzwtangziwen@gmail.com>******************************/
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include "tina.h"
-//#define NDEBUG
-#include "debug.h"
-
-
-
-void SayHello()
-{
-	printf("holla you boy\n");
-}
-
-
-/*解释器主函数*/
-/*如果未加说明则解释执行本地的test.tina脚本*/
-int main ( int argc,char * argv[] )
-{
-	Tina_Init();
-	switch(argc)
-	{
-	case 1:
-		PRINT("please input file");
-		test( /*for quick test*/
-			Tina_Build ("test.tina");
-			Tina_Run ( "main" );
-		);
-		PRINT("hahaha");
-		break;
-	case 2:
-		Tina_Build (argv[1]);
-		Tina_Run ( "main" );
-		break;
-	default:
-		STOP("INVALID ARG!");
-		break;
-	}
-	exit(EXIT_SUCCESS);
-	return 0;
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+#ifndef NDEBUG
+#define test(A) \
+		do { \
+		A \
+		 } while(0)
+#else
+#define test(A) do{\
+		;\
+		}while(0)
+#endif
+#define alert(fmt,args...)  printf("File:%s    Function:%s    Line:%d\n>>"fmt, __FILE__, __func__, __LINE__, ##args)
+#endif // DEBUG_H_INCLUDED

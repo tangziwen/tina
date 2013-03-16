@@ -24,11 +24,11 @@ PURPOSE.
 #include "token.h"
 #include "script_struct.h"
 #include "function.h"
-//模块名,默认情况下表示为全局
+/*模块名,默认情况下表示为全局*/
 extern  char module_context_name[100]= {0};
 
 extern int module_index=0;
-//模块列表
+/*模块列表*/
 extern char module_list[10][100]= {0};
 
 static void set_context(char * str);
@@ -39,132 +39,132 @@ void module_parse_using(int * pos)
 	module_index=0;
 	TokenInfo t_k;
 	do
+	{
+		token_get(pos,&t_k);
+		switch(t_k.type)
 		{
-			token_get(pos,&t_k);
-			switch(t_k.type)
-				{
-					//拷入要导入的包
-				case TOKEN_TYPE_SYMBOL:
-					strcpy(module_list[module_index],t_k.content);
-					module_index++;
-					break;
-				case TOKEN_TYPE_COMMA:
-					break;
-				case TOKEN_TYPE_SEMICOLON:
-					break;
-				case TOKEN_TYPE_EOF:
-					break;
-				default:
-					printf("illigal import !\n");
-					exit(0);
-					break;
-				}
+			/*拷入要导入的包*/
+		case TOKEN_TYPE_SYMBOL:
+			strcpy(module_list[module_index],t_k.content);
+			module_index++;
+			break;
+		case TOKEN_TYPE_COMMA:
+			break;
+		case TOKEN_TYPE_SEMICOLON:
+			break;
+		case TOKEN_TYPE_EOF:
+			break;
+		default:
+			printf("illigal import !\n");
+			exit(0);
+			break;
 		}
+	}
 	while(t_k.type!=TOKEN_TYPE_EOF && t_k.type!=TOKEN_TYPE_SEMICOLON);
 }
 
 
 
-//扫描模块
+/*扫描模块*/
 void module_parse_declare(int * pos)
 {
 	TokenInfo t_k;
 	token_get(pos,&t_k);
-	//更新模块名
+	/*更新模块名*/
 	set_context(t_k.content);
-	//跳过左边的花括号
+	/*跳过左边的花括号*/
 	token_get(pos,&t_k);
 	int brace=-1;
 	{
-		//扫描模块内部的声明
+		/*扫描模块内部的声明*/
 		do
+		{
+			token_get(pos,&t_k);
+			switch(t_k.type)
 			{
-				token_get(pos,&t_k);
-				switch(t_k.type)
-					{
-					case TOKEN_TYPE_EOF:
-						break;
-					case TOKEN_TYPE_LEFT_BRACE:
-						brace--;
-						break;
-					case TOKEN_TYPE_RIGHT_BRACE:
-						brace++;
-						if(brace==0)
-							{
-								t_k.type=TOKEN_TYPE_EOF;
-							}
-						break;
-						//发现函数的定义符号,声明函数
-					case TOKEN_TYPE_FUNC_DEF:
-						func_ParseDeclare(pos);
-						break;
-						//发现类的定义，声明类
-					case TOKEN_TYPE_STRUCT:
-						struct_ParseDeclare(pos);
-						token_SkipBlock(pos);//略过类定义块
-						break;
-					default :
-						break;
-					}
+			case TOKEN_TYPE_EOF:
+				break;
+			case TOKEN_TYPE_LEFT_BRACE:
+				brace--;
+				break;
+			case TOKEN_TYPE_RIGHT_BRACE:
+				brace++;
+				if(brace==0)
+				{
+					t_k.type=TOKEN_TYPE_EOF;
+				}
+				break;
+				/*发现函数的定义符号,声明函数*/
+			case TOKEN_TYPE_FUNC_DEF:
+				func_ParseDeclare(pos);
+				break;
+				/*发现类的定义，声明类*/
+			case TOKEN_TYPE_STRUCT:
+				struct_ParseDeclare(pos);
+				token_SkipBlock(pos);/*略过类定义块*/
+				break;
+			default :
+				break;
 			}
+		}
 		while(t_k.type!=TOKEN_TYPE_EOF);
 	}
-	//将当前模块重置为全局
+	/*将当前模块重置为全局*/
 	set_context("\0");
 }
-//扫描模块的定义
+/*扫描模块的定义*/
 void module_parse_def(int * pos)
 {
 	TokenInfo t_k;
 	token_get(pos,&t_k);
-	//更新模块名
+	/*更新模块名*/
 	set_context(t_k.content);
 	token_get(pos,&t_k);
 	int brace=-1;
-	//第二遍扫描,扫描所有函数以及类的定义
+	/*第二遍扫描,扫描所有函数以及类的定义*/
 	{
 		do
+		{
+			token_get(pos,&t_k);
+			switch(t_k.type)
 			{
-				token_get(pos,&t_k);
-				switch(t_k.type)
-					{
-					case TOKEN_TYPE_EOF:
-						break;
-						//发现函数的定义符号,定义函数
-					case TOKEN_TYPE_FUNC_DEF:
-						func_parse_def(pos);
-						break;
-					case TOKEN_TYPE_USING:
-						module_parse_using(pos);
-						break;
-						//发现类的定义
-					case TOKEN_TYPE_STRUCT:
-						struct_ParseDefine(pos);//解析类
-						break;
-					case TOKEN_TYPE_LEFT_BRACE:
-						brace--;
-						break;
-					case TOKEN_TYPE_RIGHT_BRACE:
-						brace++;
-						if(brace==0)
-							{
-								t_k.type=TOKEN_TYPE_EOF;
-							}
-						break;
-					default :
-						printf("the token %d is unknown %s\n",t_k.type,t_k.content);
-						printf("error !!\n");
-						exit(0);
-						break;
-					}
+			case TOKEN_TYPE_EOF:
+				break;
+				/*发现函数的定义符号,定义函数*/
+			case TOKEN_TYPE_FUNC_DEF:
+				func_parse_def(pos);
+				break;
+			case TOKEN_TYPE_USING:
+				module_parse_using(pos);
+				break;
+				/*发现类的定义*/
+			case TOKEN_TYPE_STRUCT:
+				struct_ParseDefine(pos);/*解析类*/
+				break;
+			case TOKEN_TYPE_LEFT_BRACE:
+				brace--;
+				break;
+			case TOKEN_TYPE_RIGHT_BRACE:
+				brace++;
+				if(brace==0)
+				{
+					t_k.type=TOKEN_TYPE_EOF;
+				}
+				break;
+			default :
+				printf("the token %d is unknown %s\n",t_k.type,t_k.content);
+				printf("error !!\n");
+				exit(0);
+				break;
 			}
+		}
 		while(t_k.type!=TOKEN_TYPE_EOF);
 	}
-	//将当前模块重置为全局
+	/*将当前模块重置为全局*/
 	set_context("\0");
 }
 
-//查询当前符号被模块修饰后的名字
+/*查询当前符号被模块修饰后的名字*/
 char * module_MangledName(int module_id,char * the_symbol)
 {
 	static char  result[100];
@@ -176,21 +176,21 @@ char * module_MangledName(int module_id,char * the_symbol)
 }
 
 
-//查询当前符号在当前上下文模块的修饰后的名字
+/*查询当前符号在当前上下文模块的修饰后的名字*/
 char * module_ContextMangledName(char * the_symbol)
 {
 	static char  result[100];
 	memset(result,0,sizeof(result));
 	if(strcmp(module_context_name,"\0")!=0)
-		{
-			strcpy(result,module_context_name);
-			strcat(result,"#");
-			strcat(result,the_symbol);
-		}
+	{
+		strcpy(result,module_context_name);
+		strcat(result,"#");
+		strcat(result,the_symbol);
+	}
 	else
-		{
-			strcpy(result,the_symbol);
-		}
+	{
+		strcpy(result,the_symbol);
+	}
 	return result;
 }
 static void set_context(char * str)

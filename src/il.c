@@ -1,4 +1,4 @@
-/************************************************************************************
+ï»¿/************************************************************************************
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
 as published by the Free Software Foundation; either
@@ -9,12 +9,12 @@ but WITHOUT ANY WARRANTY; without even the implied
 warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 PURPOSE.
 
-´Ë³ÌĞòÎª×ÔÓÉÈí¼ş,Äã¿ÉÒÔÔÚ×ñÑ­ÓÉ×ÔÓÉÈí¼ş»ù½ğ»á·¢²¼µÄGPL Í¨ÓÃ¹«¹²Ğí¿É
-Ö¤µÚÈı»ò¸ü¸ß°æ±¾µÄÔ¼ÊøÏÂÔÙ·¢²¼ºÍ(»ò)ĞŞ¸Ä
-(¶ÔGPLĞí¿ÉÖ¤µÄÏ¸½ÚÓĞÒÉÎÊ¿É²Î¿´Î»ÓÚgpl-CN.txtÀïµÄ·Ç¹Ù·½·­Òë)
+æ­¤ç¨‹åºä¸ºè‡ªç”±è½¯ä»¶,ä½ å¯ä»¥åœ¨éµå¾ªç”±è‡ªç”±è½¯ä»¶åŸºé‡‘ä¼šå‘å¸ƒçš„GPL é€šç”¨å…¬å…±è®¸å¯
+è¯ç¬¬ä¸‰æˆ–æ›´é«˜ç‰ˆæœ¬çš„çº¦æŸä¸‹å†å‘å¸ƒå’Œ(æˆ–)ä¿®æ”¹
+(å¯¹GPLè®¸å¯è¯çš„ç»†èŠ‚æœ‰ç–‘é—®å¯å‚çœ‹ä½äºgpl-CN.txté‡Œçš„éå®˜æ–¹ç¿»è¯‘)
 
-·¢²¼´Ë³ÌĞòÊÇÏ£ÍûËüÓĞÖúÓÚÄú,µ«ÊÇ×÷Õß¶ÔÆä²»×öÈÎºÎµ£±£,¼´Ê¹ÊÇÉÌÒµÉÏ»ò
-ºÏÓÚÌØ¶¨ÓÃÍ¾µÄÒşÊ½µ£±£ÒàÎŞ
+å‘å¸ƒæ­¤ç¨‹åºæ˜¯å¸Œæœ›å®ƒæœ‰åŠ©äºæ‚¨,ä½†æ˜¯ä½œè€…å¯¹å…¶ä¸åšä»»ä½•æ‹…ä¿,å³ä½¿æ˜¯å•†ä¸šä¸Šæˆ–
+åˆäºç‰¹å®šç”¨é€”çš„éšå¼æ‹…ä¿äº¦æ— 
 *********************tzw <tzwtangziwen@gmail.com>******************************/
 #include <stdio.h>
 #include <assert.h>
@@ -26,14 +26,15 @@ PURPOSE.
 #include "function.h"
 #include "api.h"
 #include "return.h"
-#include "script_array.h"
-//µ±Ç°µÄ±êÇ©Êı
+#include "script_tuple.h"
+#include "script_vec.h"
+/*å½“å‰çš„æ ‡ç­¾æ•°*/
 int label_index=0;
-//´¢´æÉÏÒ»¸ö±»Ê¹ÓÃµÄÁÙÊ±½ÚµãµÄÖµ
+/*å‚¨å­˜ä¸Šä¸€ä¸ªè¢«ä½¿ç”¨çš„ä¸´æ—¶èŠ‚ç‚¹çš„å€¼*/
 Var last_tmp_value;
-//º¯ÊıµÄµ÷ÓÃ
+/*å‡½æ•°çš„è°ƒç”¨*/
 Var IL_CallFunc (IL_element var, int index,int mode);
-//×ÔÖ¸Õë
+/*è‡ªæŒ‡é’ˆ*/
 Var self_ptr;
 Var func_return_value;
 IL_list * current_list=NULL;
@@ -45,7 +46,7 @@ static Var get_tmp(int index)
 {
 	return  current_list->tmp_var_list[index];
 }
-//´´½¨Ò»¸öÖĞ¼äÓïÑÔ±í´ïÊ½
+/*åˆ›å»ºä¸€ä¸ªä¸­é—´è¯­è¨€è¡¨è¾¾å¼*/
 IL_exp * IL_exp_create ( char op,int tmp_var_index,IL_element var_a,IL_element var_b )
 {
 	static int exp_index=0;
@@ -72,48 +73,48 @@ void IL_ListInsertReturn()
 	IL_ListInsertNode ( IL_node_create_return() );
 }
 
-//º¯ÊıµÄµ÷ÓÃ
+/*å‡½æ•°çš„è°ƒç”¨*/
 Var IL_CallFunc (IL_element var, int index,int mode);
 void IL_ListInsertNode ( IL_node *node )
 {
 	if ( func_get_current()->list.head==NULL )
-		{
-			func_get_current()->list.head=node;
-			node->pre=NULL;
-			node->next=NULL;
-		}
+	{
+		func_get_current()->list.head=node;
+		node->pre=NULL;
+		node->next=NULL;
+	}
 	else
+	{
+		IL_node *tmp=func_get_current()->list.head;
+		while ( tmp->next!=NULL )
 		{
-			IL_node *tmp=func_get_current()->list.head;
-			while ( tmp->next!=NULL )
-				{
-					tmp=tmp->next;
-				}
-			tmp->next=node;
-			node->pre=tmp;
-			node->next=NULL;
+			tmp=tmp->next;
 		}
+		tmp->next=node;
+		node->pre=tmp;
+		node->next=NULL;
+	}
 }
-//ÏòÖĞ¼äÓïÑÔµÄÖ´ĞĞĞòÁĞÖĞÔö¼ÓÒ»¸ö±í´ïÊ½
+/*å‘ä¸­é—´è¯­è¨€çš„æ‰§è¡Œåºåˆ—ä¸­å¢åŠ ä¸€ä¸ªè¡¨è¾¾å¼*/
 void IL_ListInsert ( IL_exp *exp )
 {
 	if ( func_get_current()->list.head==NULL )
-		{
-			func_get_current()->list.head=IL_node_create_exp ( exp );
-			func_get_current()->list.head->next=NULL;
-		}
+	{
+		func_get_current()->list.head=IL_node_create_exp ( exp );
+		func_get_current()->list.head->next=NULL;
+	}
 	else
+	{
+		IL_node *tmp=func_get_current()->list.head;
+		while ( tmp->next!=NULL )
 		{
-			IL_node *tmp=func_get_current()->list.head;
-			while ( tmp->next!=NULL )
-				{
-					tmp=tmp->next;
-				}
-			IL_node * node= IL_node_create_exp ( exp );
-			tmp->next= node;
-			node->pre=tmp;
-			node->next=NULL;
+			tmp=tmp->next;
 		}
+		IL_node * node= IL_node_create_exp ( exp );
+		tmp->next= node;
+		node->pre=tmp;
+		node->next=NULL;
+	}
 }
 
 void IL_print_exp ( IL_node * tmp )
@@ -121,69 +122,69 @@ void IL_print_exp ( IL_node * tmp )
 	printf ( "@ %d ",tmp->exp->tmp_index );
 	printf ( "=" );
 	switch ( tmp->exp->A.type )
-		{
-		case ELEMENT_VAR:
-			printf ( " var-ID %d",tmp->exp->A.index );
-			break;
-		case ELEMENT_NUM:
-			printf ( "%g",var_get_value ( tmp->exp->A.value ) );
-			break;
-		case ELEMENT_TMP:
-			printf ( "@%d",tmp->exp->A.index );
-			break;
-		case ELEMENT_API:
-			printf ( "API %d",tmp->exp->A.index );
-			break;
-		case ELEMENT_FUNC:
-			printf ( "FUNC %d",tmp->exp->A.index );
-			break;
-		case ELEMENT_CALL_BY_MEMBER:
-			printf ( "CALL MEMBER %d",tmp->exp->A.index );
-			break;
-		case ELEMENT_ARRAY:
-			printf("ARRAY %d",tmp->exp->A.index);
-			break;
-		case ELEMENT_STRUCT:
-			printf("STRUCT %s",tmp->exp->A.value.content.str);
-			break;
-		}
+	{
+	case ELEMENT_VAR:
+		printf ( " var-ID %d",tmp->exp->A.index );
+		break;
+	case ELEMENT_NUM:
+		printf ( "%g",var_get_value ( tmp->exp->A.value ) );
+		break;
+	case ELEMENT_TMP:
+		printf ( "@%d",tmp->exp->A.index );
+		break;
+	case ELEMENT_API:
+		printf ( "API %d",tmp->exp->A.index );
+		break;
+	case ELEMENT_FUNC:
+		printf ( "FUNC %d",tmp->exp->A.index );
+		break;
+	case ELEMENT_CALL_BY_MEMBER:
+		printf ( "CALL MEMBER %d",tmp->exp->A.index );
+		break;
+	case ELEMENT_ARRAY:
+		printf("ARRAY %d",tmp->exp->A.index);
+		break;
+	case ELEMENT_STRUCT:
+		printf("STRUCT %s",tmp->exp->A.value.content.str);
+		break;
+	}
 	printf ( " %c ",tmp->exp->op );
 	switch ( tmp->exp->B.type )
+	{
+	case ELEMENT_VAR:
+		printf ( " var-ID %d",tmp->exp->B.index );
+		break;
+	case ELEMENT_NUM:
+		if ( tmp->exp->B.value.content.type==VAR_TYPE_NILL )
 		{
-		case ELEMENT_VAR:
-			printf ( " var-ID %d",tmp->exp->B.index );
-			break;
-		case ELEMENT_NUM:
-			if ( tmp->exp->B.value.content.type==VAR_TYPE_NULL )
-				{
-					printf ( "NULL" );
-				}
-			else
-				{
-					if(tmp->exp->B.value.content.type==VAR_TYPE_STR)
-						{
-							printf ( "%s",tmp->exp->B.value.content.str );
-						}
-					else
-						{
-							printf ( "%g",var_get_value ( tmp->exp->B.value ) );
-						}
-
-				}
-			break;
-		case ELEMENT_TMP:
-			printf ( "@%d",tmp->exp->B.index );
-			break;
-		case ELEMENT_API:
-			printf ( "API %d",tmp->exp->B.index );
-			break;
-		case ELEMENT_FUNC:
-			printf ( "FUNC %d",tmp->exp->B.index );
-			break;
-		case ELEMENT_ARRAY:
-			printf("ARRAY %d",tmp->exp->B.index);
-			break;
+			printf ( "NULL" );
 		}
+		else
+		{
+            if(tmp->exp->B.value.content.type==VAR_TYPE_MESSAGE)
+			{
+				printf ( "%s",tmp->exp->B.value.content.str );
+			}
+			else
+			{
+				printf ( "%g",var_get_value ( tmp->exp->B.value ) );
+			}
+
+		}
+		break;
+	case ELEMENT_TMP:
+		printf ( "@%d",tmp->exp->B.index );
+		break;
+	case ELEMENT_API:
+		printf ( "API %d",tmp->exp->B.index );
+		break;
+	case ELEMENT_FUNC:
+		printf ( "FUNC %d",tmp->exp->B.index );
+		break;
+	case ELEMENT_ARRAY:
+		printf("ARRAY %d",tmp->exp->B.index);
+		break;
+	}
 	printf ( "\n" );
 }
 
@@ -210,48 +211,48 @@ void IL_printf_prnt ( IL_node *node )
 {
 	printf ( "PRNT :\n" );
 }
-//´òÓ¡ÖĞ¼ä´úÂëÖ´ĞĞĞòÁĞ
+/*æ‰“å°ä¸­é—´ä»£ç æ‰§è¡Œåºåˆ—*/
 void IL_list_print ( Function * func )
 {
 	IL_node * tmp=func->list.head;
 	while ( tmp!=NULL )
+	{
+		switch ( tmp->type )
 		{
-			switch ( tmp->type )
-				{
-				case IL_NODE_EXP:
-					IL_print_exp ( tmp );
-					break;
-				case IL_NODE_JE:
-					IL_print_je ( tmp );
-					break;
-				case IL_NODE_JMP:
-					IL_print_jmp ( tmp );
-					break;
-				case IL_NODE_JNE:
-					IL_print_jne ( tmp );
-					break;
-				case IL_NODE_LAB:
-					IL_print_lab ( tmp );
-					break;
-				case IL_NODE_PRNT:
-					IL_printf_prnt ( tmp );
-					break;
-				case IL_NODE_RETURN:
-					printf ( "return node \n" );
-					break;
-				}
-			tmp=tmp->next;
+		case IL_NODE_EXP:
+			IL_print_exp ( tmp );
+			break;
+		case IL_NODE_JE:
+			IL_print_je ( tmp );
+			break;
+		case IL_NODE_JMP:
+			IL_print_jmp ( tmp );
+			break;
+		case IL_NODE_JNE:
+			IL_print_jne ( tmp );
+			break;
+		case IL_NODE_LAB:
+			IL_print_lab ( tmp );
+			break;
+		case IL_NODE_PRNT:
+			IL_printf_prnt ( tmp );
+			break;
+		case IL_NODE_RETURN:
+			printf ( "return node \n" );
+			break;
 		}
+		tmp=tmp->next;
+	}
 }
 
-//¸ù¾İº¯ÊıÃû³Æ´òÓ¡ÖĞ¼ä´úÂë
+/*æ ¹æ®å‡½æ•°åç§°æ‰“å°ä¸­é—´ä»£ç */
 void Tina_PrintIL ( const char * func_name )
 {
 	IL_list_print ( func_get_by_index ( func_get_index_by_name ( func_name ) ) );
 
 }
 
-//´´½¨±í´ïÊ½ĞÍ½Úµã
+/*åˆ›å»ºè¡¨è¾¾å¼å‹èŠ‚ç‚¹*/
 IL_node * IL_node_create_exp ( IL_exp * exp )
 {
 	IL_node * node= ( IL_node* ) malloc ( sizeof ( IL_node ) );
@@ -282,139 +283,155 @@ IL_node * IL_node_create_prnt ( )
 Var  IL_rt_element_to_array_ptr ( IL_element var, IL_node * tmp )
 {
 	if(var.type==ELEMENT_ARRAY)
+	{
+		Var a=vm_rt_stack_var_get ( var.index );
+        if ( a.content.type!=VAR_TYPE_TUPLE && a.content.type!=VAR_TYPE_VECTOR  )
 		{
-			Var a=vm_rt_stack_var_get ( var.index );
-			if ( a.content.type!=VAR_TYPE_ARRAY )
-				{
-					printf ( "error !!  none array var can use '['  ']' to access!\n " );
-					exit ( 0 );
-				}
-			else
-				{
-					//Ç°Ò»¸öÁÙÊ±±äÁ¿¼´ÎªÏÂ±ê
-					if(get_tmp(var.array_index).content.type==VAR_TYPE_INT)
-						{
-							Var result =array_GetValue(a,get_tmp(var.array_index).content.int_value);
-							return result;
-						}
-					else
-						{
-							printf("error !the array subscript must be integer!\n");
-							exit(0);
-						}
-				}
+			printf ( "error !!  none array var can use '['  ']' to access!\n " );
+			exit ( 0 );
 		}
+		else
+		{
+			/*å‰ä¸€ä¸ªä¸´æ—¶å˜é‡å³ä¸ºä¸‹æ ‡*/
+			if(get_tmp(var.array_index).content.type==VAR_TYPE_INT)
+			{
+                Var result;
+                if(a.content.type==VAR_TYPE_TUPLE)
+                {
+                  result =  tuple_GetValue(a,get_tmp(var.array_index).content.int_value);
+                }
+                else
+                {
+                    result =  vector_GetValue(a,get_tmp(var.array_index).content.int_value);
+                }
+				return result;
+			}
+			else
+			{
+				printf("error !the array subscript must be integer!\n");
+				exit(0);
+			}
+		}
+	}
 }
-//ÔÚÔËĞĞÊ±½«½Úµã¸ù¾İÆäÖ¸ÏòµÄÀà±ğ,×ª»»³ÉÊÊµ±µÄVarĞÍ±äÁ¿,Èç¹ûÊÇº¯ÊıÔòÎªÆä·µ»ØÖµ
+/*åœ¨è¿è¡Œæ—¶å°†èŠ‚ç‚¹æ ¹æ®å…¶æŒ‡å‘çš„ç±»åˆ«,è½¬æ¢æˆé€‚å½“çš„Varå‹å˜é‡,å¦‚æœæ˜¯å‡½æ•°åˆ™ä¸ºå…¶è¿”å›å€¼*/
 static Var IL_rt_element_to_var ( IL_element element, IL_node * tmp )
 {
 	Var result ;
 	result.content.real_value=0;
 	result.content.type=VAR_TYPE_REAL;
-	result.index=element.index;//±äÁ¿Ò²Òª´¢´æÆä×ÔÉíËùÔÚµÄË÷Òı,ÒòÎªÔÚÒıÓÃĞÍ±äÁ¿ÖĞ»áÊ¹ÓÃµ½
+	result.index=element.index;/*å˜é‡ä¹Ÿè¦å‚¨å­˜å…¶è‡ªèº«æ‰€åœ¨çš„ç´¢å¼•,å› ä¸ºåœ¨å¼•ç”¨å‹å˜é‡ä¸­ä¼šä½¿ç”¨åˆ°*/
 	switch ( element.type )
-		{
-		case ELEMENT_VAR:
-			result= vm_rt_stack_var_get ( element.index );
-			break;
-
-		case ELEMENT_NUM:
-			result= element.value;
-			break;
-
-		case ELEMENT_TMP:
-			result= get_tmp(element.index);
-			break;
-			//×ÔÖ¸Ïò
-		case ELEMENT_SELF:
-			result=self_ptr;
-			break;
-		case ELEMENT_API:
-		{
-
-			int old_index =env_index;
-			env_index =ENV_GLOBAL;
-			result = IL_CallFunc (element, element.index,FUNC_API );
-			env_index=old_index;
-			return result;
-
-		}
+	{
+	case ELEMENT_VAR:
+		result= vm_rt_stack_var_get ( element.index );
 		break;
-		case ELEMENT_STRUCT:
-		{
-			result.content.str=element.value.content.str;
-			result.content.type=VAR_TYPE_STRUCT_NAME;
-			return result;
-		}
-		break;
-		case ELEMENT_ARRAY:
-		{
-			Var a=vm_rt_stack_var_get ( element.index );
-			if ( a.content.type!=VAR_TYPE_ARRAY )
-				{
-					printf ( "error !!  none array element can use '['  ']' to access!\n " );
-					exit ( 0 );
-				}
-			else
-				{
-					//»ñµÃÏÂ±ê
-					if(get_tmp(element.array_index).content.type==VAR_TYPE_INT)
-						{
-							result=array_GetValue(a,get_tmp(element.array_index).content.int_value);
-						}
-					else
-						{
-							printf("error !the array subscript must be integer!\n");
-							exit(0);
-						}
-				}
-		}
-		break;
-		case ELEMENT_FUNC:
-		{
-			int old_index =env_index;
-			env_index =ENV_GLOBAL;
-			result = IL_CallFunc (element, element.index ,FUNC_NORMAL);
-			env_index =old_index;
-			return result;
-		}
-		break;
-		case ELEMENT_CALL_BY_PTR:
-		{
-			int old_index =env_index;
-			env_index =ENV_GLOBAL;
-			result = IL_CallFunc (element, vm_rt_stack_var_get(element.index).content.func.func_index, vm_rt_stack_var_get(element.index).content.func.func_type);
-			env_index =old_index;
-			return result;
-		}
-		break;
-		case ELEMENT_CALL_BY_MEMBER:
-		{
 
-			int old_index =env_index;
-
-			env_index=self_ptr.class_id;
-			result = IL_CallFunc (element,  get_tmp(element.index).content.func.func_index ,get_tmp(element.index).content.func.func_type);
-			env_index=old_index;
-			return result;
-		}
+	case ELEMENT_NUM:
+		result= element.value;
 		break;
-		default :
-			printf ( "can't resolve this element type : %d\n",element.type );
+
+	case ELEMENT_TMP:
+		result= get_tmp(element.index);
+		break;
+		/*è‡ªæŒ‡å‘*/
+	case ELEMENT_SELF:
+		result=self_ptr;
+		break;
+	case ELEMENT_API:
+	{
+
+		int old_index =env_index;
+		env_index =ENV_GLOBAL;
+		result = IL_CallFunc (element, element.index,FUNC_API );
+		env_index=old_index;
+		return result;
+
+	}
+	break;
+	case ELEMENT_STRUCT:
+	{
+		result.content.str=element.value.content.str;
+		result.content.type=VAR_TYPE_STRUCT_NAME;
+		return result;
+	}
+	break;
+	case ELEMENT_ARRAY:
+	{
+		Var a=vm_rt_stack_var_get ( element.index );
+        if ( a.content.type!=VAR_TYPE_TUPLE && a.content.type!=VAR_TYPE_VECTOR )
+		{
+			printf ( "error !!  none array element can use '['  ']' to access!\n " );
 			exit ( 0 );
-			return result;
 		}
+		else
+		{
+			/*è·å¾—ä¸‹æ ‡*/
+			if(get_tmp(element.array_index).content.type==VAR_TYPE_INT)
+			{
+                if(a.content.type==VAR_TYPE_TUPLE)
+                {
+result=tuple_GetValue(a,get_tmp(element.array_index).content.int_value);
+                }
+                else
+                {
+result=vector_GetValue (a,get_tmp(element.array_index).content.int_value);
+                }
+
+			}
+			else
+			{
+				printf("error !the array subscript must be integer!\n");
+				exit(0);
+			}
+		}
+	}
+	break;
+	case ELEMENT_FUNC:
+	{
+		int old_index =env_index;
+		env_index =ENV_GLOBAL;
+		result = IL_CallFunc (element, element.index ,FUNC_NORMAL);
+		env_index =old_index;
+		return result;
+	}
+	break;
+	case ELEMENT_CALL_BY_PTR:
+	{
+		int old_index =env_index;
+		env_index =ENV_GLOBAL;
+		result = IL_CallFunc (element, vm_rt_stack_var_get(element.index).content.func.func_index, vm_rt_stack_var_get(element.index).content.func.func_type);
+		env_index =old_index;
+		return result;
+	}
+	break;
+	case ELEMENT_CALL_BY_MEMBER:
+	{
+
+		int old_index =env_index;
+
+		env_index=self_ptr.class_id;
+		result = IL_CallFunc (element,  get_tmp(element.index).content.func.func_index ,get_tmp(element.index).content.func.func_type);
+		env_index=old_index;
+		return result;
+	}
+	break;
+	default :
+		printf ( "can't resolve this element type : %d\n",element.type );
+		exit ( 0 );
+		return result;
+	}
 	result.index=element.index;
 	return result;
 }
 
 
 
-//ÔÚÔËĞĞÊ±½âÎö½ÚµãµÄ¼Ó·¨ÔËËã
+/*åœ¨è¿è¡Œæ—¶è§£æèŠ‚ç‚¹çš„åŠ æ³•è¿ç®—*/
 static void rt_eval_plus ( IL_node *tmp )
 {
 	Var value_a,value_b;
-	//¸ù¾İÕ»ÖĞµÄº¯Êıµ÷ÓÃÇé¿ö»ñÈ¡Õ»ÖĞ¾ø¶Ô¶¨Î»ÏÂµÄ±äÁ¿
+	/*æ ¹æ®æ ˆä¸­çš„å‡½æ•°è°ƒç”¨æƒ…å†µè·å–æ ˆä¸­ç»å¯¹å®šä½ä¸‹çš„å˜é‡*/
 	value_a=IL_rt_element_to_var ( tmp->exp->A,tmp );
 
 	value_b=IL_rt_element_to_var ( tmp->exp->B,tmp );
@@ -422,45 +439,45 @@ static void rt_eval_plus ( IL_node *tmp )
 	set_tmp(tmp->exp->tmp_index,last_tmp_value);
 }
 
-//ÔÚÔËĞĞÊ±½âÎö¶ÔÏó³ÉÔ±Ö¸ÏòÔËËã
+/*åœ¨è¿è¡Œæ—¶è§£æå¯¹è±¡æˆå‘˜æŒ‡å‘è¿ç®—*/
 static void rt_eval_point_to(IL_node *tmp)
 {
 	if(tmp->exp->A.type!=ELEMENT_VAR && tmp->exp->A.type!=ELEMENT_STRUCT && tmp->exp->A.type!=ELEMENT_API && tmp->exp->A.type!=ELEMENT_SELF &&  tmp->exp->A.type!=ELEMENT_TMP)
-		{
-			printf("doesn't support this kind of point operate,A : index %d    type %d \n",tmp->exp->tmp_index,tmp->exp->A.type);
-			exit(0);
-		}
+	{
+		printf("doesn't support this kind of point operate,A : index %d    type %d \n",tmp->exp->tmp_index,tmp->exp->A.type);
+		exit(0);
+	}
 	Var value_a,value_b;
 	value_a=IL_rt_element_to_var ( tmp->exp->A,tmp );
 	value_b=IL_rt_element_to_var ( tmp->exp->B,tmp );
-	if(value_a.content.type==VAR_TYPE_STRUCT_NAME) //Àà³ÉÔ±
-		{
-			last_tmp_value=var_point_to ( value_a,value_b );
-			last_tmp_value.address=GetPrototypeMemberAddress(value_a.content.str,value_b.content.str);
-			//Àà³ÉÔ±£¬selfÖ¸ÕëÊ§Ğ§£¬Í¬Ê±»·¾³Ë÷Òı±äÎªÈ«¾Ö
-			self_ptr.class_id=env_index;
-			self_ptr.content.type=VAR_TYPE_VOID;
-		}
-	else //¶ÔÏó³ÉÔ±
-		{
+	if(value_a.content.type==VAR_TYPE_STRUCT_NAME) /*ç±»æˆå‘˜*/
+	{
+		last_tmp_value=var_point_to ( value_a,value_b );
+		last_tmp_value.address=GetPrototypeMemberAddress(value_a.content.str,value_b.content.str);
+		/*ç±»æˆå‘˜ï¼ŒselfæŒ‡é’ˆå¤±æ•ˆï¼ŒåŒæ—¶ç¯å¢ƒç´¢å¼•å˜ä¸ºå…¨å±€*/
+		self_ptr.class_id=env_index;
+		self_ptr.content.type=VAR_TYPE_NILL;
+	}
+	else /*å¯¹è±¡æˆå‘˜*/
+	{
 
-			//ÅĞ¶Ï·ÃÎÊĞÔ
-			int acc=get_accessbility_of_member(value_a.class_id,get_index_of_member(value_a.class_id,value_b.content.str));
-			if(acc!=CLASS_PUBLIC && env_index != value_a.class_id)//·Ç¹«ÓĞÇÒÔÚÍâ²¿
-				{
-					printf("private or sealed member cannot be assinged outside\n");
-					exit(0);
-				}
-			last_tmp_value=var_point_to ( value_a,value_b );
-			//ÉèÖÃselfÖ¸Õë
-			self_ptr= value_a;
-			//Ö¸Ïò³ÉÔ±µÄÔËËãµÄ½á¹ûÎªÆä³ÉÔ±µÄµØÖ·
-			last_tmp_value.address=GetObjectMemberAddress(value_a.content.handle_value,get_index_of_member(value_a.class_id,value_b.content.str));
+		/*åˆ¤æ–­è®¿é—®æ€§*/
+		int acc=get_accessbility_of_member(value_a.class_id,get_index_of_member(value_a.class_id,value_b.content.str));
+		if(acc!=STRUCT_PUBLIC && env_index != value_a.class_id)/*éå…¬æœ‰ä¸”åœ¨å¤–éƒ¨*/
+		{
+			printf("private or sealed member cannot be assinged outside\n");
+			exit(0);
 		}
+		last_tmp_value=var_point_to ( value_a,value_b );
+		/*è®¾ç½®selfæŒ‡é’ˆ*/
+		self_ptr= value_a;
+		/*æŒ‡å‘æˆå‘˜çš„è¿ç®—çš„ç»“æœä¸ºå…¶æˆå‘˜çš„åœ°å€*/
+		last_tmp_value.address=GetObjectMemberAddress(value_a.content.handle_value,get_index_of_member(value_a.class_id,value_b.content.str));
+	}
 	set_tmp(tmp->exp->tmp_index,last_tmp_value);
 }
 
-//ÔÚÔËĞĞÊ±½âÎö½ÚµãµÄ³Ë·¨ÔËËã
+/*åœ¨è¿è¡Œæ—¶è§£æèŠ‚ç‚¹çš„ä¹˜æ³•è¿ç®—*/
 static void rt_eval_mutiple ( IL_node *tmp )
 {
 	Var value_a,value_b;
@@ -472,7 +489,7 @@ static void rt_eval_mutiple ( IL_node *tmp )
 
 
 
-//ÔÚÔËĞĞÊ±½âÎö½ÚµãµÄ¼õ·¨ÔËËã
+/*åœ¨è¿è¡Œæ—¶è§£æèŠ‚ç‚¹çš„å‡æ³•è¿ç®—*/
 static void rt_eval_minus ( IL_node *tmp )
 {
 	Var value_a,value_b;
@@ -482,7 +499,7 @@ static void rt_eval_minus ( IL_node *tmp )
 	set_tmp(tmp->exp->tmp_index,last_tmp_value);
 
 }
-//ÔÚÔËĞĞÊ±½âÎö½ÚµãµÄ³ı·¨ÔËËã
+/*åœ¨è¿è¡Œæ—¶è§£æèŠ‚ç‚¹çš„é™¤æ³•è¿ç®—*/
 static void rt_eval_divide ( IL_node *tmp )
 {
 	Var value_a,value_b;
@@ -492,14 +509,14 @@ static void rt_eval_divide ( IL_node *tmp )
 	set_tmp(tmp->exp->tmp_index,last_tmp_value);
 }
 
-//ÔÚÔËĞĞÊ±½âÎö½ÚµãµÄÒıÓÃÔËËã
+/*åœ¨è¿è¡Œæ—¶è§£æèŠ‚ç‚¹çš„å¼•ç”¨è¿ç®—*/
 static void rt_eval_ref ( IL_node *tmp )
 {
 	Var value_a;
 	value_a=IL_rt_element_to_var ( tmp->exp->A,tmp );
 	Var result;
 	result.content.type=VAR_TYPE_REF;
-	result.content.handle_value=vm_get_absolutely ( value_a.index )  ;
+	result.content.handle_value=vm_GetAbs ( value_a.index )  ;
 	set_tmp(tmp->exp->tmp_index,result);
 }
 
@@ -588,67 +605,123 @@ static void rt_eval_or ( IL_node *tmp )
 static Var assign_get(Var a,Var b,int mode)
 {
 	switch(mode)
-		{
-		case '=':
-			return b;
-			break;
-		case OP_ASSIGN_PLUS:
-			return var_add(a,b);
-			break;
-		case OP_ASSIGN_DIVIDE:
-			return var_divide(a,b);
-			break;
-		case OP_ASSIGN_MINUS:
-			return  var_minus(a,b);
-			break;
-		case OP_ASSIGN_MULTIPLE:
-			return var_multiple(a,b);
-			break;
-		}
+	{
+	case '=':
+		return b;
+		break;
+	case OP_ASSIGN_PLUS:
+		return var_add(a,b);
+		break;
+	case OP_ASSIGN_DIVIDE:
+		return var_divide(a,b);
+		break;
+	case OP_ASSIGN_MINUS:
+		return  var_minus(a,b);
+		break;
+	case OP_ASSIGN_MULTIPLE:
+		return var_multiple(a,b);
+		break;
+	}
 }
+
 static void rt_eval_assign ( IL_node *tmp ,int mode)
 {
 
-	if ( tmp->exp->A.type==ELEMENT_VAR //¾Ö²¿±äÁ¿
-			||tmp->exp->A.type==ELEMENT_ARRAY //Êı×é±äÁ¿
-			||(tmp->exp->A.type==ELEMENT_TMP && get_tmp(tmp->exp->A.index).address)) //¶ÔÏó³ÉÔ±
-		{
-		}
+	if ( tmp->exp->A.type==ELEMENT_VAR /*å±€éƒ¨å˜é‡*/
+			||tmp->exp->A.type==ELEMENT_ARRAY /*æ•°ç»„å˜é‡*/
+			||(tmp->exp->A.type==ELEMENT_TMP && get_tmp(tmp->exp->A.index).address)) /*å¯¹è±¡æˆå‘˜*/
+	{
+	}
 	else
-		{
-			printf ( "only var can BE l-value!!%d \n ",tmp->exp->A.type );
-			exit ( 0 );
-		}
+	{
+		printf ( "only var can BE l-value!!%d \n ",tmp->exp->A.type );
+		exit ( 0 );
+	}
 	Var	value_b;
 	value_b=IL_rt_element_to_var ( tmp->exp->B,tmp );
 
 	switch (tmp->exp->A.type)
-		{
-			//ÎªÊı×éÔªËØ¸³Öµ
-		case ELEMENT_ARRAY:
-		{
-			Var result =	assign_get(IL_rt_element_to_array_ptr(tmp->exp->A,tmp),value_b,mode);
-			Var var_obj=vm_rt_stack_var_get( tmp->exp->A.index);
-			array_SetValue(var_obj,get_tmp(tmp->exp->A.array_index).content.int_value,result);
-		}
-		break;
+	{
+		/*ä¸ºæ•°ç»„å…ƒç´ èµ‹å€¼*/
+	case ELEMENT_ARRAY:
+	{
+        Var var_array=vm_rt_stack_var_get( tmp->exp->A.index);
+        int array_type=var_GetType (var_array);
+        Var l_value;
+        if(array_type==VAR_TYPE_TUPLE)
+        {
+         l_value=tuple_GetValue(var_array,get_tmp(tmp->exp->A.array_index).content.int_value);
+        }
+        else if(array_type==VAR_TYPE_VECTOR )
+        {
+            l_value=vector_GetValue(var_array,get_tmp(tmp->exp->A.array_index).content.int_value);
+        }
+		int l_t=var_GetType(l_value);
+		Var r_value =assign_get(IL_rt_element_to_array_ptr(tmp->exp->A,tmp),value_b,mode);
+		int r_t=var_GetType(r_value);
 
-		case ELEMENT_VAR:
-			vm_rt_stack_var_set ( tmp->exp->A.index,assign_get(vm_rt_stack_var_get(tmp->exp->A.index),value_b,mode) );
-			break;
-		case ELEMENT_TMP:  //Îª¶ÔÏóµÄ³ÉÔ±¸³Öµ
+        if(r_t==VAR_TYPE_HANDLE || r_t==VAR_TYPE_TUPLE ||r_t==VAR_TYPE_VECTOR)
 		{
-			Var* member=(Var *) (get_tmp(tmp->exp->A.index).address);
-			Var resource=assign_get((*member),value_b,mode);
-			(*member).content=resource.content;
-			(*member).content.type=resource.content.type;
-			Var  a= get_tmp(tmp->exp->A.index);
-			//ÓÃÍêÖ®ºó,ÂíÉÏ°ÑÁÙÊ±±äÁ¿±íµÄµØÖ·¸øÄ¨È¥,·ÀÖ¹°ÑÆäËû±äÁ¿µ±³É¶ÔÏó
-			a.address=NULL;
-			set_tmp(tmp->exp->A.index,a);
+			RefCountIncrease(r_t,r_value.content.handle_value);
 		}
-		break;
+        if(l_t==VAR_TYPE_HANDLE || r_t==VAR_TYPE_TUPLE ||r_t==VAR_TYPE_VECTOR)
+		{
+			RefCountDecrease(l_t,l_value.content.handle_value);
 		}
+        if(array_type==VAR_TYPE_TUPLE)
+        {
+         tuple_SetValue(var_array,get_tmp(tmp->exp->A.array_index).content.int_value,r_value);
+        }
+        else if(array_type==VAR_TYPE_VECTOR )
+        {
+            vector_SetValue (var_array,get_tmp(tmp->exp->A.array_index).content.int_value,r_value);
+        }
+
+	}
+	break;
+	/*ä¸ºå˜é‡èµ‹å€¼*/
+	case ELEMENT_VAR:
+	{
+		Var r_value=assign_get(vm_rt_stack_var_get(tmp->exp->A.index),value_b,mode);
+		Var l_value=vm_rt_stack_var_get(tmp->exp->A.index);
+		int l_t=var_GetType(l_value);
+		int r_t=var_GetType(r_value);
+
+        if(r_t==VAR_TYPE_HANDLE || r_t==VAR_TYPE_TUPLE || r_t==VAR_TYPE_VECTOR)
+		{
+			RefCountIncrease(r_t,r_value.content.handle_value);
+		}
+        if(l_t==VAR_TYPE_HANDLE || l_t==VAR_TYPE_TUPLE || l_t==VAR_TYPE_VECTOR)
+		{
+			RefCountDecrease(l_t,l_value.content.handle_value);
+		}
+		vm_rt_stack_var_set (tmp->exp->A.index ,r_value);
+	}
+	break;
+	case ELEMENT_TMP:  /*ä¸ºå¯¹è±¡çš„æˆå‘˜èµ‹å€¼*/
+	{
+		Var* member=(Var *) (get_tmp(tmp->exp->A.index).address);
+		Var l_value= (*member);
+		Var r_value=assign_get((*member),value_b,mode);
+		int l_t=var_GetType(l_value);
+		int r_t=var_GetType(r_value);
+
+        if(r_t==VAR_TYPE_HANDLE || r_t==VAR_TYPE_TUPLE ||r_t==VAR_TYPE_VECTOR )
+		{
+			RefCountIncrease(r_t,r_value.content.handle_value);
+		}
+        if(l_t==VAR_TYPE_HANDLE || l_t==VAR_TYPE_TUPLE ||l_t==VAR_TYPE_VECTOR )
+		{
+			RefCountDecrease(l_t,l_value.content.handle_value);
+		}
+		(*member)=r_value;
+		Var  a= get_tmp(tmp->exp->A.index);
+		/*ç”¨å®Œä¹‹å,é©¬ä¸ŠæŠŠä¸´æ—¶å˜é‡è¡¨çš„åœ°å€ç»™æŠ¹å»,é˜²æ­¢æŠŠå…¶ä»–å˜é‡å½“æˆå¯¹è±¡*/
+		a.address=NULL;
+		set_tmp(tmp->exp->A.index,a);
+	}
+	break;
+	}
 	last_tmp_value=value_b;
 	set_tmp(tmp->exp->tmp_index,last_tmp_value);
 
@@ -658,217 +731,227 @@ static void rt_eval_assign ( IL_node *tmp ,int mode)
 static void handle_exp ( IL_node *tmp )
 {
 	switch ( tmp->exp->op )
-		{
-		case '+':
+	{
+	case '+':
 
-			rt_eval_plus ( tmp );
-			break;
-		case '-':
-			rt_eval_minus ( tmp );
-			break;
-		case '*':
-			rt_eval_mutiple ( tmp );
-			break;
-		case '/':
-			rt_eval_divide ( tmp );
-			break;
-		case '=':
-			rt_eval_assign ( tmp,tmp->exp->op);
-			break;
-		case '<':
-			rt_eval_less ( tmp );
-			break;
-		case '@':
-			rt_eval_ref ( tmp );
-			break;
-		case '>':
-			rt_eval_large ( tmp );
-			break;
+		rt_eval_plus ( tmp );
+		break;
+	case '-':
+		rt_eval_minus ( tmp );
+		break;
+	case '*':
+		rt_eval_mutiple ( tmp );
+		break;
+	case '/':
+		rt_eval_divide ( tmp );
+		break;
+	case '=':
+		rt_eval_assign ( tmp,tmp->exp->op);
+		break;
+	case '<':
+		rt_eval_less ( tmp );
+		break;
+	case '@':
+		rt_eval_ref ( tmp );
+		break;
+	case '>':
+		rt_eval_large ( tmp );
+		break;
 
-		case OP_EQUAL:
-			rt_eval_equal ( tmp );
-			break;
-		case OP_NOT_EQUAL:
-			rt_eval_not_equal ( tmp );
-			break;
-		case OP_LARGE_OR_EQUAL:
-			rt_eval_large_or_equal ( tmp );
-			break;
-		case OP_LESS_OR_EQUAL:
-			rt_eval_less_or_equal ( tmp );
-			break;
-		case OP_ASSIGN_PLUS:
-			rt_eval_assign ( tmp,tmp->exp->op);
-			break;
-		case OP_ASSIGN_MINUS:
-			rt_eval_assign ( tmp,tmp->exp->op);
-			break;
-		case OP_ASSIGN_MULTIPLE:
-			rt_eval_assign ( tmp,tmp->exp->op);
-			break;
-		case OP_ASSIGN_DIVIDE:
-			rt_eval_assign ( tmp,tmp->exp->op);
-			break;
-		case OP_AND:
-			rt_eval_and ( tmp );
-			break;
-		case OP_OR:
-			rt_eval_or ( tmp );
-			break;
-		case '.':
-			rt_eval_point_to(tmp);
-			break;
-		}
+	case OP_EQUAL:
+		rt_eval_equal ( tmp );
+		break;
+	case OP_NOT_EQUAL:
+		rt_eval_not_equal ( tmp );
+		break;
+	case OP_LARGE_OR_EQUAL:
+		rt_eval_large_or_equal ( tmp );
+		break;
+	case OP_LESS_OR_EQUAL:
+		rt_eval_less_or_equal ( tmp );
+		break;
+	case OP_ASSIGN_PLUS:
+		rt_eval_assign ( tmp,tmp->exp->op);
+		break;
+	case OP_ASSIGN_MINUS:
+		rt_eval_assign ( tmp,tmp->exp->op);
+		break;
+	case OP_ASSIGN_MULTIPLE:
+		rt_eval_assign ( tmp,tmp->exp->op);
+		break;
+	case OP_ASSIGN_DIVIDE:
+		rt_eval_assign ( tmp,tmp->exp->op);
+		break;
+	case OP_AND:
+		rt_eval_and ( tmp );
+		break;
+	case OP_OR:
+		rt_eval_or ( tmp );
+		break;
+	case '.':
+		rt_eval_point_to(tmp);
+		break;
+	}
 
 }
-//Ö´ĞĞ´òÓ¡½Úµã
+/*æ‰§è¡Œæ‰“å°èŠ‚ç‚¹*/
 void ExecPrintNode(Var the_var)
 {
 	switch ( the_var.content.type )
+	{
+	case VAR_TYPE_INT:
+		printf ( "%d\n",the_var.content.int_value );
+		break;
+	case VAR_TYPE_REAL:
+		printf ( "%g\n",the_var.content.real_value );
+		break;
+	case VAR_TYPE_BOOL:
+		if ( the_var.content.bool_value!=0 )
 		{
-		case VAR_TYPE_INT:
-			printf ( "%d\n",the_var.content.int_value );
-			break;
-		case VAR_TYPE_REAL:
-			printf ( "%g\n",the_var.content.real_value );
-			break;
-		case VAR_TYPE_BOOL:
-			if ( the_var.content.bool_value!=0 )
-				{
-					printf ( "true\n" );
-				}
-			else
-				{
-					printf ( "false\n" );
-				}
-			break;
-		case VAR_TYPE_STR:
-			printf ( "%s\n",the_var.content.str );
-			break;
-		case VAR_TYPE_REF:
-			printf ( "ref to %d  type :ref \n",the_var.content.handle_value );
-			break;
-		case VAR_TYPE_ARRAY:
-			printf ( "handle of %d  type :array \n",the_var.content.handle_value);
-			break;
-		case VAR_TYPE_HANDLE:
-			printf ( "handle %d \n",the_var.content.handle_value);
-			break;
-		default:
-			printf("print doesn't support,type: %d \n",var_GetType(the_var));
-			break;
+			printf ( "true\n" );
 		}
+		else
+		{
+			printf ( "false\n" );
+		}
+		break;
+    case VAR_TYPE_MESSAGE:
+		printf ( "%s\n",the_var.content.str );
+		break;
+	case VAR_TYPE_REF:
+		printf ( "ref to %d  type :ref \n",the_var.content.handle_value );
+		break;
+	case VAR_TYPE_HANDLE:
+		printf ( "handle %d \n",the_var.content.handle_value);
+		break;
+	case VAR_TYPE_NILL:
+		printf("NILL\n");
+		break;
+    case VAR_TYPE_CHAR:
+        printf("%c\n",the_var.content.char_value);
+        break;
+    case VAR_TYPE_VECTOR:
+        vector_Print(the_var);
+        break;
+    case VAR_TYPE_TUPLE:
+        printf("tuple %d\n",the_var.content.handle_value);
+        break;
+	default:
+		printf("print doesn't support,type: %d \n",var_GetType(the_var));
+		break;
+	}
 }
 
-//Ö´ĞĞÖĞ¼ä´úÂë,ÊäÈëÒ»ÕÅÖĞ¼ä´úÂë±í
+/*æ‰§è¡Œä¸­é—´ä»£ç ,è¾“å…¥ä¸€å¼ ä¸­é—´ä»£ç è¡¨*/
 Var IL_exec ( Function *func )
 {
-	//¼ÇÂ¼µ±Ç°º¯ÊıËùĞèµÄ±äÁ¿ÊıÁ¿,Îª¼ÆËãÆäÇ¶Ì×µ÷ÓÃº¯ÊıÊ±,ĞéÄâ»ú±äÁ¿µÄÆ«ÒÆÁ¿
-	vm_stack_layer[vm_stack_index]=func->var_counts;
+	/*è®°å½•å½“å‰å‡½æ•°æ‰€éœ€çš„å˜é‡æ•°é‡,ä¸ºè®¡ç®—å…¶åµŒå¥—è°ƒç”¨å‡½æ•°æ—¶,è™šæ‹Ÿæœºå˜é‡çš„åç§»é‡*/
+
+	vm_SetLayerVarAmount(vm_GetCurrentLayer() ,func->var_counts);
 	IL_node * tmp;
 	tmp=func->list.head;
 	current_list=&func->list;
 	while ( tmp!=NULL )
+	{
+		switch ( tmp->type )
 		{
-			switch ( tmp->type )
+		case IL_NODE_PRNT:
+			ExecPrintNode(last_tmp_value);
+			break;
+		case IL_NODE_EXP:
+			handle_exp ( tmp );
+			break;
+		case IL_NODE_RETURN:
+			return last_tmp_value;
+			break;
+		case IL_NODE_JMP:
+		{
+			int label=tmp->jmp->label;
+			IL_node * node = tmp->next;
+			while ( 1 )
+			{
+				if ( (node->type==IL_NODE_LAB) && (node->jmp->label==label ) )
 				{
-				case IL_NODE_PRNT:
-					ExecPrintNode(last_tmp_value);
 					break;
-				case IL_NODE_EXP:
-					handle_exp ( tmp );
-					break;
-				case IL_NODE_RETURN:
-					return last_tmp_value;
-					break;
-				case IL_NODE_JMP:
-				{
-					int label=tmp->jmp->label;
-					IL_node * node = tmp->next;
-					while ( 1 )
-						{
-							if ( (node->type==IL_NODE_LAB) && (node->jmp->label==label ) )
-								{
-									break;
-								}
-							node=node->next;
-						}
-					tmp =node;
 				}
-				break;
-				case IL_NODE_JE:
-				{
-					int can_jmp=0;
-					switch ( last_tmp_value.content.type )
-						{
-						case VAR_TYPE_INT:
-							if ( last_tmp_value.content.int_value==0 )
-								can_jmp=1;
-							break;
-						case VAR_TYPE_REAL:
-							if ( last_tmp_value.content.real_value==0 )
-								can_jmp=1;
-							break;
-						case VAR_TYPE_BOOL:
-							if ( last_tmp_value.content.bool_value==0 )
-								can_jmp=1;
-							break;
-						}
-
-					if ( can_jmp==1 )
-						{
-							int label =tmp->jmp->label;
-							IL_node * node= tmp->next;
-							while ( 1 )
-								{
-									if ( (node->type==IL_NODE_LAB )&& (node->jmp->label==label)  )
-										{
-											break;
-										}
-									node=node->next;
-								}
-							tmp =node;
-						}
-				}
-				break;
-				case IL_NODE_JNE:
-				{
-					int can_jmp=0;
-					switch ( last_tmp_value.content.type )
-						{
-						case VAR_TYPE_INT:
-							if ( last_tmp_value.content.int_value!=0 )
-								can_jmp=1;
-							break;
-						case VAR_TYPE_REAL:
-							if ( last_tmp_value.content.real_value!=0 )
-								can_jmp=1;
-							break;
-						case VAR_TYPE_BOOL:
-							if ( last_tmp_value.content.bool_value!=0 )
-								can_jmp=1;
-							break;
-						}
-					if ( can_jmp==1 )
-						{
-							int label = tmp->jmp->label;
-							IL_node * node=tmp->pre;
-							while ( 1 )
-								{
-									if ( (node->type==IL_NODE_LAB) &&(node->jmp->label==label))
-										{
-											break;
-										}
-									node=node->pre;
-								}
-							tmp=node;
-						}
-
-				}
-				break;
-				}
-			tmp=tmp->next;
+				node=node->next;
+			}
+			tmp =node;
 		}
+		break;
+		case IL_NODE_JE:
+		{
+			int can_jmp=0;
+			switch ( last_tmp_value.content.type )
+			{
+			case VAR_TYPE_INT:
+				if ( last_tmp_value.content.int_value==0 )
+					can_jmp=1;
+				break;
+			case VAR_TYPE_REAL:
+				if ( last_tmp_value.content.real_value==0 )
+					can_jmp=1;
+				break;
+			case VAR_TYPE_BOOL:
+				if ( last_tmp_value.content.bool_value==0 )
+					can_jmp=1;
+				break;
+			}
+
+			if ( can_jmp==1 )
+			{
+				int label =tmp->jmp->label;
+				IL_node * node= tmp->next;
+				while ( 1 )
+				{
+					if ( (node->type==IL_NODE_LAB )&& (node->jmp->label==label)  )
+					{
+						break;
+					}
+					node=node->next;
+				}
+				tmp =node;
+			}
+		}
+		break;
+		case IL_NODE_JNE:
+		{
+			int can_jmp=0;
+			switch ( last_tmp_value.content.type )
+			{
+			case VAR_TYPE_INT:
+				if ( last_tmp_value.content.int_value!=0 )
+					can_jmp=1;
+				break;
+			case VAR_TYPE_REAL:
+				if ( last_tmp_value.content.real_value!=0 )
+					can_jmp=1;
+				break;
+			case VAR_TYPE_BOOL:
+				if ( last_tmp_value.content.bool_value!=0 )
+					can_jmp=1;
+				break;
+			}
+			if ( can_jmp==1 )
+			{
+				int label = tmp->jmp->label;
+				IL_node * node=tmp->pre;
+				while ( 1 )
+				{
+					if ( (node->type==IL_NODE_LAB) &&(node->jmp->label==label))
+					{
+						break;
+					}
+					node=node->pre;
+				}
+				tmp=node;
+			}
+
+		}
+		break;
+		}
+		tmp=tmp->next;
+	}
 
 	{
 		Var result;
@@ -879,49 +962,57 @@ Var IL_exec ( Function *func )
 }
 
 
-//º¯ÊıµÄµ÷ÓÃ
+/*å‡½æ•°çš„è°ƒç”¨*/
 Var IL_CallFunc (IL_element element, int f_index,int mode)
 {
 
 	Var result;
-	if(mode==FUNC_NORMAL)//ÆÕÍ¨µÄ½Å±¾º¯Êıµ÷ÓÃ
+	if(mode==FUNC_NORMAL)/*æ™®é€šçš„è„šæœ¬å‡½æ•°è°ƒç”¨*/
+	{
+		Function * f =func_get_by_index ( f_index);
+		/*æ£€æŸ¥æ‰§è¡Œæ—¶åˆ»çš„å‚æ•°æ˜¯å¦ä¸æ‰€å¯¹åº”çš„å‡½æ•°çš„å‚æ•°æ•°ç›®ç›¸ç¬¦*/
+		if(f->arg_counts!=element.value.content.func.args)
 		{
-			Function * f =func_get_by_index ( f_index);
-			//¼ì²éÖ´ĞĞÊ±¿ÌµÄ²ÎÊıÊÇ·ñÓëËù¶ÔÓ¦µÄº¯ÊıµÄ²ÎÊıÊıÄ¿Ïà·û
-			if(f->arg_counts!=element.value.content.func.args)
-				{
-					PRINT("heheheh");
-					printf("error,%s  the args count is not match ĞÎÊ½£º%d Êµ¼Ê£º%d\n",f->name,f->arg_counts,element.value.content.func.args);
-					exit(0);
-				}
-			int i=0;
-			i=element.value.content.func.args;
-			vm_rt_stack_push();
-			//»ØËİÌí¼Ó²ÎÊı,²¢°Ñµ±Ç°²ãµÄ¿ªÍ·µÄÏàÓ¦µÄ
-			//¾Ö²¿±äÁ¿¸³ÖµÎª´Ë
-			for ( i=0;
-					i<element.value.content.func.args;
-					i++)
-				{
-					//Îªº¯ÊıµÄ²ÎÊı¸³Öµ
-					vm_rt_stack_var_set ( i,get_tmp(element.function_indexs[i]));
-				}
-			//±£´æµ±Ç°µÄ±í»·¾³
-			IL_list * old_list =current_list;
-			result =func_invoke ( f_index);
-			current_list=old_list;
-			//º¯ÊıµÄÕ»µ¯³ö
-			vm_rt_stack_pop();
+			printf("error,%s  the args count is not match å½¢å¼ï¼š%d å®é™…ï¼š%d\n",f->name,f->arg_counts,element.value.content.func.args);
+			exit(0);
 		}
-	else if(mode==FUNC_API)//APIº¯Êıµ÷ÓÃÇé¿ö
+		int i=0;
+		i=element.value.content.func.args;
+		vm_RTstackPush();
+		/*å›æº¯æ·»åŠ å‚æ•°,å¹¶æŠŠå½“å‰å±‚çš„å¼€å¤´çš„ç›¸åº”çš„*/
+		/*å±€éƒ¨å˜é‡èµ‹å€¼ä¸ºæ­¤*/
+		for ( i=0;
+				i<element.value.content.func.args;
+				i++)
 		{
-			int i=0;
-			for ( i=0; i<element.value.content.func.args; i++ )
-				{
-					API_argument_list[i]=get_tmp(element.function_indexs[i]);
-				}
-			API_SetArgCount(element.value.content.func.args);
-			return API_InovkeByIndex ( f_index);
+			Var source=get_tmp(element.function_indexs[i]);
+			int r_t=var_GetType(source);
+			/*ä¸ºå‡½æ•°çš„å‚æ•°èµ‹å€¼*/
+            if(r_t==VAR_TYPE_TUPLE  || r_t==VAR_TYPE_VECTOR|| r_t==VAR_TYPE_HANDLE)/*è‹¥å³å€¼ä¸ºå¼•ç”¨å‹å¼•ç”¨è®¡æ•°è‡ªå¢*/
+			{
+				RefCountIncrease(r_t,source.content.handle_value);
+			}
+			vm_rt_stack_var_set ( i,source);
 		}
+		/*ä¿å­˜å½“å‰çš„è¡¨ç¯å¢ƒ*/
+		IL_list * old_list =current_list;
+		result =func_invoke ( f_index);
+		current_list=old_list;
+		/*å‡½æ•°çš„æ ˆå¼¹å‡º*/
+		vm_RTstackPop();
+	}
+	else if(mode==FUNC_API)/*APIå‡½æ•°è°ƒç”¨æƒ…å†µ*/
+	{
+
+		int i=0;
+		for ( i=0; i<element.value.content.func.args; i++ )
+		{
+			API_argument_list[i]=get_tmp(element.function_indexs[i]);
+		}
+		API_SetArgCount(element.value.content.func.args);
+		Var return_value=API_InovkeByIndex ( f_index);
+
+		return return_value;
+	}
 	return result;
 }

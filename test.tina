@@ -1,5 +1,4 @@
-function  main()
+function main()
 {
-var tzw=array(10);
-print tzw[200];
+print "hello world";
 }

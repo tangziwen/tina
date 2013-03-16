@@ -25,6 +25,10 @@ void loader_load_buf(const char * file_name)
 {
 	FILE * buffer_file;
 	buffer_file= fopen(file_name,"rb");
+    if(!buffer_file)
+    {
+        STOP("invalid file input!!!");
+    }
 	fseek(buffer_file,0,SEEK_END);
 	buffer_size =ftell(buffer_file);
 	rewind(buffer_file);
@@ -32,13 +36,13 @@ void loader_load_buf(const char * file_name)
 	{
 		int i;
 		for(i=0; !feof(buffer_file); i++)
+		{
+			fread(buffer+i,sizeof(char),1,buffer_file);
+			if(buffer[i]=='\r')
 			{
-				fread(buffer+i,sizeof(char),1,buffer_file);
-				if(buffer[i]=='\r')
-				{
-					buffer[i]=' ';
-				}
+				buffer[i]=' ';
 			}
+		}
 	}
 	buffer[buffer_size]='\0';
 }

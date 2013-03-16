@@ -1,4 +1,4 @@
-/************************************************************************************
+ï»¿/************************************************************************************
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
 as published by the Free Software Foundation; either
@@ -9,12 +9,12 @@ but WITHOUT ANY WARRANTY; without even the implied
 warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 PURPOSE.
 
-´Ë³ÌĞòÎª×ÔÓÉÈí¼ş,Äã¿ÉÒÔÔÚ×ñÑ­ÓÉ×ÔÓÉÈí¼ş»ù½ğ»á·¢²¼µÄGPL Í¨ÓÃ¹«¹²Ğí¿É
-Ö¤µÚÈı»ò¸ü¸ß°æ±¾µÄÔ¼ÊøÏÂÔÙ·¢²¼ºÍ(»ò)ĞŞ¸Ä
-(¶ÔGPLĞí¿ÉÖ¤µÄÏ¸½ÚÓĞÒÉÎÊ¿É²Î¿´Î»ÓÚgpl-CN.txtÀïµÄ·Ç¹Ù·½·­Òë)
+æ­¤ç¨‹åºä¸ºè‡ªç”±è½¯ä»¶,ä½ å¯ä»¥åœ¨éµå¾ªç”±è‡ªç”±è½¯ä»¶åŸºé‡‘ä¼šå‘å¸ƒçš„GPL é€šç”¨å…¬å…±è®¸å¯
+è¯ç¬¬ä¸‰æˆ–æ›´é«˜ç‰ˆæœ¬çš„çº¦æŸä¸‹å†å‘å¸ƒå’Œ(æˆ–)ä¿®æ”¹
+(å¯¹GPLè®¸å¯è¯çš„ç»†èŠ‚æœ‰ç–‘é—®å¯å‚çœ‹ä½äºgpl-CN.txté‡Œçš„éå®˜æ–¹ç¿»è¯‘)
 
-·¢²¼´Ë³ÌĞòÊÇÏ£ÍûËüÓĞÖúÓÚÄú,µ«ÊÇ×÷Õß¶ÔÆä²»×öÈÎºÎµ£±£,¼´Ê¹ÊÇÉÌÒµÉÏ»ò
-ºÏÓÚÌØ¶¨ÓÃÍ¾µÄÒşÊ½µ£±£ÒàÎŞ
+å‘å¸ƒæ­¤ç¨‹åºæ˜¯å¸Œæœ›å®ƒæœ‰åŠ©äºæ‚¨,ä½†æ˜¯ä½œè€…å¯¹å…¶ä¸åšä»»ä½•æ‹…ä¿,å³ä½¿æ˜¯å•†ä¸šä¸Šæˆ–
+åˆäºç‰¹å®šç”¨é€”çš„éšå¼æ‹…ä¿äº¦æ— 
 *********************tzw <tzwtangziwen@gmail.com>******************************/
 
 
@@ -24,98 +24,145 @@ PURPOSE.
 #include "var.h"
 #include <stdlib.h>
 #include <string.h>
-//Õ»ÇøÓÃÓÚÔÚÕæÕıÔËĞĞÊ±·ÖÅä¾Ö²¿±äÁ¿
-Var vm_stack_var[1024];
-//ÓÃÓÚ¼Ç×¡Ã¿Ò»²ãµÄÉî¶È,ÓĞÀûÓÚ»ØÊÕ
-int vm_stack_layer[128];
-int vm_stack_offset=0;
-int vm_stack_index=0;
+#include "script_struct.h"
+#include "script_tuple.h"
+#include "script_vec.h"
+#define MAX_LOCAL_VAR 1024
+#define MAX_LAYER 128
+/*æ ˆåŒºç”¨äºåœ¨çœŸæ­£è¿è¡Œæ—¶åˆ†é…å±€éƒ¨å˜é‡*/
+static Var local_var[MAX_LOCAL_VAR];
+/*ç”¨äºè®°ä½æ¯ä¸€å±‚çš„æ·±åº¦,æœ‰åˆ©äºå›æ”¶*/
+static int vm_stack_layer[MAX_LAYER];
+static int current_offset=0;
+static int current_layer=0;
+
+/*æ¸…é™¤å½“å‰å±‚æ‰€æœ‰çš„å±€éƒ¨å˜é‡çš„å€¼,
+è¿™äº›å±€éƒ¨å˜é‡å°†è¢«è®¾ä¸ºNilç±»å‹
+
+
+*/
+void CleanCurrentLocalVar()
+{
+	int i=current_offset;
+	for(; i<current_offset+vm_stack_layer[current_layer]; i++)
+	{
+		/*å¦‚æœä¸´æ—¶å˜é‡ç»´æŠ¤ä¸€ä¸ªå¼•ç”¨,åˆ™åœ¨æ¸…ç©ºå±€éƒ¨å˜é‡æ—¶,ä½¿å¼•ç”¨è®¡æ•°äº¦å‡ä¸€*/
+		int t=var_GetType(local_var[i]);
+        if(t==VAR_TYPE_TUPLE || t == VAR_TYPE_HANDLE)
+		{
+			RefCountDecrease(t,local_var[i].content.handle_value);
+		}
+		var_SetNil( &(local_var[i] ));
+	}
+}
+
+/*è·å–å½“å‰è¿è¡Œæ—¶,æ‰€æ‰§è¡Œçš„å±€éƒ¨å—å½“å‰å±‚æ•°*/
+int vm_GetCurrentLayer()
+{
+
+	return current_layer;
+}
 
 void vm_rt_stack_var_cast_set(int the_index,Var source)
 {
-	vm_stack_var[vm_stack_offset+the_index]=source;
+	local_var[current_offset+the_index]=source;
 }
 
+void vm_init()
+{
+	int i=0;
+	for(; i<MAX_LOCAL_VAR; i++)
+	{
+		var_SetNil( &(local_var[i] ));
+	}
+}
 
-//»ñµÃÖ¸¶¨Ë÷Òı´¦µÄÕ»¾Ö²¿±äÁ¿
+/*è®¾ç½®æŒ‡å®šå—å±‚æ¬¡çš„å±€éƒ¨å˜é‡æ•°ç›®*/
+void vm_SetLayerVarAmount(int index ,int amount)
+{
+	vm_stack_layer[index]=amount;
+}
+
+/*è·å¾—æŒ‡å®šç´¢å¼•å¤„çš„æ ˆå±€éƒ¨å˜é‡*/
 Var  vm_rt_stack_var_get(int the_index)
 {
-	return  vm_stack_var[vm_stack_offset+the_index];
+	return  local_var[current_offset+the_index];
 }
 
-//»ñµÃÖ¸¶¨Ë÷Òı´¦µÄÕ»¾Ö²¿±äÁ¿µÄÖ¸Õë
+/*è·å¾—æŒ‡å®šç´¢å¼•å¤„çš„æ ˆå±€éƒ¨å˜é‡çš„æŒ‡é’ˆ*/
 Var *  vm_rt_stack_var_get_ptr(int the_index)
 {
-	return  &(vm_stack_var[vm_stack_offset+the_index]);
+	return  &(local_var[current_offset+the_index]);
 }
 
-//ÔÚÔËĞĞÊ±ÉèÖÃĞéÄâ»úÖĞµÄÕ»±äÁ¿
+/*åœ¨è¿è¡Œæ—¶è®¾ç½®è™šæ‹Ÿæœºä¸­çš„æ ˆå˜é‡*/
 void vm_rt_stack_var_set ( int the_index,Var source )
 {
-	int dist_the_index=vm_get_absolutely(the_index);
-	//ÈôÓû±»¸³ÖµµÄ¶ÔÏóÊÇÒ»¸öÒıÓÃ,ÄÇÎÒÃÇÊµ¼ÊÉÏ¸Ä±äµÄÊÇÆäËùÖ¸ÏòµÄ±äÁ¿µÄÖµ
-	if ( vm_stack_var[dist_the_index].content.type==VAR_TYPE_REF )
-		{
-			Var * a=vm_rt_stack_var_get_abs ( vm_stack_var[dist_the_index].content.handle_value );
-			if ( source.content.type!=VAR_TYPE_REF )   //Ö»ÓĞ±»¸³ÖµµÄ¶ÔÏóÊÇÒıÓÃ
-				{
-					( *a ) =source;
-				}
-			else     //Á½Õß¶¼ÊÇÒıÓÃ
-				{
-					Var *b;
-					b =vm_rt_stack_var_get_abs ( source.content.handle_value );
-					( *a ) = ( *b );
-				}
-		}
-	else     //ÓÒÖµ²»ÊÇÒıÓÃµÄÇé¿ö
-		{
-			if(source.content.type!=VAR_TYPE_REF)
-				{
-					//ÓÒÖµÊÇÒ»¸ö×Ö·û´®£¿
-					if(source.content.type==VAR_TYPE_STR)
-						{
-							//Èç¹û×óÖµÒ²ÊÇ£¬ÄÇÃ´ĞèÒªÏÈÏú»ÙÔÙÊ¹ÓÃ
-							if(vm_stack_var[dist_the_index].content.type==VAR_TYPE_STR)
-								{
-									free(vm_stack_var[dist_the_index].content.str);
-								}
-							vm_stack_var[dist_the_index].content.str=malloc(strlen(source.content.str)+1);
-							strcpy(vm_stack_var[dist_the_index].content.str,source.content.str);
-						}
-					vm_stack_var[dist_the_index]=source;
-				}
-			else
-				{
-					Var *b;
-					b =vm_rt_stack_var_get_abs ( source.content.handle_value );
-					vm_stack_var[dist_the_index]=(*b);
-				}
-		}
+	int dist_the_index=vm_GetAbs(the_index);
+	int r_t=var_GetType(source);
+	local_var[dist_the_index]=source;
 }
 
-//´ÓĞéÄâ»úÖĞ»ñµÃµ±Ç°²ãÖ¸¶¨Ë÷ÒıµÄÕ»±äÁ¿µÄÖ¸Õë
-Var * vm_rt_stack_var_get_abs ( int the_index )
+/*ä»è™šæ‹Ÿæœºä¸­è·å¾—å½“å‰å±‚æŒ‡å®šç´¢å¼•çš„æ ˆå˜é‡çš„æŒ‡é’ˆ*/
+Var * vm_RTstackVarGetAbs ( int the_index )
 {
-	return & ( vm_stack_var[the_index] );
+	return & ( local_var[the_index] );
 }
 
-//Í¨¹ıµ±Ç°²ãµÄË÷ÒıÕÒµ½¸Ã¾Ö²¿±äÁ¿µÄ¾ø¶ÔË÷Òı
-int vm_get_absolutely ( int the_index )
+/*é€šè¿‡å½“å‰å±‚çš„ç´¢å¼•æ‰¾åˆ°è¯¥å±€éƒ¨å˜é‡çš„ç»å¯¹ç´¢å¼•*/
+int vm_GetAbs ( int the_index )
 {
-	return ( vm_stack_offset+the_index );
+	return ( current_offset+the_index );
 }
-//ÔËĞĞÊ±µÄÕ»¼ÓÉî
-void vm_rt_stack_push()
+/*è¿è¡Œæ—¶çš„æ ˆåŠ æ·±*/
+void vm_RTstackPush()
 {
-	vm_stack_offset+=vm_stack_layer[vm_stack_index];
-	vm_stack_index++;
+	current_offset+=vm_stack_layer[current_layer];
+	current_layer++;
 
 }
 
-//ÔËĞĞÊ±µÄÕ»µ¯³ö(Ïú»Ù)
-void vm_rt_stack_pop()
+/*è¿è¡Œæ—¶çš„æ ˆå¼¹å‡º(é”€æ¯)*/
+void vm_RTstackPop()
 {
-	vm_stack_index--;
-	vm_stack_offset-=vm_stack_layer[vm_stack_index];
+	current_layer--;
+	current_offset-=vm_stack_layer[current_layer];
+}
+void RefCountDecrease(int type,void * handle)
+{
+
+	switch(type)
+	{
+    case VAR_TYPE_TUPLE:
+        TupleRefCountDecrease(handle);
+		break;
+	case VAR_TYPE_HANDLE:
+		StructRefCountDecrease(handle);
+		break;
+    case VAR_TYPE_VECTOR:
+        VectorRefCountDecrease(handle);
+        break;
+	default:
+		STOP("error ref type");
+		break;
+	}
+}
+
+void RefCountIncrease(int type,void *handle)
+{
+	switch(type)
+	{
+    case VAR_TYPE_TUPLE:
+        TupleRefCountIncrease(handle);
+		break;
+	case VAR_TYPE_HANDLE:
+		StructRefCountIncrease(handle);
+		break;
+    case VAR_TYPE_VECTOR:
+        VectorRefCountIncrease(handle);
+        break;
+	default:
+		STOP("error ref type");
+		break;
+	}
 }

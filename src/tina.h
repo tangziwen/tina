@@ -20,41 +20,45 @@ PURPOSE.
 #define TINA_H
 #include "type.h"
 #include "def.h"
-#define INTERFACE extern
-typedef struct
-{
-	int type;
-	int class_id;
-	union
-	{
-		int  int_value;
-		int bool_value;
-		double real_value;
-		void * handle_value;
-		char *str;
-	};
-} Tina_Var;
-//API 函数
+#include "var.h"
 
-//运行一个函数
+/*运行一个函数*/
 void Tina_Run(const char *name);
 
 //通过指定一个tina脚本文件并将其编译为中间代码,放入内存中以便运行
 void Tina_Build(const char * file_name);
 
+
+/*向脚本注册一个API*/
 int Tina_API_Register( const char * func_name,void (*func_ptr)(),int tag);
 
-void Tina_API_SetReturnValue(Var return_value);
+/*设置返回值*/
+void Tina_API_SetReturn(Var return_value);
 
+/*获得参数*/
 Var TIna_API_GetArg(int index);
 
 int Tina_API_GetTag();
-//获得当前已经被解析过的函数个数
+
+/*获得当前已经被解析过的函数个数*/
 int Tina_FuncGetCount();
 
 //根据函数名称打印中间代码
 void Tina_PrintIL(const char * func_name);
 
+/*创建一个结构体原型,返回其索引*/
+extern int Tina_CreateProtype( const char * name);
+
+
+/*为指定结构体原型添加成员,并指定其值.
+返回其索引
+*/
+extern int Tina_ProtypeAddMember(int id, const char * member_name, Var value,int is_sealed);
+
+/*
+未指定的结构体原型的指定成员赋值
+*/
+extern void Tina_ProtypeSetMember(int struct_id,int member_id,Var value);
 //初始化tina
 extern void Tina_Init();
 #endif

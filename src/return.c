@@ -22,7 +22,7 @@ PURPOSE.
 #include "return.h"
 #include "il.h"
 #include "expression.h"
-//解析return语句
+/*解析return语句*/
 void return_parse(int *pos,int layer)
 {
 	exp_Parse(pos,EXP_NORMAL,layer);

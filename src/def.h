@@ -25,11 +25,11 @@ PURPOSE.
 #include <stdlib.h>
 #include <stdio.h>
 #define PLATFORM_WINDOWS 0
-//#define PLATFORM_LINUX
-//#define PLATFORM_MAC
+/*#define PLATFORM_LINUX*/
+/*#define PLATFORM_MAC*/
 #define INIT( A ) {   extern void    A##_init();    A##_init();  }
 
 #define STOP(A) {  printf("%s\n",A); exit(0);}
 
 #define PRINT(A) { printf("%s\n",A);}
-#endif // DEF_H
+#endif /* DEF_H*/

@@ -30,13 +30,14 @@ PURPOSE.
 #define IL_VAR_TMP 1
 #define IL_VAR_GLOBAL 2
 
-#define IL_NODE_EXP 1 //表示此节点为一个表达式
-#define IL_NODE_JE 2  //表示此节点为一个成假跳转(等于零跳转),只会向下寻找
-#define IL_NODE_JNE 3 //表示此节点为一个成真跳转(非零跳转),只会向上寻找
-#define IL_NODE_JMP 4 //表示此节点为一个强制跳转,只会向下寻找
-#define IL_NODE_LAB 5 //表示此节点为一个跳转标记
-#define IL_NODE_PRNT 6 //现实原语
-#define IL_NODE_RETURN 7 //返回节点
+#define IL_NODE_EXP 1 /*表示此节点为一个表达式*/
+#define IL_NODE_JE 2  /*表示此节点为一个成假跳转(等于零跳转),只会向下寻找*/
+#define IL_NODE_JNE 3 /*表示此节点为一个成真跳转(非零跳转),只会向上寻找*/
+#define IL_NODE_JMP 4 /*表示此节点为一个强制跳转,只会向下寻找*/
+#define IL_NODE_LAB 5 /*表示此节点为一个跳转标记*/
+#define IL_NODE_PRNT 6 /*现实原语*/
+#define IL_NODE_RETURN 7 /*返回节点*/
+#define IL_NODE_DELETE 8 /**/
 
 #define ELEMENT_VAR 1
 #define ELEMENT_NUM 2
@@ -49,7 +50,7 @@ PURPOSE.
 #define ELEMENT_CALL_BY_MEMBER 9
 #define ELEMENT_SELF 10
 #define ELEMENT_STRUCT 11
-//当前的标签数
+/*当前的标签数*/
 extern int label_index;
 
 
@@ -66,27 +67,27 @@ extern IL_list list;
 
 extern Var self_ptr;
 
-//当前的表
+/*当前的表*/
 IL_list * current_list;
 
-//创建一个中间语言表达式
+/*创建一个中间语言表达式*/
 IL_exp * IL_exp_create(char op,int tmp_var_index,IL_element var_a,IL_element var_b);
 
-//向中间语言的执行序列中增加一个表达式
+/*向中间语言的执行序列中增加一个表达式*/
 void IL_ListInsert(IL_exp *exp);
 
 void IL_ListInsertNode(IL_node *node);
 
-//打印中间代码序列
+/*打印中间代码序列*/
 void IL_list_print(Function * func);
 
-//执行中间代码
+/*执行中间代码*/
 Var IL_exec(Function *func);
 
-//重设临时变量
+/*重设临时变量*/
 void IL_tmp_reset();
 
-//往中间代码中加入返回节点
+/*往中间代码中加入返回节点*/
 void IL_ListInsertReturn();
 
 #endif

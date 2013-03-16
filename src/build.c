@@ -37,82 +37,82 @@ void Tina_Build(const char *file_name)
 		int postion =0;
 		TokenInfo t_k;
 
-		//第一遍扫描,扫描所有的全局函数的声明
+		/*第一遍扫描,扫描所有的全局函数的声明*/
 		do
+		{
+			/*因为需要更多的信息,所以我们有两个变量控制*/
+			/*步进关系*/
+			int test_pos=postion;
+			token_get(&test_pos,&t_k);
+			switch(t_k.type)
 			{
-				//因为需要更多的信息,所以我们有两个变量控制
-				//步进关系
-				int test_pos=postion;
-				token_get(&test_pos,&t_k);
-				switch(t_k.type)
-					{
-				//发现模块定义标识符，扫描模块的声明
-				case TOKEN_TYPE_MODULE:
-					postion =test_pos;
-					module_parse_declare(&postion);
-					break;
-					case TOKEN_TYPE_EOF:
-						break;
-					//发现全局的函数的定义符号,声明函数
-					case TOKEN_TYPE_FUNC_DEF:
-						postion =test_pos;
-						func_ParseDeclare(&postion);
-						break;
-						//发现全局的类的定义，声明类
-					case TOKEN_TYPE_STRUCT:
-						postion=test_pos;
-						struct_ParseDeclare(&postion);
-						token_SkipBlock(&postion);//略过类定义块
-						break;
-					default :
-						postion=test_pos;
-						break;
-					}
+				/*发现模块定义标识符，扫描模块的声明*/
+			case TOKEN_TYPE_MODULE:
+				postion =test_pos;
+				module_parse_declare(&postion);
+				break;
+			case TOKEN_TYPE_EOF:
+				break;
+				/*发现全局的函数的定义符号,声明函数*/
+			case TOKEN_TYPE_FUNC_DEF:
+				postion =test_pos;
+				func_ParseDeclare(&postion);
+				break;
+				/*发现全局的类的定义，声明类*/
+			case TOKEN_TYPE_STRUCT:
+				postion=test_pos;
+				struct_ParseDeclare(&postion);
+				token_SkipBlock(&postion);/*略过类定义块*/
+				break;
+			default :
+				postion=test_pos;
+				break;
 			}
+		}
 		while(t_k.type!=TOKEN_TYPE_EOF);
 	}
 
-	//第二遍扫描,扫描所有函数以及类的定义
+	/*第二遍扫描,扫描所有函数以及类的定义*/
 	{
 		int postion =0;
 		TokenInfo t_k;
 		do
+		{
+			/*因为需要更多的信息,所以我们有两个变量控制*/
+			/*步进关系*/
+			int test_pos=postion;
+			token_get(&test_pos,&t_k);
+			switch(t_k.type)
 			{
-				//因为需要更多的信息,所以我们有两个变量控制
-				//步进关系
-				int test_pos=postion;
-				token_get(&test_pos,&t_k);
-				switch(t_k.type)
-					{
-					case TOKEN_TYPE_EOF:
-						break;
-					//插入引用
-					case TOKEN_TYPE_USING:
-						postion =test_pos;
-						module_parse_using(&postion);
-						break;
-				//发现模块标识符，扫描模块内部的声明
-					case TOKEN_TYPE_MODULE:
-						postion =test_pos;
-						module_parse_def(&postion);
-						break;
-					//发现函数的定义符号,定义函数
-					case TOKEN_TYPE_FUNC_DEF:
-						postion =test_pos;
-						func_parse_def(&postion);
-						break;
-					//发现类的定义
-					case TOKEN_TYPE_STRUCT:
-						struct_ParseDefine(&test_pos);//解析类
-						postion =test_pos;
-						break;
-					default :
-						printf("the token %d is unknown %s\n",t_k.type,t_k.content);
-						printf("error !!\n");
-						exit(0);
-						break;
-					}
+			case TOKEN_TYPE_EOF:
+				break;
+				/*插入引用*/
+			case TOKEN_TYPE_USING:
+				postion =test_pos;
+				module_parse_using(&postion);
+				break;
+				/*发现模块标识符，扫描模块内部的声明*/
+			case TOKEN_TYPE_MODULE:
+				postion =test_pos;
+				module_parse_def(&postion);
+				break;
+				/*发现函数的定义符号,定义函数*/
+			case TOKEN_TYPE_FUNC_DEF:
+				postion =test_pos;
+				func_parse_def(&postion);
+				break;
+				/*发现类的定义*/
+			case TOKEN_TYPE_STRUCT:
+				struct_ParseDefine(&test_pos);/*解析类*/
+				postion =test_pos;
+				break;
+			default :
+				printf("the token %d is unknown %s\n",t_k.type,t_k.content);
+				printf("error !!\n");
+				exit(0);
+				break;
 			}
+		}
 		while(t_k.type!=TOKEN_TYPE_EOF);
 	}
 }

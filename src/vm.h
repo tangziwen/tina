@@ -27,12 +27,11 @@ PURPOSE.
  * 但是在中间代码执行时,因为函数调用的栈性质,我们需要定位相对索引的绝对位置
  */
 
+/*获取当前运行时,所执行的局部块当前层数*/
+int vm_GetCurrentLayer();
 
-//栈区用于在真正运行时分配局部变量
-extern Var vm_stack_var[1024];
-//用于记住每一层的深度,有利于回收
-extern int vm_stack_layer[128];
-
+/*设置指定块层次的局部变量数目*/
+void vm_SetLayerVarAmount(int index ,int amount);
 
 //在运行时对虚拟机中的栈变量赋值,但是该变量的类型
 //以及值将会做适当的改变,如果是一个引用的话,将会取其指向的变量的值
@@ -56,17 +55,24 @@ void vm_rt_stack_var_cast_set(int index,Var source);
 
 
 //从虚拟机中获得当前层指定索引的栈变量
-Var * vm_rt_stack_var_get_abs(int index);
+Var * vm_RTstackVarGetAbs(int index);
 
 //通过当前层的索引找到该局部变量的绝对索引
-int vm_get_absolutely(int index);
+int vm_GetAbs(int index);
 
 //运行时的栈加深
-void vm_rt_stack_push();
+void vm_RTstackPush();
 
 //运行时的栈弹出(销毁)
-void vm_rt_stack_pop();
+void vm_RTstackPop();
+/*引用计数器减一*/
+void RefCountDecrease(int type,void * handle);
+/*引用计数器增一*/
+void RefCountIncrease(int type,void *handle);
+
+/*清除当前层所有的局部变量的值,
+这些局部变量将被设为Nil类型
+*/
+void CleanCurrentLocalVar();
 //
-extern int vm_stack_offset;
-extern int vm_stack_index;
 #endif

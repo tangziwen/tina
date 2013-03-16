@@ -26,37 +26,37 @@ static void clear_comments(char *buffer)
 
 	int i;
 	for( i=0; i<buffer_size; i++)
+	{
+		/*遇见单行注释*/
+		if(buffer[i]=='/' && buffer[i+1]=='/')
 		{
-			//遇见单行注释
-			if(buffer[i]=='/' && buffer[i+1]=='/')
-				{
-					buffer[i]=' ';
-					buffer[i+1]=' ';
-					int j=i+2;
-					while(buffer[j]!='\n')
-						{
-							buffer[j]=' ';
-							j++;
-						}
-					i=j;
-				}
-			//遇见块注释
-			if(buffer[i]=='/'&& buffer[i+1]=='*')
-				{
-					buffer[i]=' ';
-					buffer[i+1] = ' ';
-					int j =i+2;
-					while(buffer[j]!='*' && buffer[j+1]!='/')
-						{
-							buffer[j]=' ';
-							j++;
-						}
-					buffer[j]=' ';
-					buffer[j+1]= ' ';
-					i=j;
-				}
-
+			buffer[i]=' ';
+			buffer[i+1]=' ';
+			int j=i+2;
+			while(buffer[j]!='\n')
+			{
+				buffer[j]=' ';
+				j++;
+			}
+			i=j;
 		}
+		/*遇见块注释*/
+		if(buffer[i]=='/'&& buffer[i+1]=='*')
+		{
+			buffer[i]=' ';
+			buffer[i+1] = ' ';
+			int j =i+2;
+			while(buffer[j]!='*' && buffer[j+1]!='/')
+			{
+				buffer[j]=' ';
+				j++;
+			}
+			buffer[j]=' ';
+			buffer[j+1]= ' ';
+			i=j;
+		}
+
+	}
 
 }
 

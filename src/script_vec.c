@@ -55,7 +55,7 @@ static vec_chunk * CreateVec(int tuple_size)
 Var vector_GetValue(Var array_obj,int index )
 {
     vec_chunk * a;
-    a=(vec_chunk *)array_obj.content.handle_value;
+    a=(vec_chunk *)var_getHandle (array_obj);
     if(index <a->vec_size+1&& index>0)
 	{
         Var * the_tuple =a->var_handle;
@@ -71,7 +71,7 @@ Var vector_GetValue(Var array_obj,int index )
 void vector_SetValue(Var array_obj,int index ,Var new_value)
 {
     vec_chunk * a;
-    a=(vec_chunk *)array_obj.content.handle_value;
+    a=(vec_chunk *)var_getHandle (array_obj);
     if(index <a->vec_size+1 && index>0)
     {
         if(a->content_type!=var_GetType (new_value))
@@ -88,26 +88,23 @@ void vector_SetValue(Var array_obj,int index ,Var new_value)
     }
 }
 
-static void the_vector_creator()
+Var the_vector_creator(int size,Var init_arg[])
 {
 	Var result;
     result.content.type=VAR_TYPE_VECTOR;
-    int size =API_GetArgCount();
    vec_chunk * new_obj = CreateVec(size);
-    new_obj->content_type=var_GetType (API_argument_list[0]);
-    result.content.handle_value=new_obj;
+    new_obj->content_type=var_GetType (init_arg[0]);
+    result.content.var_value.handle_value=new_obj;
     int i=0;
     for(;i<size;i++)
     {
-        if(new_obj->content_type!=var_GetType (API_argument_list[i]))
+        if(new_obj->content_type!=var_GetType (init_arg[i]))
         {
             STOP("invalid vector");
         }
-        vector_SetValue (result,i+1,API_argument_list[i]);
+        vector_SetValue (result,i+1,init_arg[i]);
     }
-
-	Tina_API_SetReturn ( result );
-
+    return result;
 }
 
 /*获取数组的长度*/
@@ -126,8 +123,8 @@ static void getVectorLength()
         printf("vec_size only support array type!\n");
 		exit(0);
 	}
-    vec_chunk * a=the_tuple_var.content.handle_value;
-    result.content.int_value=a->vec_size;
+    vec_chunk * a=var_getHandle (the_tuple_var);
+    var_SetInt (&result,a->vec_size);
 	Tina_API_SetReturn ( result );
 }
 
@@ -146,7 +143,7 @@ static void free_vector(vec_chunk * ptr)
 		int t=var_GetType(ptr->var_handle[i]);
         if(t==VAR_TYPE_VECTOR || t==VAR_TYPE_HANDLE ||t==VAR_TYPE_TUPLE)
 		{
-			RefCountDecrease(t,ptr->var_handle[i].content.handle_value);
+            RefCountDecrease(t,var_getHandle (ptr->var_handle[i]));
 		}
 	}
 }
@@ -201,7 +198,7 @@ void * vector_CreateByString(const char * str)
     vec_chunk * new_vec=CreateVec (str_size);
     new_vec->content_type=VAR_TYPE_CHAR;
     Var obj;
-    obj.content.handle_value=new_vec;
+    obj.content.var_value.handle_value=new_vec;
     obj.content.type=VAR_TYPE_VECTOR;
     int i=0;
     for(;i<str_size;i++)
@@ -210,7 +207,7 @@ void * vector_CreateByString(const char * str)
         var_SetChar(&ch,str[i]);
         vector_SetValue (obj,i+1,ch);
     }
-    return obj.content.handle_value;
+    return var_getHandle (obj);
 }
 
 void VectorRefCountDecrease(void * ptr)
@@ -225,8 +222,6 @@ void VectorRefCountDecrease(void * ptr)
 
 void script_vector_init()
 {
-    Tina_API_Register ( "vector",the_vector_creator,0);
-    Tina_API_Register ( "vec_len",getVectorLength,0);
 }
 
 /*打印一个向量的所有成员*/
@@ -236,7 +231,7 @@ void vector_Print(Var vec)
     {
         STOP("the obj is not a vector");
     }
-    vec_chunk *the_vec= vec.content.handle_value;
+    vec_chunk *the_vec= var_getHandle (vec);
     int i=1;
     int vec_size=the_vec->vec_size;
     for(;i<vec_size+1;i++)
@@ -246,6 +241,32 @@ void vector_Print(Var vec)
     printf("\n");
 }
 
+
+/*从原位置克隆一个向量*/
+Var vector_Clone(Var src)
+{
+    if(var_GetType (src)!=VAR_TYPE_VECTOR)
+    {
+        STOP("vector_Clone invalid src ");
+    }
+
+    vec_chunk * src_vec, *new_vec;
+    src_vec=var_getHandle (src);
+   new_vec= CreateVec (src_vec->vec_size);
+   new_vec=src_vec;/*拷贝所有属性*/
+   /*拷贝成员*/
+   int i=1;
+   for(;i<=src_vec->vec_size;i++)
+   {
+       new_vec->var_handle[i]=src_vec->var_handle[i];
+   }
+   /*装箱成Var 类型*/
+   Var new_obj;
+   new_obj.content.type=VAR_TYPE_VECTOR;
+   new_obj.content.var_value.handle_value=new_vec;
+   return new_obj;
+}
+
 /*获得指定向量维护的类型*/
 int vector_GetType(Var vec)
 {
@@ -253,7 +274,7 @@ int vector_GetType(Var vec)
     {
         STOP("vector_GetType ,not a vector value");
     }
-    vec_chunk * a= vec.content.handle_value;
+    vec_chunk * a= var_getHandle (vec);
     return a->content_type;
 }
 
@@ -265,7 +286,7 @@ int vector_GetSize(Var vec)
     {
         STOP("vector_GetSize ,not a vector value");
     }
-    vec_chunk * a= vec.content.handle_value;
+    vec_chunk * a= var_getHandle (vec);
     return a->vec_size;
 }
 
@@ -276,7 +297,7 @@ char * vector_ToString(Var vec)
 {
         STOP("vector_ToString invalid obj");
     }
-    vec_chunk * obj=vec.content.handle_value;
+    vec_chunk * obj=var_getHandle (vec);
     if(obj->content_type!=VAR_TYPE_CHAR)
     {
         STOP("vector_ToString invalid obj");

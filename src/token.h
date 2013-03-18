@@ -33,6 +33,7 @@ PURPOSE.
 #define OP_NOT_EQUAL 8
 #define OP_AND 9
 #define OP_OR 10
+#define OP_CALL 11
 
 //标志类型
 #define TOKEN_TYPE_INVALID 0
@@ -75,6 +76,8 @@ PURPOSE.
 #define TOKEN_TYPE_DELETE 37 /*销毁*/
 #define TOKEN_TYPE_CHAR 38
 #define TOKEN_TYPE_STRING 39
+#define TOKEN_TYPE_VECTOR 40
+#define TOKEN_TYPE_TUPLE 41
 
 /*从当前位置(pos)解析一个词法标记，并将词法标记的相关信息存储进t_k所指向的TokenInfo对象里
  解 析之后，当前位置会向后跳跃一个词法标记               *

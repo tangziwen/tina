@@ -41,4 +41,8 @@ int vector_GetType(Var vec);
 int vector_GetSize(Var vec);
 /*将一个向量的元素，若其维护的值为VAR_TYPE_CHAR的话，转移至一个char型数组里。该空间有使用者回收*/
 char * vector_ToString(Var vec);
+/*创建一个向量*/
+Var the_vector_creator(int size,Var init_arg[]);
+/*从原位置克隆一个向量*/
+Var vector_Clone(Var src);
 #endif

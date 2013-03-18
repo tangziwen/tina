@@ -54,10 +54,10 @@ void var_define(int *pos, int *index,int offset,int layer)
 		int i;
 		for(i=(*index)-1; i>=offset; i--)
 		{
-			if(strcmp(t_k.content,func_get_current()->var_list[i].name)==0)
+            if(strcmp(t_k.content,func_get_current()->var_list[i].name)==0)
 			{
 				/*被使用过了,抛出异常*/
-				printf("the var name %s  has already used !!\n",t_k.content);
+                printf("the var name %s  has already used !!\n",t_k.content);
 				exit(0);
 			}
 		}
@@ -65,7 +65,7 @@ void var_define(int *pos, int *index,int offset,int layer)
 	if(func_get_current()->var_list[(*index)].layer==-1)   /*该位置还没用过,那么变量直接放在这就行了*/
 	{
 		func_get_current()->var_list[(*index)].layer=layer;
-		strcpy(func_get_current()->var_list[(*index)].name,t_k.content);
+        strcpy(func_get_current()->var_list[(*index)].name,t_k.content);
 		(*index)+=1;
 		func_get_current()->var_counts+=1;
 	}
@@ -80,11 +80,11 @@ void var_define(int *pos, int *index,int offset,int layer)
 		}
 		/*然后加入该变量*/
 		func_get_current()->var_list[(*index)].layer=layer;
-		func_get_current()->var_list[(*index)].content.type=VAR_TYPE_TUPLE;
-		strcpy(func_get_current()->var_list[(*index)].name,t_k.content);
+        func_get_current()->var_list[(*index)].content.type=VAR_TYPE_TUPLE;
+        strcpy(func_get_current()->var_list[(*index)].name,t_k.content);
 		(*index)+=1;
 		func_get_current()->var_counts+=1;
-		printf("new var %s %d define in layer %d\n",t_k.content,(*index),layer);
+        printf("new var %s %d define in layer %d\n",t_k.content,(*index),layer);
 	}
 }
 
@@ -158,66 +158,6 @@ void var_parse_local(int *pos,int arg_count)
 	local_declare_parse(arg_count,0,pos);
 }
 
-/*连接字符串变量*/
-static Var var_str_cat(Var a ,Var b)
-{
-	Var result;
-    if(a.content.type==VAR_TYPE_MESSAGE &&b.content.type!=VAR_TYPE_MESSAGE)
-	{
-		char digit[32];
-		if(b.content.type==VAR_TYPE_BOOL)
-		{
-			if(b.content.bool_value==0)
-			{
-				strcpy(digit,"false");
-			}
-			else
-			{
-				strcpy(digit,"true");
-			}
-		}
-		else
-		{
-			sprintf(digit,"%g",var_get_value(b));
-			sprintf(digit,"%g",var_get_value(b));
-		}
-		int size = strlen(digit);
-		result.content.str=(char *)malloc(sizeof(char)*(strlen(a.content.str)+size +1));
-		strcpy(result.content.str,a.content.str);
-		strcat(result.content.str,digit);
-	}
-    else if((a.content.type!=VAR_TYPE_MESSAGE&&b.content.type==VAR_TYPE_MESSAGE))
-	{
-		char digit[32];
-		if(a.content.type==VAR_TYPE_BOOL)
-		{
-			if(a.content.bool_value==0)
-			{
-				strcpy(digit,"false");
-			}
-			else
-			{
-				strcpy(digit,"true");
-			}
-		}
-		else
-		{
-			sprintf(digit,"%g",var_get_value(a));
-		}
-		int size = strlen(digit);
-		result.content.str=(char *)malloc(sizeof(char)*(strlen(a.content.str)+size +1));
-		strcpy(result.content.str,digit);
-		strcat(result.content.str,b.content.str);
-	}
-    else if(a.content.type==VAR_TYPE_MESSAGE && b.content.type==VAR_TYPE_MESSAGE)
-	{
-		result.content.str=(char *)malloc(sizeof(char)*(strlen(a.content.str)+strlen(b.content.str)+1));
-		strcpy(result.content.str,a.content.str);
-		strcat(result.content.str,b.content.str);
-	}
-    result.content.type=VAR_TYPE_MESSAGE;
-	return result;
-}
 
 
 /*通过名字查找当前被扫描函数的局部变量的索引*/
@@ -248,15 +188,15 @@ int var_get_local_index(const char *var_name,int layer)
 
 double get_value(int index)
 {
-	if(func_get_current()->var_list[index].content.type==VAR_TYPE_INT)
+    if(func_get_current()->var_list[index].content.type==VAR_TYPE_INT)
 	{
 
-		return (double)func_get_current()->var_list[index].content.int_value;
+        return (double)func_get_current()->var_list[index].content.var_value.int_value;
 	}
 	else
 	{
 
-		return (double)func_get_current()->var_list[index].content.real_value;
+        return (double)func_get_current()->var_list[index].content.var_value.real_value;
 	}
 
 }
@@ -268,30 +208,30 @@ Var var_point_to(Var a,Var b)
     if(a.content.type==VAR_TYPE_HANDLE && b.content.type==VAR_TYPE_MESSAGE)
 	{
 		/*找不到成员*/
-		if(get_index_of_member(a.class_id,b.content.str)==-1)
+        if(get_index_of_member(a.class_id,b.content.var_value.str)==-1)
 		{
-			printf("there is no such member which's called \"%s\" in type \"%s\" \n",b.content.str,struct_get_name(a.class_id));
+            printf("there is no such member which's called \"%s\" in type \"%s\" \n",b.content.var_value.str,struct_get_name(a.class_id));
 			exit(0);
 		}
-		result = *(GetObjectMemberAddress(a.content.handle_value,get_index_of_member(a.class_id,b.content.str)));
+        result = *(GetObjectMemberAddress(a.content.var_value.handle_value,get_index_of_member(a.class_id,b.content.var_value.str)));
 	}
 
 	/*类的静态成员访问*/
     else if(a.content.type==VAR_TYPE_STRUCT_NAME && b.content.type==VAR_TYPE_MESSAGE)
 	{
-		int struct_id=get_class_id(a.content.str);
+        int struct_id=get_class_id(a.content.var_value.str);
 		/*找不到成员*/
-		if(get_index_of_member(struct_id,b.content.str)==-1)
+        if(get_index_of_member(struct_id,b.content.var_value.str)==-1)
 		{
-			printf("there is no such member which's called \"%s\" in type \"%s\" \n",b.content.str,struct_get_name(struct_id));
+            printf("there is no such member which's called \"%s\" in type \"%s\" \n",b.content.var_value.str,struct_get_name(struct_id));
 			exit(0);
 		}
-		int member_id=get_index_of_member(struct_id,b.content.str);
+        int member_id=get_index_of_member(struct_id,b.content.var_value.str);
 		result=GetMember(struct_id,member_id);
 	}
 	else
 	{
-		printf("invalid dot operation %d    %d \n",a.content.type,b.content.type);
+        printf("invalid dot operation %d    %d \n",a.content.type,b.content.type);
 		exit(0);
 	}
 	return result;
@@ -302,39 +242,33 @@ Var var_add(Var a,Var b)
 {
 	Var result;
 	/*处理a+NULL的情景,这在单个表达式的时候会用到*/
-	if(b.content.type==VAR_TYPE_NILL)
+    if(b.content.type==VAR_TYPE_NILL)
 	{
 		return a;
 	}
 
 
-    if(a.content.type==VAR_TYPE_MESSAGE  ||  b.content.type==VAR_TYPE_MESSAGE)
+if(a.content.type==VAR_TYPE_REAL && b.content.type==VAR_TYPE_REAL)
 	{
-		result=var_str_cat(a,b);
-        result.content.type=VAR_TYPE_MESSAGE;
-		return result;
+        result.content.type=VAR_TYPE_REAL;
+        result.content.var_value.real_value=a.content.var_value.real_value+b.content.var_value.real_value;
 	}
-	else if(a.content.type==VAR_TYPE_REAL && b.content.type==VAR_TYPE_REAL)
+    else if(a.content.type==VAR_TYPE_REAL && b.content.type==VAR_TYPE_INT)
 	{
-		result.content.type=VAR_TYPE_REAL;
-		result.content.real_value=a.content.real_value+b.content.real_value;
+        result.content.type=VAR_TYPE_REAL;
+        result.content.var_value.real_value=(a.content.var_value.real_value)+(1.0*b.content.var_value.int_value);
 	}
-	else if(a.content.type==VAR_TYPE_REAL && b.content.type==VAR_TYPE_INT)
+    else if(a.content.type==VAR_TYPE_INT && b.content.type==VAR_TYPE_REAL)
 	{
-		result.content.type=VAR_TYPE_REAL;
-		result.content.real_value=(a.content.real_value)+(1.0*b.content.int_value);
+        result.content.type=VAR_TYPE_REAL;
+        result.content.var_value.real_value=1.0*a.content.var_value.int_value+b.content.var_value.real_value;
 	}
-	else if(a.content.type==VAR_TYPE_INT && b.content.type==VAR_TYPE_REAL)
+    else if(a.content.type==VAR_TYPE_INT && b.content.type==VAR_TYPE_INT)
 	{
-		result.content.type=VAR_TYPE_REAL;
-		result.content.real_value=1.0*a.content.int_value+b.content.real_value;
+        result.content.type=VAR_TYPE_INT;
+        result.content.var_value.int_value=a.content.var_value.int_value+b.content.var_value.int_value;
 	}
-	else if(a.content.type==VAR_TYPE_INT && b.content.type==VAR_TYPE_INT)
-	{
-		result.content.type=VAR_TYPE_INT;
-		result.content.int_value=a.content.int_value+b.content.int_value;
-	}
-	else if(a.content.type==VAR_TYPE_BOOL || b.content.type==VAR_TYPE_BOOL)
+    else if(a.content.type==VAR_TYPE_BOOL || b.content.type==VAR_TYPE_BOOL)
 	{
 		printf("error the boolean type's var can take part in plus-caculate\n");
 		exit(0);
@@ -350,53 +284,53 @@ Var var_add(Var a,Var b)
 Var var_and(Var a, Var b)
 {
 	Var result;
-	if(a.content.type!=VAR_TYPE_BOOL || b.content.type!=VAR_TYPE_BOOL)
+    if(a.content.type!=VAR_TYPE_BOOL || b.content.type!=VAR_TYPE_BOOL)
 	{
 		printf("runtime error ! 'and' can  only used in bool\n");
 		exit(0);
 	}
-	result.content.type=VAR_TYPE_BOOL;
-	result.content.bool_value =(a.content.bool_value&&b.content.bool_value);
+    result.content.type=VAR_TYPE_BOOL;
+    result.content.var_value.bool_value =(a.content.var_value.bool_value&&b.content.var_value.bool_value);
 	return result;
 }
 
 Var var_or(Var a, Var b)
 {
 	Var result;
-	if(a.content.type!=VAR_TYPE_BOOL || b.content.type!=VAR_TYPE_BOOL)
+    if(a.content.type!=VAR_TYPE_BOOL || b.content.type!=VAR_TYPE_BOOL)
 	{
 		printf("runtime error ! 'or' can  only used in bool\n");
 		exit(0);
 	}
-	result.content.type=VAR_TYPE_BOOL;
-	result.content.bool_value =(a.content.bool_value || b.content.bool_value);
+    result.content.type=VAR_TYPE_BOOL;
+    result.content.var_value.bool_value =(a.content.var_value.bool_value || b.content.var_value.bool_value);
 	return result;
 }
 /*两数相减*/
 Var var_minus(Var a,Var b)
 {
 	Var result;
-	if(a.content.type==VAR_TYPE_INT && b.content.type==VAR_TYPE_INT)
+    if(a.content.type==VAR_TYPE_INT && b.content.type==VAR_TYPE_INT)
 	{
-		result.content.type=VAR_TYPE_INT;
-		result.content.int_value=a.content.int_value-b.content.int_value;
+        result.content.type=VAR_TYPE_INT;
+        result.content.var_value.int_value=a.content.var_value.int_value-b.content.var_value.int_value;
 	}
-	else if(a.content.type==VAR_TYPE_REAL && b.content.type==VAR_TYPE_REAL)
+    else if(a.content.type==VAR_TYPE_REAL && b.content.type==VAR_TYPE_REAL)
 	{
-		result.content.type=VAR_TYPE_REAL;
-		result.content.int_value=a.content.real_value-b.content.real_value;
+        result.content.type=VAR_TYPE_REAL;
+        result.content.var_value.int_value=a.content.var_value.real_value-b.content.var_value.real_value;
 	}
-	else if(a.content.type==VAR_TYPE_REAL && b.content.type==VAR_TYPE_INT)
+    else if(a.content.type==VAR_TYPE_REAL && b.content.type==VAR_TYPE_INT)
 	{
-		result.content.type=VAR_TYPE_REAL;
-		result.content.int_value=a.content.real_value-b.content.int_value;
+        result.content.type=VAR_TYPE_REAL;
+        result.content.var_value.int_value=a.content.var_value.real_value-b.content.var_value.int_value;
 	}
-	else if(a.content.type==VAR_TYPE_INT && b.content.type==VAR_TYPE_REAL)
+    else if(a.content.type==VAR_TYPE_INT && b.content.type==VAR_TYPE_REAL)
 	{
-		result.content.type=VAR_TYPE_REAL;
-		result.content.int_value=a.content.int_value-b.content.real_value;
+        result.content.type=VAR_TYPE_REAL;
+        result.content.var_value.int_value=a.content.var_value.int_value-b.content.var_value.real_value;
 	}
-	else if(a.content.type==VAR_TYPE_BOOL || b.content.type==VAR_TYPE_BOOL)
+    else if(a.content.type==VAR_TYPE_BOOL || b.content.type==VAR_TYPE_BOOL)
 	{
 		printf("error the boolean type's var can take part in minus-caculate\n");
 		exit(0);
@@ -410,47 +344,38 @@ Var var_minus(Var a,Var b)
 }
 
 
-/*使用于在有@运算符的引用*/
-Var var_refer(Var a)
-{
-	Var result;
-	result.content.type=VAR_TYPE_REF;
-	/*储存引用*/
-	result.content.handle_value=a.index;
-	return result;
-}
 /*两数相乘*/
 Var var_multiple(Var a,Var b)
 {
 	Var result;
-	if(a.content.type==VAR_TYPE_INT && b.content.type==VAR_TYPE_INT)
+    if(a.content.type==VAR_TYPE_INT && b.content.type==VAR_TYPE_INT)
 	{
-		result.content.type=VAR_TYPE_INT;
-		result.content.int_value=a.content.int_value*b.content.int_value;
+        result.content.type=VAR_TYPE_INT;
+        result.content.var_value.int_value=a.content.var_value.int_value*b.content.var_value.int_value;
 	}
-	else if(a.content.type==VAR_TYPE_REAL && b.content.type==VAR_TYPE_REAL)
+    else if(a.content.type==VAR_TYPE_REAL && b.content.type==VAR_TYPE_REAL)
 	{
-		result.content.type=VAR_TYPE_REAL;
-		result.content.real_value=a.content.real_value*b.content.real_value;
+        result.content.type=VAR_TYPE_REAL;
+        result.content.var_value.real_value=a.content.var_value.real_value*b.content.var_value.real_value;
 	}
-	else if(a.content.type==VAR_TYPE_REAL && b.content.type==VAR_TYPE_INT)
+    else if(a.content.type==VAR_TYPE_REAL && b.content.type==VAR_TYPE_INT)
 	{
-		result.content.type=VAR_TYPE_REAL;
-		result.content.real_value=a.content.real_value*b.content.int_value;
+        result.content.type=VAR_TYPE_REAL;
+        result.content.var_value.real_value=a.content.var_value.real_value*b.content.var_value.int_value;
 	}
-	else if(a.content.type==VAR_TYPE_INT && b.content.type==VAR_TYPE_REAL)
+    else if(a.content.type==VAR_TYPE_INT && b.content.type==VAR_TYPE_REAL)
 	{
-		result.content.type=VAR_TYPE_REAL;
-		result.content.real_value=a.content.int_value*b.content.real_value;
+        result.content.type=VAR_TYPE_REAL;
+        result.content.var_value.real_value=a.content.var_value.int_value*b.content.var_value.real_value;
 	}
-	else if(a.content.type==VAR_TYPE_BOOL || b.content.type==VAR_TYPE_BOOL)
+    else if(a.content.type==VAR_TYPE_BOOL || b.content.type==VAR_TYPE_BOOL)
 	{
 		printf("error the boolean type's var can take part in multiple-caculate\n");
 		exit(0);
 	}
 	else
 	{
-		printf("this way of multipling is not supported  yet %d %d \n",a.content.type,b.content.type );
+        printf("this way of multipling is not supported  yet %d %d \n",a.content.type,b.content.type );
 		exit(0);
 	}
 	return result;
@@ -459,36 +384,36 @@ Var var_multiple(Var a,Var b)
 Var var_divide(Var a, Var b)
 {
 	Var result;
-	if(a.content.type==VAR_TYPE_INT && b.content.type==VAR_TYPE_INT)
+    if(a.content.type==VAR_TYPE_INT && b.content.type==VAR_TYPE_INT)
 	{
 		/*在整数相除时,如果两数不能整除则要转换成实数类型*/
-		if(a.content.int_value%b.content.int_value==0)
+        if(a.content.var_value.int_value%b.content.var_value.int_value==0)
 		{
-			result.content.type=VAR_TYPE_INT;
-			result.content.int_value=a.content.int_value/b.content.int_value;
+            result.content.type=VAR_TYPE_INT;
+            result.content.var_value.int_value=a.content.var_value.int_value/b.content.var_value.int_value;
 		}
 		else
 		{
-			result.content.type=VAR_TYPE_REAL;
-			result.content.real_value=var_get_value(a)/var_get_value(b);
+            result.content.type=VAR_TYPE_REAL;
+            result.content.var_value.real_value=var_get_value(a)/var_get_value(b);
 		}
 	}
-	else if(a.content.type==VAR_TYPE_REAL && b.content.type==VAR_TYPE_REAL)
+    else if(a.content.type==VAR_TYPE_REAL && b.content.type==VAR_TYPE_REAL)
 	{
-		result.content.type=VAR_TYPE_REAL;
-		result.content.real_value=a.content.real_value/b.content.real_value;
+        result.content.type=VAR_TYPE_REAL;
+        result.content.var_value.real_value=a.content.var_value.real_value/b.content.var_value.real_value;
 	}
-	else if(a.content.type==VAR_TYPE_REAL && b.content.type==VAR_TYPE_INT)
+    else if(a.content.type==VAR_TYPE_REAL && b.content.type==VAR_TYPE_INT)
 	{
-		result.content.type=VAR_TYPE_REAL;
-		result.content.real_value=(a.content.real_value)/(1.0*b.content.int_value);
+        result.content.type=VAR_TYPE_REAL;
+        result.content.var_value.real_value=(a.content.var_value.real_value)/(1.0*b.content.var_value.int_value);
 	}
-	else if(a.content.type==VAR_TYPE_INT && b.content.type==VAR_TYPE_REAL)
+    else if(a.content.type==VAR_TYPE_INT && b.content.type==VAR_TYPE_REAL)
 	{
-		result.content.type=VAR_TYPE_REAL;
-		result.content.real_value=1.0*a.content.int_value/b.content.real_value;
+        result.content.type=VAR_TYPE_REAL;
+        result.content.var_value.real_value=1.0*a.content.var_value.int_value/b.content.var_value.real_value;
 	}
-	else if(a.content.type==VAR_TYPE_BOOL || b.content.type==VAR_TYPE_BOOL)
+    else if(a.content.type==VAR_TYPE_BOOL || b.content.type==VAR_TYPE_BOOL)
 	{
 		printf("error the boolean type's var can take part in divide-caculate\n");
 		exit(0);
@@ -504,19 +429,19 @@ Var var_divide(Var a, Var b)
 /*以浮点的形式返回一个变量的较精确值*/
 double var_get_value(Var a)
 {
-	switch(a.content.type)
+    switch(a.content.type)
 	{
 	case VAR_TYPE_NILL:
 		return 0;
 		break;
 	case VAR_TYPE_INT:
-		return a.content.int_value;
+        return a.content.var_value.int_value;
 		break;
 	case VAR_TYPE_REAL:
-		return a.content.real_value;
+        return a.content.var_value.real_value;
 		break;
 	case VAR_TYPE_BOOL:
-		return a.content.bool_value;
+        return a.content.var_value.bool_value;
 		break;
     case VAR_TYPE_MESSAGE:
 		return 0;
@@ -527,8 +452,14 @@ double var_get_value(Var a)
 	case VAR_TYPE_FUNC:
 		return 0;
 		break;
+    case VAR_TYPE_CHAR:
+        return a.content.var_value.char_value;
+        break;
+    case VAR_TYPE_VECTOR:
+        return 0;
+        break;
 	default:
-		printf("other type's not support yet %d \n",a.content.type);
+        printf("other type's not support yet %d \n",a.content.type);
 		exit(0);
 		return -1;
 		break;
@@ -542,34 +473,23 @@ Var var_large(Var a,Var b)
 {
 	Var result;
 
-	result.content.type=VAR_TYPE_BOOL;
-	if(a.content.type==VAR_TYPE_INT && b.content.type==VAR_TYPE_INT)
+    result.content.type=VAR_TYPE_BOOL;
+    if(a.content.type==VAR_TYPE_INT && b.content.type==VAR_TYPE_INT)
 	{
-		result.content.bool_value=a.content.int_value>b.content.int_value;
+        result.content.var_value.bool_value=a.content.var_value.int_value>b.content.var_value.int_value;
 	}
-	else if(a.content.type==VAR_TYPE_BOOL && b.content.type==VAR_TYPE_BOOL)
+    else if(a.content.type==VAR_TYPE_BOOL && b.content.type==VAR_TYPE_BOOL)
 	{
-		result.content.bool_value=a.content.bool_value>b.content.bool_value;
+        result.content.var_value.bool_value=a.content.var_value.bool_value>b.content.var_value.bool_value;
 	}
-    else if(a.content.type==VAR_TYPE_MESSAGE && b.content.type==VAR_TYPE_MESSAGE)
+
+    else if(a.content.type==VAR_TYPE_INT && b.content.type==VAR_TYPE_BOOL)
 	{
-		int i= strcmp(a.content.str,b.content.str);
-		if(i>0)
-		{
-			result.content.bool_value=1;
-		}
-		else
-		{
-			result.content.bool_value=0;
-		}
+        result.content.var_value.bool_value=a.content.var_value.int_value>b.content.var_value.bool_value;
 	}
-	else if(a.content.type==VAR_TYPE_INT && b.content.type==VAR_TYPE_BOOL)
+    else if(a.content.type==VAR_TYPE_BOOL && b.content.type==VAR_TYPE_INT)
 	{
-		result.content.bool_value=a.content.int_value>b.content.bool_value;
-	}
-	else if(a.content.type==VAR_TYPE_BOOL && b.content.type==VAR_TYPE_INT)
-	{
-		result.content.bool_value=a.content.bool_value>b.content.int_value;
+        result.content.var_value.bool_value=a.content.var_value.bool_value>b.content.var_value.int_value;
 	}
 	else
 	{
@@ -583,34 +503,22 @@ Var var_less(Var a,Var b)
 {
 
 	Var result;
-	result.content.type=VAR_TYPE_BOOL;
-	if(a.content.type==VAR_TYPE_INT && b.content.type==VAR_TYPE_INT)
+    result.content.type=VAR_TYPE_BOOL;
+    if(a.content.type==VAR_TYPE_INT && b.content.type==VAR_TYPE_INT)
 	{
-		result.content.bool_value=a.content.int_value<b.content.int_value;
+        result.content.var_value.bool_value=a.content.var_value.int_value<b.content.var_value.int_value;
 	}
-	else if(a.content.type==VAR_TYPE_BOOL && b.content.type==VAR_TYPE_BOOL)
+    else if(a.content.type==VAR_TYPE_BOOL && b.content.type==VAR_TYPE_BOOL)
 	{
-		result.content.bool_value=a.content.bool_value<b.content.bool_value;
+        result.content.var_value.bool_value=a.content.var_value.bool_value<b.content.var_value.bool_value;
 	}
-    else if(a.content.type==VAR_TYPE_MESSAGE && b.content.type==VAR_TYPE_MESSAGE)
+    else if(a.content.type==VAR_TYPE_INT && b.content.type==VAR_TYPE_BOOL)
 	{
-		int i =strcmp(a.content.str,b.content.str);
-		if(i<0)
-		{
-			result.content.bool_value=1;
-		}
-		else
-		{
-			result.content.bool_value=1;
-		}
+        result.content.var_value.bool_value=a.content.var_value.int_value<b.content.var_value.bool_value;
 	}
-	else if(a.content.type==VAR_TYPE_INT && b.content.type==VAR_TYPE_BOOL)
+    else if(a.content.type==VAR_TYPE_BOOL && b.content.type==VAR_TYPE_INT)
 	{
-		result.content.bool_value=a.content.int_value<b.content.bool_value;
-	}
-	else if(a.content.type==VAR_TYPE_BOOL && b.content.type==VAR_TYPE_INT)
-	{
-		result.content.bool_value=a.content.bool_value<b.content.int_value;
+        result.content.var_value.bool_value=a.content.var_value.bool_value<b.content.var_value.int_value;
 	}
 	else
 	{
@@ -623,43 +531,38 @@ Var var_equal(Var a,Var b)
 {
 	Var result;
 
-	result.content.type=VAR_TYPE_BOOL;
-	if(a.content.type==VAR_TYPE_INT && b.content.type==VAR_TYPE_INT)
+    result.content.type=VAR_TYPE_BOOL;
+    if(a.content.type==VAR_TYPE_INT && b.content.type==VAR_TYPE_INT)
 	{
-		result.content.bool_value=a.content.int_value==b.content.int_value;
+        result.content.var_value.bool_value=a.content.var_value.int_value==b.content.var_value.int_value;
 	}
-	else if(a.content.type==VAR_TYPE_BOOL && b.content.type==VAR_TYPE_BOOL)
+    else if(a.content.type==VAR_TYPE_BOOL && b.content.type==VAR_TYPE_BOOL)
 	{
-		result.content.bool_value=a.content.bool_value==b.content.bool_value;
+        result.content.var_value.bool_value=a.content.var_value.bool_value==b.content.var_value.bool_value;
 	}
-	else if(a.content.type==VAR_TYPE_INT && b.content.type==VAR_TYPE_BOOL)
+    else if(a.content.type==VAR_TYPE_INT && b.content.type==VAR_TYPE_BOOL)
 	{
-		result.content.bool_value=a.content.int_value==b.content.bool_value;
+        result.content.var_value.bool_value=a.content.var_value.int_value==b.content.var_value.bool_value;
 	}
-	else if(a.content.type==VAR_TYPE_NILL && b.content.type!=VAR_TYPE_NILL)
+    else if(a.content.type==VAR_TYPE_NILL && b.content.type!=VAR_TYPE_NILL)
 	{
-		result.content.bool_value=0;
+        result.content.var_value.bool_value=0;
 	}
-	else if(a.content.type==VAR_TYPE_NILL && b.content.type==VAR_TYPE_NILL)
+    else if(a.content.type==VAR_TYPE_NILL && b.content.type==VAR_TYPE_NILL)
 	{
-		result.content.bool_value=1;
+        result.content.var_value.bool_value=1;
 	}
-    else if(a.content.type==VAR_TYPE_MESSAGE && b.content.type ==VAR_TYPE_MESSAGE)
+    else if(a.content.type==VAR_TYPE_HANDLE && b.content.type==VAR_TYPE_INT)
 	{
-		int i=strcmp(a.content.str,b.content.str);
-		result.content.bool_value=1-i;
+        result.content.var_value.bool_value=(a.content.var_value.handle_value==b.content.var_value.int_value);
 	}
-	else if(a.content.type==VAR_TYPE_HANDLE && b.content.type==VAR_TYPE_INT)
+    else if(a.content.type==VAR_TYPE_HANDLE && b.content.type ==VAR_TYPE_NILL)
 	{
-		result.content.bool_value=(a.content.handle_value==b.content.int_value);
+        result.content.var_value.bool_value=(a.content.var_value.handle_value==0);
 	}
-	else if(a.content.type==VAR_TYPE_HANDLE && b.content.type ==VAR_TYPE_NILL)
+    else if(a.content.type==VAR_TYPE_BOOL && b.content.type==VAR_TYPE_INT)
 	{
-		result.content.bool_value=(a.content.handle_value==0);
-	}
-	else if(a.content.type==VAR_TYPE_BOOL && b.content.type==VAR_TYPE_INT)
-	{
-		result.content.bool_value=a.content.bool_value==b.content.int_value;
+        result.content.var_value.bool_value=a.content.var_value.bool_value==b.content.var_value.int_value;
 	}
 	else
 	{
@@ -673,47 +576,42 @@ Var var_not_equal(Var a,Var b)
 {
 	Var result;
 
-	result.content.type=VAR_TYPE_BOOL;
-	if(a.content.type==VAR_TYPE_INT && b.content.type==VAR_TYPE_INT)
+    result.content.type=VAR_TYPE_BOOL;
+    if(a.content.type==VAR_TYPE_INT && b.content.type==VAR_TYPE_INT)
 	{
-		result.content.bool_value=a.content.int_value!=b.content.int_value;
+        result.content.var_value.bool_value=a.content.var_value.int_value!=b.content.var_value.int_value;
 	}
-	else if(a.content.type==VAR_TYPE_BOOL && b.content.type==VAR_TYPE_BOOL)
+    else if(a.content.type==VAR_TYPE_BOOL && b.content.type==VAR_TYPE_BOOL)
 	{
-		result.content.bool_value=a.content.bool_value!=b.content.bool_value;
+        result.content.var_value.bool_value=a.content.var_value.bool_value!=b.content.var_value.bool_value;
 	}
-	else if(a.content.type==VAR_TYPE_INT && b.content.type==VAR_TYPE_BOOL)
+    else if(a.content.type==VAR_TYPE_INT && b.content.type==VAR_TYPE_BOOL)
 	{
-		result.content.bool_value=a.content.int_value!=b.content.bool_value;
+        result.content.var_value.bool_value=a.content.var_value.int_value!=b.content.var_value.bool_value;
 	}
-	else if(a.content.type==VAR_TYPE_NILL && b.content.type!=VAR_TYPE_NILL)
+    else if(a.content.type==VAR_TYPE_NILL && b.content.type!=VAR_TYPE_NILL)
 	{
-		result.content.bool_value=1;
+        result.content.var_value.bool_value=1;
 	}
-	else if(a.content.type==VAR_TYPE_NILL && b.content.type==VAR_TYPE_NILL)
+    else if(a.content.type==VAR_TYPE_NILL && b.content.type==VAR_TYPE_NILL)
 	{
-		result.content.bool_value=0;
+        result.content.var_value.bool_value=0;
 	}
-    else if(a.content.type==VAR_TYPE_MESSAGE && b.content.type ==VAR_TYPE_MESSAGE)
+    else if(a.content.type==VAR_TYPE_HANDLE && b.content.type==VAR_TYPE_INT)
 	{
-		int i=strcmp(a.content.str,b.content.str);
-		result.content.bool_value=i;
+        result.content.var_value.bool_value=(a.content.var_value.handle_value!=b.content.var_value.int_value);
 	}
-	else if(a.content.type==VAR_TYPE_HANDLE && b.content.type==VAR_TYPE_INT)
+    else if(a.content.type==VAR_TYPE_HANDLE && b.content.type ==VAR_TYPE_NILL)
 	{
-		result.content.bool_value=(a.content.handle_value!=b.content.int_value);
+        result.content.var_value.bool_value=(a.content.var_value.handle_value!=0);
 	}
-	else if(a.content.type==VAR_TYPE_HANDLE && b.content.type ==VAR_TYPE_NILL)
+    else if(a.content.type==VAR_TYPE_BOOL && b.content.type==VAR_TYPE_INT)
 	{
-		result.content.bool_value=(a.content.handle_value!=0);
-	}
-	else if(a.content.type==VAR_TYPE_BOOL && b.content.type==VAR_TYPE_INT)
-	{
-		result.content.bool_value=a.content.bool_value!=b.content.int_value;
+        result.content.var_value.bool_value=a.content.var_value.bool_value!=b.content.var_value.int_value;
 	}
 	else
 	{
-		printf("this way of \" not equal \" comparing is not supported yet %d %d \n",a.content.type,b.content.type);
+        printf("this way of \" not equal \" comparing is not supported yet %d %d \n",a.content.type,b.content.type);
 		exit(0);
 	}
 	return result;
@@ -723,33 +621,23 @@ Var var_less_or_equal(Var a,Var b)
 {
 	Var result;
 
-	result.content.type=VAR_TYPE_BOOL;
-	if(a.content.type==VAR_TYPE_INT && b.content.type==VAR_TYPE_INT)
+    result.content.type=VAR_TYPE_BOOL;
+    if(a.content.type==VAR_TYPE_INT && b.content.type==VAR_TYPE_INT)
 	{
-		result.content.bool_value=a.content.int_value<=b.content.int_value;
+        result.content.var_value.bool_value=a.content.var_value.int_value<=b.content.var_value.int_value;
 	}
-	else if(a.content.type==VAR_TYPE_BOOL && b.content.type==VAR_TYPE_BOOL)
+    else if(a.content.type==VAR_TYPE_BOOL && b.content.type==VAR_TYPE_BOOL)
 	{
-		result.content.bool_value=a.content.bool_value<=b.content.bool_value;
+        result.content.var_value.bool_value=a.content.var_value.bool_value<=b.content.var_value.bool_value;
 	}
-	else if(a.content.type==VAR_TYPE_INT && b.content.type==VAR_TYPE_BOOL)
+    else if(a.content.type==VAR_TYPE_INT && b.content.type==VAR_TYPE_BOOL)
 	{
-		result.content.bool_value=a.content.int_value<=b.content.bool_value;
+        result.content.var_value.bool_value=a.content.var_value.int_value<=b.content.var_value.bool_value;
 	}
-    else if(a.content.type==VAR_TYPE_MESSAGE && b.content.type==VAR_TYPE_MESSAGE)
+
+    else if(a.content.type==VAR_TYPE_BOOL && b.content.type==VAR_TYPE_INT)
 	{
-		if(strcmp(a.content.str,b.content.str)<=0)
-		{
-			result.content.bool_value=1;
-		}
-		else
-		{
-			result.content.bool_value=0;
-		}
-	}
-	else if(a.content.type==VAR_TYPE_BOOL && b.content.type==VAR_TYPE_INT)
-	{
-		result.content.bool_value=a.content.bool_value<=b.content.int_value;
+        result.content.var_value.bool_value=a.content.var_value.bool_value<=b.content.var_value.int_value;
 	}
 	else
 	{
@@ -764,37 +652,27 @@ Var var_large_or_qual(Var a,Var b)
 
 	Var result;
 
-	result.content.type=VAR_TYPE_BOOL;
-	if(a.content.type==VAR_TYPE_INT && b.content.type==VAR_TYPE_INT)
+    result.content.type=VAR_TYPE_BOOL;
+    if(a.content.type==VAR_TYPE_INT && b.content.type==VAR_TYPE_INT)
 	{
-		result.content.bool_value=a.content.int_value>=b.content.int_value;
+        result.content.var_value.bool_value=a.content.var_value.int_value>=b.content.var_value.int_value;
 	}
-	else if(a.content.type==VAR_TYPE_BOOL && b.content.type==VAR_TYPE_BOOL)
+    else if(a.content.type==VAR_TYPE_BOOL && b.content.type==VAR_TYPE_BOOL)
 	{
-		result.content.bool_value=a.content.bool_value<=b.content.bool_value;
+        result.content.var_value.bool_value=a.content.var_value.bool_value<=b.content.var_value.bool_value;
 	}
-	else if(a.content.type==VAR_TYPE_INT && b.content.type==VAR_TYPE_BOOL)
+    else if(a.content.type==VAR_TYPE_INT && b.content.type==VAR_TYPE_BOOL)
 	{
-		result.content.bool_value=a.content.int_value>=b.content.bool_value;
+        result.content.var_value.bool_value=a.content.var_value.int_value>=b.content.var_value.bool_value;
 	}
-    else if(a.content.type==VAR_TYPE_MESSAGE && b.content.type==VAR_TYPE_MESSAGE)
+
+    else if(a.content.type==VAR_TYPE_BOOL && b.content.type==VAR_TYPE_INT)
 	{
-		if(strcmp(a.content.str,b.content.str)>=0)
-		{
-			result.content.bool_value=1;
-		}
-		else
-		{
-			result.content.bool_value=0;
-		}
+        result.content.var_value.bool_value=a.content.var_value.bool_value>=b.content.var_value.int_value;
 	}
-	else if(a.content.type==VAR_TYPE_BOOL && b.content.type==VAR_TYPE_INT)
+    else if(a.content.type!=VAR_TYPE_HANDLE && b.content.type!=VAR_TYPE_HANDLE)
 	{
-		result.content.bool_value=a.content.bool_value>=b.content.int_value;
-	}
-	else if(a.content.type!=VAR_TYPE_HANDLE && b.content.type!=VAR_TYPE_HANDLE)
-	{
-		result.content.bool_value= var_get_value(a)>=var_get_value(b);
+        result.content.var_value.bool_value= var_get_value(a)>=var_get_value(b);
 	}
 	return result;
 }
@@ -804,7 +682,7 @@ double var_GetDouble(Var a)
 {
 	if(var_GetType(a)==VAR_TYPE_REAL)
 	{
-		return a.content.real_value;
+        return a.content.var_value.real_value;
 	}
 	else
 	{
@@ -817,7 +695,7 @@ int var_GetInt(Var a)
 {
 	if(var_GetType(a)==VAR_TYPE_INT)
 	{
-		return a.content.int_value;
+        return a.content.var_value.int_value;
 	}
 	else
 	{
@@ -827,9 +705,9 @@ int var_GetInt(Var a)
 
 int var_GetBool(Var a)
 {
-	if(var_GetType(a)==VAR_TYPE_REAL)
+    if(var_GetType(a)==VAR_TYPE_BOOL)
 	{
-		return a.content.bool_value;
+        return a.content.var_value.bool_value;
 	}
 	else
 	{
@@ -841,7 +719,7 @@ char var_GetChar(Var a)
 {
     if(var_GetType(a)==VAR_TYPE_CHAR)
     {
-        return a.content.char_value;
+        return a.content.var_value.char_value;
     }
     else
     {
@@ -852,50 +730,59 @@ char var_GetChar(Var a)
 /*获得变量的值类型*/
 int var_GetType(Var a)
 {
-	return a.content.type;
+    return a.content.type;
+}
+void * var_getHandle(Var a)
+{
+    return a.content.var_value.handle_value;
 }
 
 /*设置Var变量的实数值，如果其不为实数，类型将会强制转换*/
 void var_SetReal(Var *a,double value)
 {
-	a->content.real_value=value;
-	a->content.type=VAR_TYPE_REAL;
+    a->content.var_value.real_value=value;
+    a->content.type=VAR_TYPE_REAL;
 }
 
 /*设置Var变量的字符值，如果其不为字符，类型将会强制转换*/
 void var_SetChar(Var *a,int ch)
 {
-    a->content.char_value=ch;
+    a->content.var_value.char_value=ch;
     a->content.type=VAR_TYPE_CHAR;
-
 }
+
+char * var_GetMsg(Var a)
+{
+    return a.content.var_value.str;
+}
+
 
 /*设置Var变量的整数值，如果其不为整数，类型将会强制转换*/
 void var_SetInt(Var *a,int value)
 {
-	a->content.int_value=value;
-	a->content.type=VAR_TYPE_INT;
+    a->content.var_value.int_value=value;
+    a->content.type=VAR_TYPE_INT;
 }
 
 
 /*设置Var变量的布尔值，如果其不为布尔，类型将会强制转换*/
 void var_SetBool(Var *a,int value)
 {
-	a->content.bool_value=value;
-	a->content.type=VAR_TYPE_BOOL;
+    a->content.var_value.bool_value=value;
+    a->content.type=VAR_TYPE_BOOL;
 }
 
 /*设置一个指定的Var变量的值类型为Nil*/
 void var_SetNil(Var *a)
 {
-	a->content.type=VAR_TYPE_NILL;
+    a->content.type=VAR_TYPE_NILL;
 }
 
 /*将指定的Var变量转换成API形式*/
 void var_SetAPI(Var *a ,int API_index)
 {
-	a->content.func.func_index=API_index;
-	a->content.func.func_type=FUNC_API;
+    a->content.var_value.func.func_index=API_index;
+    a->content.var_value.func.func_type=FUNC_API;
 }
 
 /*在stdout里打印Var变量的值，注意不带换行*/
@@ -917,6 +804,9 @@ void var_Print(Var a)
 		break;
     case VAR_TYPE_CHAR:
         printf("%c",var_GetChar(a));
+        break;
+    case VAR_TYPE_MESSAGE:
+        printf("%s",a.content.var_value.str);
         break;
 	default:
 		printf("var_Print : not support yet %d\n",var_GetType(a));

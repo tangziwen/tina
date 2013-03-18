@@ -27,7 +27,7 @@ PURPOSE.
 #include "assert.h"
 #include "function.h"
 #include "module.h"
-
+#include "const_segment.h"
 #define  OP_ASSCOCIATE_LEFT 1
 #define  OP_ASSCOCIATE_RIGHT 2
 #define LEFT_BRACE_PIORITY -1
@@ -162,7 +162,6 @@ static  int IsTokenCompatible(int pre ,int current,int pos)
 /*解析表达式*/
 void exp_Parse ( int * pos,int mode,int layer )
 {
-	int dot_counts=0;/*储存连续的点的个数*/
 	is_exp_parsing=1;
 	int brace =-1;
 	/*记录前一个词法单元的类型，*/
@@ -201,7 +200,7 @@ void exp_Parse ( int * pos,int mode,int layer )
 			{
 				Var a;
 				a.content.type=VAR_TYPE_NILL;
-				put_num_to_RPN ( a );
+                PutLiteralTo_RPN(ConstSegmentPush (a));
 				push_op_to_RPN_stack ( '+' );
 				TransferStackTop();
 			}
@@ -218,11 +217,16 @@ void exp_Parse ( int * pos,int mode,int layer )
 				/*出现了左括号，那么寻找该结构体类型的构造函数API，并把它压入*/
 				push_API_to_RPN_stack ( API_Search_cnstructor( t_k.content ) );
 				Element *top =GetRPNStackTop();
-				top->var_value.content.func.args=GetArgCount(*pos);
+                top->info.func_args=GetArgCount(*pos);
 			}
 			else/*若没有出现左括号，那么可能目的是为了访问静态成员*/
 			{
-				put_struct_name_to_PRN(t_k.content);
+
+                Var struct_var;
+                struct_var.content.type=VAR_TYPE_STRUCT_NAME;
+                struct_var.content.var_value.str=malloc(strlen(t_k.content)+1);
+                strcpy(struct_var.content.var_value.str,t_k.content);
+                PutLiteralTo_RPN (ConstSegmentPush (struct_var));
 			}
 		}
 		break;
@@ -237,7 +241,7 @@ void exp_Parse ( int * pos,int mode,int layer )
 			{
 				push_API_to_RPN_stack ( API_Search ( t_k.content ) );
 				Element *top =GetRPNStackTop();
-				top->var_value.content.func.args=GetArgCount(*pos);
+                top->info.func_args=GetArgCount(*pos);
 			}
 			else/*退化成一个函数指针*/
 			{
@@ -245,12 +249,24 @@ void exp_Parse ( int * pos,int mode,int layer )
 				Var a;
 				a.content.type=VAR_TYPE_FUNC;
 				/*储存函数索引*/
-				a.content.func.func_index=API_Search(t_k.content);
-				a.content.func.func_type=FUNC_API;
-				put_num_to_RPN ( a );
+                a.content.var_value.func.func_index=API_Search(t_k.content);
+                a.content.var_value.func.func_type=FUNC_API;
+                PutLiteralTo_RPN(ConstSegmentPush (a));
 			}
 		}
 		break;
+            /*遇见vector关键字，说明是构造向量的节点*/
+        case TOKEN_TYPE_VECTOR:
+        {
+            PushListCreatorToStack (ELEMENT_VECTOR_CREATE,GetArgCount(*pos));
+        }
+            break;
+            /*遇见tuple关键字，说明是构造向量的节点*/
+        case TOKEN_TYPE_TUPLE:
+        {
+            PushListCreatorToStack (ELEMENT_TUPLE_CREATE,GetArgCount(*pos));
+        }
+            break;
 		case TOKEN_TYPE_FUNC:
 		{
 			Var a;
@@ -264,16 +280,16 @@ void exp_Parse ( int * pos,int mode,int layer )
 
 				push_func_to_RPN_stack ( func_get_index_by_name ( t_k.content ),ELEMENT_FUNC);
 				Element *top =GetRPNStackTop();
-				top->var_value.content.func.args=GetArgCount(*pos);
+                top->info.func_args=GetArgCount(*pos);
 			}
 			else
 			{
 				/*退化成为一个函数指针常量*/
 				a.content.type=VAR_TYPE_FUNC;
 				/*储存函数索引*/
-				a.content.func.func_index=func_get_index_by_name(t_k.content);
-				a.content.func.func_type=FUNC_NORMAL;
-				put_num_to_RPN ( a );
+                a.content.var_value.func.func_index=func_get_index_by_name(t_k.content);
+                a.content.var_value.func.func_type=FUNC_NORMAL;
+                PutLiteralTo_RPN(ConstSegmentPush (a));
 			}
 		}
 		break;
@@ -281,16 +297,16 @@ void exp_Parse ( int * pos,int mode,int layer )
 		{
 			Var a;
 			a.content.type=VAR_TYPE_NILL;
-			a.content.int_value=0;
-			put_num_to_RPN(a);
+            a.content.var_value.int_value=0;
+            PutLiteralTo_RPN(ConstSegmentPush (a));
 		}
 		break;
         case TOKEN_TYPE_CHAR:
         {
             Var a;
             a.content.type=VAR_TYPE_CHAR;
-            a.content.char_value=t_k.content[0];
-            put_num_to_RPN ( a );
+            a.content.var_value.char_value=t_k.content[0];
+            PutLiteralTo_RPN(ConstSegmentPush (a));
         }
             break;
 		case TOKEN_TYPE_NUM:
@@ -299,30 +315,31 @@ void exp_Parse ( int * pos,int mode,int layer )
 			if ( IsInteger ( t_k.content ) ==1 )
 			{
 				a.content.type=VAR_TYPE_INT;
-				a.content.int_value=atoi ( t_k.content );
+                a.content.var_value.int_value=atoi ( t_k.content );
+
 			}
 			else
 			{
                     a.content.type=VAR_TYPE_REAL;
-                    a.content.real_value=atof ( t_k.content );
+                    a.content.var_value.real_value=atof ( t_k.content );
 			}
-			put_num_to_RPN ( a );
+            PutLiteralTo_RPN(ConstSegmentPush (a));
 		}
 		break;
 		case TOKEN_TYPE_TRUE:
 		{
 			Var a;
 			a.content.type=VAR_TYPE_BOOL;
-			a.content.bool_value=1;
-			put_num_to_RPN ( a );
+            a.content.var_value.bool_value=1;
+            PutLiteralTo_RPN(ConstSegmentPush (a));
 		}
 		break;
 		case TOKEN_TYPE_FALSE:
 		{
 			Var a;
 			a.content.type=VAR_TYPE_BOOL;
-			a.content.bool_value=0;
-			put_num_to_RPN ( a );
+            a.content.var_value.bool_value=0;
+            PutLiteralTo_RPN(ConstSegmentPush (a));
 		}
 		break;
 		/*若是个变量标记，则通过其名称，在当前被扫描function的*/
@@ -341,11 +358,10 @@ void exp_Parse ( int * pos,int mode,int layer )
 			{
 				push_func_to_RPN_stack(var_get_local_index ( t_k.content,layer),ELEMENT_CALL_BY_PTR);
 				Element *top =GetRPNStackTop();
-				top->var_value.content.func.args=GetArgCount(*pos);
+                top->info.func_args=GetArgCount(*pos);
 			}
 			else
 			{
-
 				/*仅仅视作普通变量*/
 				int a= var_get_local_index ( t_k.content,layer );
 				put_var_to_RPN ( a );
@@ -361,26 +377,22 @@ break;
             /*函数,否则就退化一个函数指针.*/
             TokenInfo next;
             token_get ( &test_pos,&next );
-            /*后面出现了左括号，故判定为成员函数调用*/
-            if(next.type==TOKEN_TYPE_OP&& next.content[0]=='(')
-            {
-                /*把字符串压入*/
-                Var a;
-                a.content.type=VAR_TYPE_MESSAGE;
-                /*在get_token中已经分配过内存了,所以在此直接指向*/
-                a.content.str=t_k.str;
-                put_num_to_RPN ( a );
-                TransferStackTop();
-                push_func_to_RPN_stack(0,ELEMENT_CALL_BY_MEMBER);/*压入call_by_member*/
-                Element *top =GetRPNStackTop();
-                top->var_value.content.func.args=GetArgCount(*pos);
-                break;
-            }
+            /*把字符串压入*/
             Var a;
             a.content.type=VAR_TYPE_MESSAGE;
             /*在get_token中已经分配过内存了,所以在此直接指向*/
-            a.content.str=t_k.str;
-            put_num_to_RPN ( a );
+            a.content.var_value.str=t_k.str;
+            PutLiteralTo_RPN(ConstSegmentPush (a));
+            TransferStackTop();/*把点运算符转移至队列*/
+            /*后面出现了左括号，故判定为成员函数调用*/
+            if(next.type==TOKEN_TYPE_OP&& next.content[0]=='(')
+            {
+
+                push_func_to_RPN_stack(0,ELEMENT_CALL_BY_MEMBER);/*在逆波兰栈中压入call_by_member*/
+                Element *top =GetRPNStackTop();
+                top->info.func_args=GetArgCount(*pos);
+                break;
+            }
 		}
 		break;
         /*字符串字面量*/
@@ -388,8 +400,8 @@ break;
         {
             Var a;
             a.content.type=VAR_TYPE_VECTOR;
-            a.content.handle_value=t_k.literal_handle;
-            put_num_to_RPN ( a );
+            a.content.var_value.handle_value=t_k.literal_handle;
+            PutLiteralTo_RPN(ConstSegmentPush (a));
         }
             break;
 		case TOKEN_TYPE_OP:
@@ -402,7 +414,7 @@ break;
 					TransferQueueEnd ( ELEMENT_ARRAY );
 
 				}
-				push_op_to_RPN_stack ( t_k.content[0] );
+                push_op_to_RPN_stack (t_k.content[0] );
 			}
 			else
 			{
@@ -429,7 +441,7 @@ break;
 				else
 				{
 					/*判断优先级放入运算符，并弹出更加优先的运算符，并要确保不把'(' 、'[ '错误弹出*/
-					if ( (get_top_priority_RPN()>0)&&get_top_priority_RPN()>=GetOpPriority ( t_k.content[0] ) )
+                    if ( (get_top_priority_RPN()>0)&&get_top_priority_RPN()>=GetOpPriority ( t_k.content[0] ) )
 					{
 						TransferStackTop();
 						push_op_to_RPN_stack ( t_k.content[0] );
@@ -477,29 +489,33 @@ break;
 					( RPN_GetStackTopType() ==ELEMENT_API
 					  || RPN_GetStackTopType() ==ELEMENT_FUNC
 					  ||RPN_GetStackTopType()==ELEMENT_CALL_BY_PTR
-					  ||RPN_GetStackTopType()==ELEMENT_CALL_BY_MEMBER) )
+                      ||RPN_GetStackTopType()==ELEMENT_CALL_BY_MEMBER
+                      ||RPN_GetStackTopType()==ELEMENT_VECTOR_CREATE
+                      )
+                 )
 			{
 				Element * top= GetRPNStackTop();
-                if ( top->var_value.content.func.args!=0 )//情况(a),(c)
+                if ( top->info.func_args!=0 )//情况(a),(c)
 				{
 					Var nul_var;
 					nul_var.content.type=VAR_TYPE_NILL;
-					put_num_to_RPN ( nul_var );
+                    PutLiteralTo_RPN(ConstSegmentPush (nul_var));
 					push_op_to_RPN_stack ( '+' );
 					TransferStackTop();
 				}
-                else if(top->var_value.content.func.args==0)//情况(b)
+                else if(top->info.func_args==0)//情况(b)
 				{
 					TransferStackTop();
 				}
 			}
 			else/*不出现上述情况下,直接将函数移走*/
 			{
-				/*如果顶端是个函数,则将其放入队列中*/
+                /*如果顶端是个函数或是具有类似性质的构造器,则将其放入队列中*/
 				if ( RPN_GetStackTopType() ==ELEMENT_API
 						|| RPN_GetStackTopType() ==ELEMENT_FUNC
 						||RPN_GetStackTopType()==ELEMENT_CALL_BY_PTR
 						|| RPN_GetStackTopType()==ELEMENT_CALL_BY_MEMBER
+                     ||RPN_GetStackTopType()==ELEMENT_VECTOR_CREATE
 				   )
 				{
 					TransferStackTop();
@@ -530,7 +546,7 @@ break;
 			{
 				Var nul_var;
 				nul_var.content.type=VAR_TYPE_NILL;
-				put_num_to_RPN ( nul_var );
+                PutLiteralTo_RPN(ConstSegmentPush (nul_var));
 				push_op_to_RPN_stack ( '+' );
 				TransferStackTop();/*将+放入队列*/
 			}
@@ -555,17 +571,17 @@ finish_lable:
 		TransferStackTop();
 	}
 	/*把单个的变量a变为a+NULL的形式*/
-	if ( GetRPNQueueTail() ==ELEMENT_VAR|| GetRPNQueueTail() == ELEMENT_NUM ||GetRPNQueueTail() == ELEMENT_ARRAY ||GetRPNQueueTail()==ELEMENT_STRUCT )
+    if ( GetRPNQueueTail() ==ELEMENT_VAR|| GetRPNQueueTail() == ELEMENT_LITERAL ||GetRPNQueueTail() == ELEMENT_ARRAY )
 	{
 
 		Var nul_var;
 		nul_var.content.type=VAR_TYPE_NILL;
-		put_num_to_RPN ( nul_var );
+        PutLiteralTo_RPN(ConstSegmentPush (nul_var));
 		push_op_to_RPN_stack ( '+' );
 		TransferStackTop();
 	}
 	/*PrintRPN();*/
-
+    PrintRPN();
 	/*转换成中间码*/
 	generate_IL();
 	/*重设表达式相关数据,为下次计算做准备*/
@@ -578,12 +594,15 @@ finish_lable:
 
 Element RPN_Queue[32];
 int RPN_QueueIndex=-1;
-/*把一个数字压入逆波兰表达式队列中*/
-void put_num_to_RPN ( Var number )
+
+
+/*把一个字面量放入逆波兰队列之中，参数为其在常量段的索引*/
+void PutLiteralTo_RPN(int index)
 {
-	RPN_QueueIndex++;
-	RPN_Queue[RPN_QueueIndex].type=ELEMENT_NUM;
-	RPN_Queue[RPN_QueueIndex].var_value=number;
+RPN_QueueIndex++;
+RPN_Queue[RPN_QueueIndex].type=ELEMENT_LITERAL;
+RPN_Queue[RPN_QueueIndex].index=index;
+printf("put #%d to PRN \n",RPN_Queue[RPN_QueueIndex].index);
 }
 
 /*把self指针压入*/
@@ -600,16 +619,7 @@ void put_var_to_RPN ( int index )
 	RPN_Queue[RPN_QueueIndex].index=index;
 }
 
-/*把一个结构体名压入逆波兰表达式中*/
-void put_struct_name_to_PRN(char * name)
-{
-	Var number;
-	number.content.str=malloc(strlen(name)+1);
-	strcpy(number.content.str,name);
-	RPN_QueueIndex++;
-	RPN_Queue[RPN_QueueIndex].type=ELEMENT_STRUCT;
-	RPN_Queue[RPN_QueueIndex].var_value=number;
-}
+
 Element RON_stack[16];
 int RPN_StackIndex=-1;
 /*把一个操作符压入转换逆波兰表达式的辅助栈中*/
@@ -627,7 +637,17 @@ void push_API_to_RPN_stack ( int index )
 	RPN_StackIndex++;
 	RON_stack[RPN_StackIndex].index=index;
 	RON_stack[RPN_StackIndex].type=ELEMENT_API;
+    RON_stack[RPN_StackIndex].op=OP_CALL;
 }
+
+void PushListCreatorToStack(int type,int args)
+{
+    RPN_StackIndex++;
+    RON_stack[RPN_StackIndex].type=type;
+    RON_stack[RPN_StackIndex].op=OP_CALL;
+    RON_stack[RPN_StackIndex].info.func_args=args;
+}
+
 
 
 
@@ -638,6 +658,7 @@ void push_func_to_RPN_stack ( int index,int mode)
 	RPN_StackIndex++;
 	RON_stack[RPN_StackIndex].index=index;
 	RON_stack[RPN_StackIndex].type=mode;
+    RON_stack[RPN_StackIndex].op=OP_CALL;
 }
 
 
@@ -647,6 +668,7 @@ void push_array_to_RPN_stack ( int index )
 	RPN_StackIndex++;
 	RON_stack[RPN_StackIndex].index=index;
 	RON_stack[RPN_StackIndex].type=ELEMENT_ARRAY;
+    RON_stack[RPN_StackIndex].op=OP_CALL;
 }
 int RPN_GetStackTopType()
 {
@@ -676,23 +698,20 @@ Element  * GetRPNStackTop()
 {
 	return &(RON_stack[RPN_StackIndex]);
 }
+
 /*转移栈顶的操作符或函数进入输出队列*/
 void TransferStackTop()
 {
-	RPN_QueueIndex++;
-	RPN_Queue[RPN_QueueIndex].op=RON_stack[RPN_StackIndex].op;
-	RPN_Queue[RPN_QueueIndex].type=RON_stack[RPN_StackIndex].type;
-	RPN_Queue[RPN_QueueIndex].index=RON_stack[RPN_StackIndex].index;
-	RPN_Queue[RPN_QueueIndex].var_value=RON_stack[RPN_StackIndex].var_value;
+    RPN_QueueIndex++;
+    RPN_Queue[RPN_QueueIndex]=RON_stack[RPN_StackIndex];
 	RPN_StackIndex--;
 }
 /*把输出队列的末尾的元素移入栈中*/
 void TransferQueueEnd ( int type )
 {
-	RPN_StackIndex++;
-	RON_stack[RPN_StackIndex].op=RPN_Queue[RPN_QueueIndex].op;
-	RON_stack[RPN_StackIndex].type=type;
-	RON_stack[RPN_StackIndex].index=RPN_Queue[RPN_QueueIndex].index;
+    RPN_StackIndex++;
+     RON_stack[RPN_StackIndex]=RPN_Queue[RPN_QueueIndex];
+    RON_stack[RPN_StackIndex].type=type;
 	RPN_QueueIndex--;
 }
 /*销毁栈顶的元素*/
@@ -744,9 +763,11 @@ int GetOpPriority ( char op )
 		return 7;
 	case '/':
 		return 7;
-
+    case OP_CALL:
+        return 8;
 	case '.':
 		return 9;
+
 	default :
 		printf ( "in  \"GetOpPriority\",illigal operator   %d\n",op );
 		exit(0);
@@ -763,7 +784,7 @@ int GetRPNQueueTail()
 /*打印逆波兰队列*/
 void PrintRPN()
 {
-	printf("PRN: ");
+    printf("PRN:\n");
 	int i;
 	for ( i=0; i<=RPN_QueueIndex; i++ )
 	{
@@ -772,9 +793,8 @@ void PrintRPN()
 		case ELEMENT_OP:
 			printf ( "%c ",RPN_Queue[i].op );
 			break;
-		case ELEMENT_NUM:
-			var_Print(RPN_Queue[i].var_value);
-			printf(" ");
+		case ELEMENT_LITERAL:
+            printf("#%d ",RPN_Queue[i].index);
 			break;
 		case ELEMENT_VAR:
 			printf ( "var " );
@@ -790,15 +810,15 @@ void PrintRPN()
 			break;
 		case ELEMENT_CALL_BY_PTR:
 			printf("CALL_BY_PTR ");
-		case ELEMENT_STRUCT:
-			printf("STRUCT ");
+            break;
 		case ELEMENT_CALL_BY_MEMBER:
-			printf("call  ");
+            printf("CALL_MEMBER ");
+            break;
 		default:
 			break;
 		}
 	}
-	printf ( "\n" );
+    printf ( "\nEND:\n" );
 }
 
 static Element IL_Stack[32];
@@ -829,19 +849,12 @@ void generate_IL()
 			IL_Stack[IL_StackIndex].type=ELEMENT_SELF;
 			IL_Stack[IL_StackIndex].index=RPN_Queue[i].index;/*储存其对于其函数的相对索引*/
 			break;
-			/*遇到结构体名称也将其当成变量压入*/
-		case ELEMENT_STRUCT:
-			IL_StackIndex++;
-			IL_Stack[IL_StackIndex].type=ELEMENT_STRUCT;
-			IL_Stack[IL_StackIndex].var_value =RPN_Queue[i].var_value;/*储存值*/
-			IL_Stack[IL_StackIndex].index=RPN_Queue[i].index;/*储存其对于其函数的相对索引*/
-			break;
 			/*遇见常量也将其放入中间栈中*/
-		case ELEMENT_NUM:
+		case ELEMENT_LITERAL:
 			IL_StackIndex++;
-			IL_Stack[IL_StackIndex].type=ELEMENT_NUM;
-			IL_Stack[IL_StackIndex].var_value =RPN_Queue[i].var_value;
+			IL_Stack[IL_StackIndex].type=ELEMENT_LITERAL;
 			IL_Stack[IL_StackIndex].index=RPN_Queue[i].index;/*储存其对于其函数的相对索引*/
+            printf("#%d\n",IL_Stack[IL_StackIndex].index);
 			break;
 			/*遇见API其地位等同于操作符*/
 			/*做一个变形，将API设为a操作数，变成a+nil的形式*/
@@ -849,31 +862,12 @@ void generate_IL()
 		{
 			/*向栈前去寻找参数.*/
 			Element e =RPN_Queue[i];
-			int index=e .var_value.content.func.args;
-			int j=0;
-			for ( ; index>0; index--,j++ )/*记录参数的位置*/
-			{
-				e.function_indexs[j]=IL_Stack[IL_StackIndex-index+1].index;
-			}
 			/*然后从栈中抹去参数*/
-			int k=IL_StackIndex-e.var_value.content.func.args;
+            int k=IL_StackIndex-e.info.func_args;
 			IL_StackIndex=k;
-			/*数据拷入a中*/
-			A.type=e.type;
-			A.value=e.var_value;
-			A.index=e.index;
-			{
-				int i;
-				for ( i=0; i<10; i++ )
-				{
-					A.function_indexs[i]=e.function_indexs[i];
-				}
-			}
 			/*把结果加入到中间语言执行序列中去*/
 			tmp_index++;
-			B.value.content.type=VAR_TYPE_NILL;
-			B.type=ELEMENT_NUM;
-			IL_ListInsert ( IL_exp_create ( '+',tmp_index,A,B ) );
+            IL_ListInsertCall (FUNC_API,tmp_index,e.info.func_args,e.index);
 			/*同时把中间结果写回栈中*/
 			IL_StackIndex++;
 			IL_Stack[IL_StackIndex].type=ELEMENT_TMP;
@@ -887,31 +881,12 @@ void generate_IL()
 
 			/*向栈前去寻找参数.*/
 			Element e =RPN_Queue[i];
-			int index=e .var_value.content.func.args;
-			int j=0;
-			for ( ; index>0; index--,j++ )/*记录参数的位置*/
-			{
-				e.function_indexs[j]=IL_Stack[IL_StackIndex-index+1].index;
-			}
 			/*然后从栈中抹去参数*/
-			int k=IL_StackIndex-e.var_value.content.func.args;
+            int k=IL_StackIndex-e.info.func_args;
 			IL_StackIndex=k;
-			/*数据拷入a中*/
-			A.type=e.type;
-			A.value=e.var_value;
-			A.index=e.index;
-			{
-				int i;
-				for ( i=0; i<10; i++ )
-				{
-					A.function_indexs[i]=e.function_indexs[i];
-				}
-			}
 			/*把结果加入到中间语言执行序列中去*/
 			tmp_index++;
-			B.value.content.type=VAR_TYPE_NILL;
-			B.type=ELEMENT_NUM;
-			IL_ListInsert ( IL_exp_create ( '+',tmp_index,A,B ) );
+            IL_ListInsertCall (FUNC_NORMAL,tmp_index,e.info.func_args,e.index);
 			/*同时把中间结果写回栈中*/
 			IL_StackIndex++;
 			IL_Stack[IL_StackIndex].type=ELEMENT_TMP;
@@ -923,31 +898,12 @@ void generate_IL()
 		{
 			/*向栈前去寻找参数.*/
 			Element e =RPN_Queue[i];
-			int index=e .var_value.content.func.args;
-			int j=0;
-			for ( ; index>0; index--,j++ )/*记录参数的位置*/
-			{
-				e.function_indexs[j]=IL_Stack[IL_StackIndex-index+1].index;
-			}
 			/*然后从栈中抹去参数*/
-			int k=IL_StackIndex-e.var_value.content.func.args;
+            int k=IL_StackIndex-e.info.func_args-1;
 			IL_StackIndex=k;
-			/*数据拷入a中*/
-			A.type=e.type;
-			A.value=e.var_value;
-			A.index=e.index;
-			{
-				int i;
-				for ( i=0; i<10; i++ )
-				{
-					A.function_indexs[i]=e.function_indexs[i];
-				}
-			}
 			/*把结果加入到中间语言执行序列中去*/
 			tmp_index++;
-			B.value.content.type=VAR_TYPE_NILL;
-			B.type=ELEMENT_NUM;
-			IL_ListInsert ( IL_exp_create ( '+',tmp_index,A,B ) );
+            IL_ListInsertCall (FUNC_DYNAMIC,tmp_index,e.info.func_args,-1);
 			/*同时把中间结果写回栈中*/
 			IL_StackIndex++;
 			IL_Stack[IL_StackIndex].type=ELEMENT_TMP;
@@ -958,74 +914,80 @@ void generate_IL()
 		{
 			/*向栈前去寻找参数.*/
 			Element e =RPN_Queue[i];
-			int index=e .var_value.content.func.args;
-			/*向上查找.找到计算引用的那一步，获取索引*/
-			e.index =IL_Stack[IL_StackIndex-index].index;
-			int j=0;
-			for ( ; index>0; index--,j++ )/*记录参数的位置*/
-			{
-				e.function_indexs[j]=IL_Stack[IL_StackIndex-index+1].index;
-			}
+            printf("the IL_StackIndex %d\n",IL_StackIndex);
 			/*然后从栈中抹去参数*/
-			int k=IL_StackIndex-e.var_value.content.func.args;
+            int k=IL_StackIndex-e.info.func_args-1;
 			IL_StackIndex=k;
-			/*数据拷入a中*/
-			A.type=e.type;
-			A.value=e.var_value;
-			A.index=e.index;
-			{
-				int i;
-				for ( i=0; i<10; i++ )
-				{
-					A.function_indexs[i]=e.function_indexs[i];
-				}
-			}
 			/*把结果加入到中间语言执行序列中去*/
 			tmp_index++;
-			B.value.content.type=VAR_TYPE_NILL;
-			B.type=ELEMENT_NUM;
-			IL_ListInsert ( IL_exp_create ( '+',tmp_index,A,B ) );
+            IL_ListInsertCall (FUNC_DYNAMIC,tmp_index,e.info.func_args,-1);
 			/*同时把中间结果写回栈中*/
 			IL_StackIndex++;
 			IL_Stack[IL_StackIndex].type=ELEMENT_TMP;
 			IL_Stack[IL_StackIndex].index=tmp_index;
 		}
 		break;
-		case ELEMENT_ARRAY:
-			IL_StackIndex++;
-			IL_Stack[IL_StackIndex].array_index=IL_Stack[IL_StackIndex-1].index;
-			IL_Stack[IL_StackIndex].type=ELEMENT_ARRAY;
-			IL_Stack[IL_StackIndex].index =RPN_Queue[i].index;
+        /*向量构造函数*/
+        case ELEMENT_VECTOR_CREATE:
+        {
+
+            /*向栈前去寻找参数.*/
+            Element e =RPN_Queue[i];
+            printf("the IL_StackIndex %d\n",IL_StackIndex);
+            /*然后从栈中抹去参数*/
+            int k=IL_StackIndex-e.info.func_args;
+            IL_StackIndex=k;
+            /*把结果加入到中间语言执行序列中去*/
+            tmp_index++;
+            IL_ListInsertListCreator (ELEMENT_VECTOR_CREATE,tmp_index,e.info.func_args);
+            /*同时把中间结果写回栈中*/
+            IL_StackIndex++;
+            IL_Stack[IL_StackIndex].type=ELEMENT_TMP;
+            IL_Stack[IL_StackIndex].index=tmp_index;
+        }
+            break;
+            /*元组构造函数*/
+            case ELEMENT_TUPLE_CREATE:
+            {
+                /*向栈前去寻找参数.*/
+                Element e =RPN_Queue[i];
+                printf("the IL_StackIndex %d\n",IL_StackIndex);
+                /*然后从栈中抹去参数*/
+                int k=IL_StackIndex-e.info.func_args;
+                IL_StackIndex=k;
+                /*把结果加入到中间语言执行序列中去*/
+                tmp_index++;
+                IL_ListInsertListCreator (ELEMENT_TUPLE_CREATE,tmp_index,e.info.func_args);
+                /*同时把中间结果写回栈中*/
+                IL_StackIndex++;
+                IL_Stack[IL_StackIndex].type=ELEMENT_TMP;
+                IL_Stack[IL_StackIndex].index=tmp_index;
+            }
+                break;
+            /*数组我们视为一个特殊的常量*/
+        case ELEMENT_ARRAY:
+            /*覆盖前面的一个*/
+            IL_Stack[IL_StackIndex].type=ELEMENT_ARRAY;
+            /*前一个零食变量，为记录索引计算的最终位置*/
+            IL_Stack[IL_StackIndex].info.array_index_tmp=tmp_index;
+            IL_Stack[IL_StackIndex].index =RPN_Queue[i].index;
 			break;
 			/*遇见操作符,则从中间栈中中取出两个数,并加入到中间语言执行序列之中*/
 		case ELEMENT_OP:
 			/*注意从栈中取出的顺序与计算顺序相反,先取b再取a*/
 			B.type=IL_Stack[IL_StackIndex].type;
 			B.index=IL_Stack[IL_StackIndex].index;
-			B.value=IL_Stack[IL_StackIndex].var_value;
-			{
-				int i;
-				for ( i=0; i<10; i++ )
-				{
-					B.function_indexs[i]=IL_Stack[IL_StackIndex].function_indexs[i];
-				}
-			}
+            B.info=IL_Stack[IL_StackIndex].info;
+            printf("B#%d\n",IL_Stack[IL_StackIndex].index);
 			IL_StackIndex--;
 			A.type=IL_Stack[IL_StackIndex].type;
 			A.index=IL_Stack[IL_StackIndex].index;
-			A.value=IL_Stack[IL_StackIndex].var_value;
-			{
-				int i;
-				for ( i=0; i<10; i++ )
-				{
-					A.function_indexs[i]=IL_Stack[IL_StackIndex].function_indexs[i];
-				}
-			}
+            A.info=IL_Stack[IL_StackIndex].info;
+            printf("A#%d\n",IL_Stack[IL_StackIndex].index);
 			IL_StackIndex--;
-
 			/*把结果加入到中间语言执行序列中去*/
 			tmp_index++;
-			IL_ListInsert ( IL_exp_create ( RPN_Queue[i].op,tmp_index,A,B ) );
+            IL_ListInsertEXP ( IL_exp_create( RPN_Queue[i].op,A,B ),tmp_index);
 			/*同时把中间结果写回栈中*/
 			IL_StackIndex++;
 			IL_Stack[IL_StackIndex].type=ELEMENT_TMP;

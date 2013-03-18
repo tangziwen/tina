@@ -24,17 +24,13 @@ PURPOSE.
 #define EXP_CONTROL 3 /*控制表达式,以 "{" 结尾*/
 #include "tina.h"
 #include "var.h"
+
 typedef struct element_t
 {
 	int type;
-	Var var_value;
 	char op;
 	int index;
-	union
-	{
-		int array_index;/*数组取下标的临时变量的索引*/
-		int function_indexs[10];/*函数取下标的临时变量的索引*/
-	};
+    union element_info_t info;
 } Element;
 /*计算表达式*/
 /*形如 a=3*(c+b)/2.5;*/
@@ -69,13 +65,14 @@ int isRPN_StackEmpty();
 
 /*转移栈顶的操作符进入输出队列*/
 void TransferStackTop();
-
-
+/*向栈中添加列表构造函数*/
+void PushListCreatorToStack(int type,int args);
 /*把输出队列的末尾的元素移入栈中*/
 void TransferQueueEnd(int type);
 /*销毁栈顶的元素*/
 void RemoveRPN_StackTop();
-
+/*把一个字面量放入逆波兰队列之中，参数为其在常量段的索引*/
+void PutLiteralTo_RPN(int index);
 /*获取操作符的优先级*/
 int GetOpPriority( char op);
 

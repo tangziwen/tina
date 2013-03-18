@@ -1,4 +1,4 @@
-﻿/************************************************************************************
+/************************************************************************************
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
 as published by the Free Software Foundation; either
@@ -50,7 +50,7 @@ void CleanCurrentLocalVar()
 		int t=var_GetType(local_var[i]);
         if(t==VAR_TYPE_TUPLE || t == VAR_TYPE_HANDLE)
 		{
-			RefCountDecrease(t,local_var[i].content.handle_value);
+            RefCountDecrease(t,var_getHandle (local_var[i]));
 		}
 		var_SetNil( &(local_var[i] ));
 	}

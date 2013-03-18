@@ -29,6 +29,8 @@ void tuple_init();
 void tuple_SetValue(Var array_obj,int index ,Var new_value);
 void TupleRefCountIncrease(void * ptr);
 void TupleRefCountDecrease(void * ptr);
+/*元组构造器*/
+Var the_tuple_creator(int size,Var init_arg[]);
 /*清除数组临时对象池*/
 void tuple_CleanTmpPool();
 #endif /* TINA_ARRAY_H*/

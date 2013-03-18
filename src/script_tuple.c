@@ -52,8 +52,7 @@ static tuple_chunk * CreateTuple(int tuple_size)
 		/*初始化*/
         for ( i=0; i<tuple_size; i++ )
 		{
-			array[i].content.type=VAR_TYPE_INT;
-			array[i].content.int_value=0;
+            var_SetInt (array+i,0);
 		}
 	}
 	return new_array;
@@ -64,7 +63,7 @@ static tuple_chunk * CreateTuple(int tuple_size)
 Var tuple_GetValue(Var array_obj,int index )
 {
     tuple_chunk * a;
-    a=(tuple_chunk *)array_obj.content.handle_value;
+    a=(tuple_chunk *)var_getHandle (array_obj);
     if(index <a->tuple_size+1&& index>0)
 	{
         Var * the_tuple =a->var_handle;
@@ -80,7 +79,7 @@ Var tuple_GetValue(Var array_obj,int index )
 void tuple_SetValue(Var array_obj,int index ,Var new_value)
 {
     tuple_chunk * a;
-    a=(tuple_chunk *)array_obj.content.handle_value;
+    a=(tuple_chunk *)var_getHandle (array_obj);
     if(index <a->tuple_size+1 && index>0)
 	{
 		Var * array =a->var_handle;
@@ -92,19 +91,18 @@ void tuple_SetValue(Var array_obj,int index ,Var new_value)
 	}
 }
 
-static void the_tuple_creator()
+Var the_tuple_creator(int size,Var init_arg[])
 {
-	Var result;
+    Var result;
     result.content.type=VAR_TYPE_TUPLE;
-    int size =API_GetArgCount();
-    result.content.handle_value= CreateTuple(size);
+   tuple_chunk * new_obj = CreateTuple(size);
+    result.content.var_value.handle_value=new_obj;
     int i=0;
     for(;i<size;i++)
     {
-        tuple_SetValue (result,i+1,API_argument_list[i]);
+        tuple_SetValue (result,i+1,init_arg[i]);
     }
-	Tina_API_SetReturn ( result );
-
+    return result;
 }
 
 /*获取数组的长度*/
@@ -123,8 +121,8 @@ static void getTupleLength()
         printf("tuple_size only support array type!\n");
 		exit(0);
 	}
-    tuple_chunk * a=the_tuple_var.content.handle_value;
-    result.content.int_value=a->tuple_size;
+    tuple_chunk * a=var_getHandle (the_tuple_var);
+    var_SetInt (&result,a->tuple_size);
 	Tina_API_SetReturn ( result );
 }
 
@@ -143,7 +141,7 @@ static void free_array(tuple_chunk * ptr)
 		int t=var_GetType(ptr->var_handle[i]);
         if(t==VAR_TYPE_TUPLE || t==VAR_TYPE_HANDLE ||t==VAR_TYPE_VECTOR)
 		{
-			RefCountDecrease(t,ptr->var_handle[i].content.handle_value);
+            RefCountDecrease(t,var_getHandle (ptr->var_handle[i]));
 		}
 	}
 }

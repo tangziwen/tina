@@ -48,7 +48,7 @@ static void type_creator()
 	Var result;
 	result.content.type=VAR_TYPE_HANDLE;
 	int id=Tina_API_GetTag();
-	result.content.handle_value=create_instance(id);
+    result.content.var_value.handle_value=create_instance(id);
 
 	result.class_id=Tina_API_GetTag();
 	/*若存在初始化函数,则调用它*/
@@ -228,7 +228,7 @@ static void free_struct(struct_chunk * obj)
 			int type=var_GetType(obj->member[i]);
 			if(type==VAR_TYPE_TUPLE || type ==VAR_TYPE_HANDLE)
 			{
-				RefCountDecrease(type,obj->member[i].content.handle_value);
+                RefCountDecrease(type,obj->member[i].content.var_value.handle_value);
 			}
 		}
 	}
@@ -472,8 +472,8 @@ DEF:
 			{
 				Var func_ptr;
 				func_ptr.content.type=VAR_TYPE_FUNC;
-				func_ptr.content.func.func_index=func_get_index_by_name(f->name);
-				func_ptr.content.func.func_type=FUNC_NORMAL;
+                func_ptr.content.var_value.func.func_index=func_get_index_by_name(f->name);
+                func_ptr.content.var_value.func.func_type=FUNC_NORMAL;
 				strcpy(func_ptr.name,member_name);
 				AddMember(struct_index,func_ptr,acc,is_sealed);
 			}

@@ -16,60 +16,13 @@ PURPOSE.
 发布此程序是希望它有助于您,但是作者对其不做任何担保,即使是商业上或
 合于特定用途的隐式担保亦无
 *********************tzw <tzwtangziwen@gmail.com>******************************/
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include "tina.h"
-//#define NDEBUG
-#include "debug.h"
-
-
-
-void SayHello()
-{
-	printf("holla you boy\n");
-}
-
-
-/*解释器主函数*/
-/*如果未加说明则解释执行本地的test.tina脚本*/
-int main ( int argc,char * argv[] )
-{
-	Tina_Init();
-	switch(argc)
-	{
-	case 1:
-		PRINT("please input file");
-		test( /*for quick test*/
-			Tina_Build ("test.tina");
-                Tina_PrintIL ("main");
-            Tina_Run ( "main" );
-		);
-		break;
-	case 2:
-		Tina_Build (argv[1]);
-		Tina_Run ( "main" );
-		break;
-	default:
-		STOP("INVALID ARG!");
-		break;
-	}
-	exit(EXIT_SUCCESS);
-	return 0;
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+#ifndef TINA_CONST_SEGMENT_H
+#define TINA_CONST_SEGMENT_H
+#include "var.h"
+/*将指定的变量加入常量段,并返回其索引*/
+int ConstSegmentPush(Var const_var);
+/*返回当前常量段中拥有的常量的数量*/
+int ConstSegmentGetCount();
+/*返回指定索引的常量段中的变量*/
+Var ConstSegmentGetVar(int index);
+#endif // CONST_SEGMENT_H

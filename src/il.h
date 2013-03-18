@@ -27,6 +27,7 @@ PURPOSE.
  */
 #include "var.h"
 #include "def.h"
+#include "type.h"
 #define IL_VAR_TMP 1
 #define IL_VAR_GLOBAL 2
 
@@ -35,12 +36,18 @@ PURPOSE.
 #define IL_NODE_JNE 3 /*表示此节点为一个成真跳转(非零跳转),只会向上寻找*/
 #define IL_NODE_JMP 4 /*表示此节点为一个强制跳转,只会向下寻找*/
 #define IL_NODE_LAB 5 /*表示此节点为一个跳转标记*/
-#define IL_NODE_PRNT 6 /*现实原语*/
+#define IL_NODE_PRNT 6 /*显示原语*/
 #define IL_NODE_RETURN 7 /*返回节点*/
 #define IL_NODE_DELETE 8 /**/
+#define IL_NODE_CALL_LIST 9 /*调用一个list*/
+#define IL_NODE_CALL_API 10 /*调用一个API函数*/
+#define IL_NODE_CALL_DYNAMIC 11 /*调用一个动态的过程，可能是LIST也可能是API，将由虚拟机在运行时判定*/
+#define IL_NODE_VECTOR_CREATOR 12 /*向量构造器节点*/
+#define IL_NODE_TUPLE_CREATOR 13
+#define IL_NODE_NILL 14 /*空节点，无实际意义*/
 
 #define ELEMENT_VAR 1
-#define ELEMENT_NUM 2
+#define ELEMENT_LITERAL 2
 #define ELEMENT_OP 3
 #define ELEMENT_TMP 4
 #define ELEMENT_API 5
@@ -49,13 +56,14 @@ PURPOSE.
 #define ELEMENT_CALL_BY_PTR 8
 #define ELEMENT_CALL_BY_MEMBER 9
 #define ELEMENT_SELF 10
-#define ELEMENT_STRUCT 11
+#define ELEMENT_VECTOR_CREATE 11
+#define ELEMENT_TUPLE_CREATE 12
 /*当前的标签数*/
 extern int label_index;
 
 
 
-extern IL_node* IL_node_create_exp(IL_exp * exp);
+extern IL_node* IL_node_create_exp(IL_exp * exp, int tmp_index);
 
 extern IL_node * IL_node_create_jmp(int label ,int mode);
 
@@ -71,10 +79,10 @@ extern Var self_ptr;
 IL_list * current_list;
 
 /*创建一个中间语言表达式*/
-IL_exp * IL_exp_create(char op,int tmp_var_index,IL_element var_a,IL_element var_b);
+IL_exp * IL_exp_create(char op, IL_element var_a, IL_element var_b);
 
 /*向中间语言的执行序列中增加一个表达式*/
-void IL_ListInsert(IL_exp *exp);
+void IL_ListInsertEXP(IL_exp *exp, int tmp_index);
 
 void IL_ListInsertNode(IL_node *node);
 
@@ -90,4 +98,11 @@ void IL_tmp_reset();
 /*往中间代码中加入返回节点*/
 void IL_ListInsertReturn();
 
+/*像中间代码添加带列表函数调用代码*/
+void IL_ListInsertCall(int type,int tmp_index, int args, int function_index);
+
+/*像中间代码添加列表构造器中间代码*/
+void IL_ListInsertListCreator(int type,int tmp_index,int init_args);
+/*向节点中添加*/
+IL_node * IL_CreateNode(int tmp_index);
 #endif

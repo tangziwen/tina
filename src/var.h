@@ -35,6 +35,7 @@ PURPOSE.
 #define VAR_TYPE_VECTOR 9
 #define VAR_TYPE_CHAR 10 /*字符类型*/
 #define VAR_TYPE_MESSAGE 11
+#define VAR_TYPE_ELEMENT 12 /*用于保存一个表的元素*/
 /*null只能作为右操作数,a+null返回a的值*/
 
 
@@ -101,6 +102,10 @@ int var_GetBool(Var a);
 char var_GetChar(Var a);
 /*获得变量的值类型*/
 int var_GetType(Var a);
+/*获得变量的句柄类型*/
+void * var_getHandle(Var a);
+/*获得变量的消息*/
+char * var_GetMsg(Var a);
 /*设置Var变量的实数值，如果其不为实数，类型将会强制转换*/
 void var_SetReal(Var *a,double value);
 /*设置Var变量的整数值，如果其不为整数，类型将会强制转换*/

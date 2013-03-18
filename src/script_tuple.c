@@ -199,6 +199,4 @@ void TupleRefCountDecrease(void * ptr)
 
 void script_tuple_init()
 {
-    Tina_API_Register ( "tuple",the_tuple_creator,0);
-    Tina_API_Register ( "tuple_length",getTupleLength,0);
 }

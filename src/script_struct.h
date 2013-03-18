@@ -50,6 +50,9 @@ void struct_ParseDeclare(int * pos);
 void struct_ParseDefine(int * pos);
 int get_class_id(const char * name);
 void SetMember(int ID ,int member_id,Var value);
+
+/*创建一个对象，传入该对象对应的原型的ID，并传入构造函数所需的参数(如果有的话)*/
+Var  struct_Create(int id, Var init_arg[], int args);
 /*引用计数自增一*/
 void StructRefCountIncrease(void * handle);
 /*引用计数自减一*/

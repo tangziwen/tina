@@ -43,30 +43,32 @@ static  struct_info class_list[30];
 /*变量保存的临时池,引用计数为零的变量*/
 static struct_chunk * StructTmpPool;
 
-static void type_creator()
+/*创建一个对象，传入该对象对应的原型的ID，并传入构造函数所需的参数(如果有的话)*/
+Var  struct_Create(int id,Var init_arg[],int args)
 {
 	Var result;
 	result.content.type=VAR_TYPE_HANDLE;
-	int id=Tina_API_GetTag();
     result.content.var_value.handle_value=create_instance(id);
-
-	result.class_id=Tina_API_GetTag();
+    result.class_id=id;
 	/*若存在初始化函数,则调用它*/
 	if(class_list[id].initializer_index>=0)
 	{
-
 		int old_env =env_index;
 		env_index=id;/*环境索引改变为类内部*/
 		/*函数栈压入*/
 		vm_RTstackPush();
 		/*获取构造函数*/
 		Function  *f=func_get_by_index(class_list[id].initializer_index);
-		int i;
+        if(f->arg_counts!=args)
+        {
+            STOP("struct constructor not matched!");
+        }
 		self_ptr=result;
-		/*传入参数*/
+        /*传入参数*/
+        int i;
 		for(i=0; i<f->arg_counts; i++)
 		{
-			vm_rt_stack_var_cast_set ( i,API_argument_list[i]);
+            vm_rt_stack_var_cast_set ( i,init_arg[i]);
 		}
 		IL_list * old_list=current_list;
 		func_PlainInvoke ( class_list[id].initializer_index);/*执行构造函数*/
@@ -76,8 +78,9 @@ static void type_creator()
 		self_ptr.content.type=VAR_TYPE_NILL;
 		env_index=old_env;/*维持环境*/
 	}
-	Tina_API_SetReturn ( result );
+    return result;
 }
+
 /*通过指定字符串找到类的id*/
 static int plain_get_class_id(const char * name)
 {
@@ -144,11 +147,6 @@ static void create_type(int ID,char * name)
 	char unique_name[128]= {0};
 	strcpy(unique_name,module_ContextMangledName(name));
 	strcpy(class_list[ID].name,unique_name);
-	strcat(unique_name,"@new");
-	/*每当创建一个类型,就注册一个与类型同名的函数当做API,来构建对象*/
-	int index =Tina_API_Register ( unique_name,type_creator ,ID);
-	/*保存当前注册函数的索引*/
-	class_list[ID].api_index=index;
 }
 
 
@@ -268,7 +266,6 @@ void *  create_instance(int ID)
 	new_obj->tmp_next=StructTmpPool;
 	new_obj->member_count=class_list[ID].member_count;
 	StructTmpPool=new_obj;
-
 	/*引用计数初始化*/
 	new_obj->ref_count=0;
 	return new_obj;

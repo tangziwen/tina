@@ -29,6 +29,7 @@ PURPOSE.
 #include "script_tuple.h"
 #include "script_vec.h"
 #include "const_segment.h"
+#include "script_struct.h"
 
 /*当前运行到节点*/
 static IL_node * current_node=NULL;
@@ -155,17 +156,48 @@ IL_node * IL_CreateNode(int tmp_index)
 }
 
 
-IL_ListCreatorNode *  IL_CreateCreator(int init_args)
+IL_ListCreatorNode *  IL_CreateListCreator(int init_args)
 {
     IL_ListCreatorNode * node =malloc (sizeof(IL_ListCreatorNode));
     node->init_args=init_args;
     return node;
 }
+IL_StructCreatorNode *  IL_CreateStructCreator(int id,int init_args)
+{
+    IL_StructCreatorNode * node =malloc (sizeof(IL_StructCreatorNode));
+    node->id=id;
+    node->init_args=init_args;
+    return node;
+}
+/*像中间代码添加列表构造器中间代码*/
+void IL_ListInsertStructCreator(int id,int tmp_index,int init_args)
+{
+    IL_node * node=IL_CreateNode (tmp_index);
+    node->struct_creator=IL_CreateStructCreator(id,init_args);
+    printf("%d %d\n",id,init_args);
+    node->type=IL_NODE_STRUCT_CREATOR;
+    if ( func_get_current()->list.head==NULL )
+    {
+        func_get_current()->list.head=node;
+        func_get_current()->list.head->next=NULL;
+    }
+    else
+    {
+        IL_node *tmp=func_get_current()->list.head;
+        while ( tmp->next!=NULL )
+        {
+            tmp=tmp->next;
+        }
+        tmp->next= node;
+        node->pre=tmp;
+        node->next=NULL;
+    }
+}
 /*像中间代码添加列表构造器中间代码*/
 void IL_ListInsertListCreator(int type,int tmp_index,int init_args)
 {
     IL_node * node=IL_CreateNode (tmp_index);
-     node->list_creator=IL_CreateCreator(init_args);
+     node->list_creator=IL_CreateListCreator(init_args);
      switch(type)
      {
      case ELEMENT_VECTOR_CREATE:
@@ -334,6 +366,11 @@ void IL_printf_tuple_creator(IL_node *node)
 {
     printf("TUPLE:@%d=[args:%d]\n",node->tmp_index,node->list_creator->init_args);
 }
+void IL_printf_struct_creator(IL_node * node)
+{
+ printf("STRUCT:@%d=[^%d %d]\n",node->tmp_index,node->struct_creator->id,node->struct_creator->init_args);
+}
+
 /*打印中间代码执行序列*/
 void IL_list_print ( Function * func )
 {
@@ -378,6 +415,9 @@ void IL_list_print ( Function * func )
             break;
         case IL_NODE_TUPLE_CREATOR:
             IL_printf_tuple_creator (tmp);
+            break;
+        case IL_NODE_STRUCT_CREATOR:
+            IL_printf_struct_creator(tmp);
             break;
 		}
 		tmp=tmp->next;
@@ -926,6 +966,20 @@ Var IL_exec ( Function *func )
             }
         last_tmp_value= the_vector_creator(tmp->list_creator->init_args,init_var);
         set_tmp (tmp->tmp_index,last_tmp_value);
+        }
+            break;
+        case IL_NODE_STRUCT_CREATOR:
+        {
+            IL_node * i=tmp->pre;
+            int c=tmp->struct_creator->init_args;
+            Var init_var[c];
+            for(;c>0;c--)
+            {
+                init_var[c-1]=get_tmp (i->tmp_index);
+                i=i->pre;
+            }
+            last_tmp_value =struct_Create(tmp->struct_creator->id,init_var,tmp->struct_creator->init_args);
+            set_tmp (tmp->tmp_index,last_tmp_value);
         }
             break;
         case IL_NODE_TUPLE_CREATOR:

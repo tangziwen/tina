@@ -28,6 +28,7 @@ PURPOSE.
 #include "function.h"
 #include "module.h"
 #include "const_segment.h"
+#include "script_struct.h"
 #define  OP_ASSCOCIATE_LEFT 1
 #define  OP_ASSCOCIATE_RIGHT 2
 #define LEFT_BRACE_PIORITY -1
@@ -215,9 +216,8 @@ void exp_Parse ( int * pos,int mode,int layer )
 			if(next.type==TOKEN_TYPE_OP&& next.content[0]=='(')
 			{
 				/*出现了左括号，那么寻找该结构体类型的构造函数API，并把它压入*/
-				push_API_to_RPN_stack ( API_Search_cnstructor( t_k.content ) );
-				Element *top =GetRPNStackTop();
-                top->info.func_args=GetArgCount(*pos);
+                PushStructCreatorToStack(get_class_id(t_k.content),GetArgCount(*pos));
+
 			}
 			else/*若没有出现左括号，那么可能目的是为了访问静态成员*/
 			{
@@ -640,6 +640,16 @@ void push_API_to_RPN_stack ( int index )
     RON_stack[RPN_StackIndex].op=OP_CALL;
 }
 
+/*把结构体构造器压入*/
+void PushStructCreatorToStack(int struct_id,int arg)
+{
+    RPN_StackIndex++;
+    RON_stack[RPN_StackIndex].info.func_args=arg;
+    RON_stack[RPN_StackIndex].type=ELEMENT_STRUCT_CREATOR;
+    RON_stack[RPN_StackIndex].op=OP_CALL;
+    RON_stack[RPN_StackIndex].index=struct_id;
+}
+
 void PushListCreatorToStack(int type,int args)
 {
     RPN_StackIndex++;
@@ -856,6 +866,22 @@ void generate_IL()
 			IL_Stack[IL_StackIndex].index=RPN_Queue[i].index;/*储存其对于其函数的相对索引*/
             printf("#%d\n",IL_Stack[IL_StackIndex].index);
 			break;
+        case ELEMENT_STRUCT_CREATOR:
+        {
+            /*向栈前去寻找参数.*/
+            Element e =RPN_Queue[i];
+            /*然后从栈中抹去参数*/
+            int k=IL_StackIndex-e.info.func_args;
+            IL_StackIndex=k;
+            /*把结果加入到中间语言执行序列中去*/
+            tmp_index++;
+            IL_ListInsertStructCreator(e.index,tmp_index,e.info.func_args);
+            /*同时把中间结果写回栈中*/
+            IL_StackIndex++;
+            IL_Stack[IL_StackIndex].type=ELEMENT_TMP;
+            IL_Stack[IL_StackIndex].index=tmp_index;
+        }
+            break;
 			/*遇见API其地位等同于操作符*/
 			/*做一个变形，将API设为a操作数，变成a+nil的形式*/
 		case ELEMENT_API:

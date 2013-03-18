@@ -45,6 +45,7 @@ PURPOSE.
 #define IL_NODE_VECTOR_CREATOR 12 /*向量构造器节点*/
 #define IL_NODE_TUPLE_CREATOR 13
 #define IL_NODE_NILL 14 /*空节点，无实际意义*/
+#define IL_NODE_STRUCT_CREATOR 15 /*结构体构造器*/
 
 #define ELEMENT_VAR 1
 #define ELEMENT_LITERAL 2
@@ -58,6 +59,7 @@ PURPOSE.
 #define ELEMENT_SELF 10
 #define ELEMENT_VECTOR_CREATE 11
 #define ELEMENT_TUPLE_CREATE 12
+#define ELEMENT_STRUCT_CREATOR 13
 /*当前的标签数*/
 extern int label_index;
 
@@ -103,6 +105,9 @@ void IL_ListInsertCall(int type,int tmp_index, int args, int function_index);
 
 /*像中间代码添加列表构造器中间代码*/
 void IL_ListInsertListCreator(int type,int tmp_index,int init_args);
+
+/*像中间代码添加列表构造器中间代码*/
+void IL_ListInsertStructCreator(int id,int tmp_index,int init_args);
 /*向节点中添加*/
 IL_node * IL_CreateNode(int tmp_index);
 #endif

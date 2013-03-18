@@ -131,6 +131,12 @@ typedef struct IL_list_creator_t
     int init_args;/*初始化的参数*/
 } IL_ListCreatorNode;
 
+/*结构体构造器*/
+typedef struct IL_struct_creator_t
+{
+    int id;/*结构体原型索引*/
+    int init_args; /*构造函数参数个数*/
+} IL_StructCreatorNode;
 
 //跳转节点,用于实现if语句
 typedef struct
@@ -160,6 +166,7 @@ typedef struct
 
 
 
+
 typedef struct IL_node_t
 {
     int type;
@@ -173,11 +180,11 @@ typedef struct IL_node_t
         IL_CallNode * call;
         IL_ListNode * list_element;
         IL_ListCreatorNode * list_creator;
+        IL_StructCreatorNode * struct_creator;
     };
     struct IL_node_t * next;
     struct IL_node_t * pre;
 } IL_node;
-
 
 
 

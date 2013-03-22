@@ -25,7 +25,6 @@ typedef struct
 	char name[32];
 	Var  member [100];
 	char accessibility[100];//访问性
-	char is_sealed[100];//密封性
 	int member_count;
 	int initializer_index;
 	int api_index;
@@ -59,8 +58,14 @@ void StructRefCountIncrease(void * handle);
 void StructRefCountDecrease(void * handle);
 
 //获得类的成员
-Var GetMember(int ID ,int member_id);
+Var *GetMember(int ID ,int member_id);
 /*清空临时对象池*/
 void struct_CleanTmpPool();
 Var * GetPrototypeMemberAddress(char * struct_name,char * struct_member_name);
+/*将结构体信息写入字节码中*/
+void struct_Compile(FILE *f);
+/*从字节码中读入成员信息*/
+void struct_MemberLoad(char *str);
+/*从字节码中读入结构体信息*/
+void struct_Load(char *str);
 #endif

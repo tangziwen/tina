@@ -45,5 +45,6 @@ void loader_load_buf(const char * file_name)
 		}
 	}
 	buffer[buffer_size]='\0';
+    fclose(buffer_file);
 }
 

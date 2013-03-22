@@ -19,6 +19,7 @@ PURPOSE.
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include "tina.h"
 //#define NDEBUG
 #include "debug.h"
@@ -35,27 +36,40 @@ void SayHello()
 /*如果未加说明则解释执行本地的test.tina脚本*/
 int main ( int argc,char * argv[] )
 {
-	Tina_Init();
-	switch(argc)
-	{
-	case 1:
-		PRINT("please input file");
-		test( /*for quick test*/
-			Tina_Build ("test.tina");
-                Tina_PrintIL ("main");
-            Tina_Run ( "main" );
-		);
-		break;
-	case 2:
-		Tina_Build (argv[1]);
-		Tina_Run ( "main" );
-		break;
-	default:
-		STOP("INVALID ARG!");
-		break;
-	}
-	exit(EXIT_SUCCESS);
-	return 0;
+
+    Tina_Init();
+    switch(argc)
+    {
+    case 1:
+    {
+        printf("tina is a dynamic type script language compiler & virtual machine\n");
+    }
+        break;
+    case 3:
+        switch(argv[1][0])
+        {
+        case 'c':
+        {
+        Tina_Build (argv[2]);
+        }
+        break;
+        case 'r':
+        {
+            Tina_Load(argv[2]);
+            Tina_Run("main");
+        }
+            break;
+        default:
+            STOP("INVALID ARG!");
+        }
+        break;
+    default:
+        STOP("INVALID ARG!");
+        break;
+    }
+
+    exit(EXIT_SUCCESS);
+    return 0;
 }
 
 

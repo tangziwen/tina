@@ -60,14 +60,14 @@ static tuple_chunk * CreateTuple(int tuple_size)
 
 
 /*获得数组指定元素的值*/
-Var tuple_GetValue(Var array_obj,int index )
+Var *tuple_GetValue(Var array_obj,int index )
 {
     tuple_chunk * a;
     a=(tuple_chunk *)var_getHandle (array_obj);
     if(index <a->tuple_size+1&& index>0)
 	{
         Var * the_tuple =a->var_handle;
-        return the_tuple[index-1];
+        return  & (the_tuple[index-1]);
 	}
 	else
 	{
@@ -139,7 +139,7 @@ static void free_array(tuple_chunk * ptr)
     for(;i<ptr->tuple_size;i++)
 	{
 		int t=var_GetType(ptr->var_handle[i]);
-        if(t==VAR_TYPE_TUPLE || t==VAR_TYPE_HANDLE ||t==VAR_TYPE_VECTOR)
+        if(t==VAR_TYPE_TUPLE || t==VAR_TYPE_OBJ ||t==VAR_TYPE_VECTOR)
 		{
             RefCountDecrease(t,var_getHandle (ptr->var_handle[i]));
 		}

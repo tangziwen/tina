@@ -21,7 +21,7 @@ PURPOSE.
 #include "type.h"
 #include "def.h"
 /*获得数组指定元素的值*/
-Var vector_GetValue(Var array_obj,int index );
+Var * vector_GetValue(Var array_obj,int index );
 /*数组初始化*/
 void vector_init();
 
@@ -44,5 +44,5 @@ char * vector_ToString(Var vec);
 /*创建一个向量*/
 Var the_vector_creator(int size,Var init_arg[]);
 /*从原位置克隆一个向量*/
-Var vector_Clone(Var src);
+Var * vector_Clone(Var src);
 #endif

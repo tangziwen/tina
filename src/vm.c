@@ -48,7 +48,7 @@ void CleanCurrentLocalVar()
 	{
 		/*如果临时变量维护一个引用,则在清空局部变量时,使引用计数亦减一*/
 		int t=var_GetType(local_var[i]);
-        if(t==VAR_TYPE_TUPLE || t == VAR_TYPE_HANDLE)
+        if(t==VAR_TYPE_TUPLE || t == VAR_TYPE_OBJ)
 		{
             RefCountDecrease(t,var_getHandle (local_var[i]));
 		}
@@ -86,7 +86,7 @@ void vm_SetLayerVarAmount(int index ,int amount)
 /*获得指定索引处的栈局部变量*/
 Var  vm_rt_stack_var_get(int the_index)
 {
-	return  local_var[current_offset+the_index];
+    return  local_var[current_offset+the_index];
 }
 
 /*获得指定索引处的栈局部变量的指针*/
@@ -136,7 +136,7 @@ void RefCountDecrease(int type,void * handle)
     case VAR_TYPE_TUPLE:
         TupleRefCountDecrease(handle);
 		break;
-	case VAR_TYPE_HANDLE:
+	case VAR_TYPE_OBJ:
 		StructRefCountDecrease(handle);
 		break;
     case VAR_TYPE_VECTOR:
@@ -155,7 +155,7 @@ void RefCountIncrease(int type,void *handle)
     case VAR_TYPE_TUPLE:
         TupleRefCountIncrease(handle);
 		break;
-	case VAR_TYPE_HANDLE:
+	case VAR_TYPE_OBJ:
 		StructRefCountIncrease(handle);
 		break;
     case VAR_TYPE_VECTOR:

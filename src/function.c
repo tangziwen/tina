@@ -34,17 +34,31 @@ PURPOSE.
 #include "script_tuple.h"
 #include "module.h"
 #include "debug.h"
-int func_index=0;
+/*函数列表*/
+Function function_list[FUNCTION_MAX];
+int current_func_index=0;
 /*当前的被扫描函数*/
 Function * current_func=NULL;
-
+static int plain_get_index_by_name(  char * func_name);
+static void CreatFunction(int args,char *name )
+{
+    function_list[current_func_index].arg_counts=args;
+    if(plain_get_index_by_name(name)!=-1)
+    {
+        printf("%s\n",name);
+        STOP("FUNC NAME CONFLICT!!");
+    }
+    strcpy (function_list[current_func_index].name,name);
+    func_set_current( & (function_list[current_func_index]));
+    current_func_index++;
+}
 
 /*通过名称检索函数,如果存在,返回索引*/
 /*如果不存在,则返回-1*/
 static int plain_get_index_by_name(  char * func_name)
 {
 	int i;
-	for(i=0; i<func_index; i++)
+    for(i=0; i<current_func_index; i++)
 	{
 		if(strcmp(function_list[i].name,func_name)==0)
 		{
@@ -85,7 +99,7 @@ int func_get_index_by_name( char * func_name)
 /*获得当前已经被解析过的函数个数*/
 int Tina_FuncGetCount()
 {
-	return func_index;
+    return current_func_index;
 }
 /*解析函数的声明*/
 void func_ParseDeclare(int *postion)
@@ -98,7 +112,7 @@ void func_ParseDeclare(int *postion)
 	/*检查有无重名函数*/
 	{
 		int i;
-		for(i=0; i<func_index; i++)
+        for(i=0; i<current_func_index; i++)
 		{
 			if(strcmp(function_list[i].name,unique_name)==0)
 			{
@@ -108,8 +122,8 @@ void func_ParseDeclare(int *postion)
 		}
 	}
 	/*创建函数*/
-	strcpy(function_list[func_index].name,unique_name);
-	func_index++;
+    strcpy(function_list[current_func_index].name,unique_name);
+    current_func_index++;
 }
 
 /*解析方法（成员函数）的声明*/
@@ -123,7 +137,7 @@ void method_parse_declare(int *postion,char * class_name)
 	/*检查有无重名函数*/
 	{
 		int i;
-		for(i=0; i<func_index; i++)
+        for(i=0; i<current_func_index; i++)
 		{
 			if(strcmp(function_list[i].name,t_k.content)==0)
 			{
@@ -133,8 +147,8 @@ void method_parse_declare(int *postion,char * class_name)
 		}
 	}
 	/*创建函数*/
-	strcpy(function_list[func_index].name,t_k.content);
-	func_index++;
+    strcpy(function_list[current_func_index].name,t_k.content);
+    current_func_index++;
 }
 
 Function * func_get_by_index(int index)
@@ -209,9 +223,6 @@ Function * func_parse_def(int *postion )
 			type=VAR_TYPE_INT;
 		}
 		break;
-		case TOKEN_TYPE_REF:
-			type=VAR_TYPE_REF;
-			break;
 		case TOKEN_TYPE_COMMA:
 			break;
 		case TOKEN_TYPE_RIGHT_PARENTHESIS:
@@ -246,7 +257,7 @@ end:
 			break;
 		case TOKEN_TYPE_VAR_DEF:
 
-			(*postion)=test_pos;
+            (*postion)=test_pos;
 			exp_Parse(postion,EXP_NORMAL,current_layer);
 			break;
 		case TOKEN_TYPE_NUM:
@@ -259,15 +270,15 @@ end:
 			break;
 		case TOKEN_TYPE_SYMBOL:
 			;
-			/*回退一个,解析表达式*/
+            /*回退一格,解析表达式*/
 			exp_Parse(postion,EXP_NORMAL,current_layer);
 			break;
 		case TOKEN_TYPE_TRUE:
-			/*回退一个,解析表达式*/
+            /*回退一格,解析表达式*/
 			exp_Parse(postion,EXP_NORMAL,current_layer);
 			break;
         case TOKEN_TYPE_CHAR:
-            /*回退一个,解析表达式*/
+            /*回退一格,解析表达式*/
             exp_Parse(postion,EXP_NORMAL,current_layer);
             break;
 		case TOKEN_TYPE_RETURN:/*解析返回值表达式*/
@@ -346,6 +357,8 @@ end:
 		}
 	}
 	while(t_k.type!=TOKEN_TYPE_EOF);
+    //在函数的结尾处，始终增加一个return
+    IL_ListInsertReturn();
 	return f;
 }
 
@@ -400,9 +413,6 @@ Function * method_parse_def(int *postion,char * class_name )
 			type=VAR_TYPE_INT;
 		}
 		break;
-		case TOKEN_TYPE_REF:
-			type=VAR_TYPE_REF;
-			break;
 		case TOKEN_TYPE_COMMA:
 			break;
 		case TOKEN_TYPE_RIGHT_PARENTHESIS:
@@ -534,6 +544,7 @@ end:
 		}
 	}
 	while(t_k.type!=TOKEN_TYPE_EOF);
+
 	return f;
 }
 
@@ -595,3 +606,22 @@ Var Tina_CallScriptFunc(int func_id)
 	return result;
 }
 
+//函数编译成字节码
+void func_Compile(FILE * f)
+{
+    int i=0;
+    for(; i<current_func_index;i++)
+    {
+        fprintf(f,"F %d %s\n",function_list[i].arg_counts,function_list[i].name);
+        IL_ListCompile(f,i);
+    }
+}
+
+/*从字节码中载入函数定义*/
+void func_Load(char *str)
+{
+    char func_char[3][32];
+    sscanf (str,"%s %s %s",func_char[0],func_char[1],func_char[2]);
+    int args=atoi(func_char[1]);
+    CreatFunction(args,func_char[2]);
+}

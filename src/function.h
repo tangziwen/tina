@@ -23,8 +23,7 @@ PURPOSE.
 #include "def.h"
 #define FUNC_GLOBAL 0 /*全局函数*/
 #define FUNC_MEMBER 1 /*成员函数*/
-/*函数列表*/
-Function function_list[FUNCTION_MAX];
+
 
 /*解析函数的定义*/
 Function *  func_parse_def(int *pos);
@@ -67,4 +66,9 @@ void Tina_SetScriptFuncArg(Var arg,int id);
 平凡性调用,用于具有聚合原子性的地方
 */
 Var  func_PlainInvoke(int index);
+
+//函数编译成字节码
+void func_Compile(FILE * f);
+/*从字节码中载入函数定义*/
+void func_Load(char *str);
 #endif

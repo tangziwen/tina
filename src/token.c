@@ -564,9 +564,6 @@ void token_get ( int * pos,TokenInfo * t_k )
 		case KEYWORD_PRIVATE:
 			t_k->type=TOKEN_TYPE_PRIVATE;
 			break;
-		case KEYWORD_SEALED:
-			t_k->type=TOKEN_TYPE_SEALED;
-			break;
 		case KEYWORD_MODULE:
 			t_k->type=TOKEN_TYPE_MODULE;
 			break;
@@ -610,8 +607,7 @@ void token_get ( int * pos,TokenInfo * t_k )
 			tmp_str[i-postion]='\0';
 
             t_k->type=TOKEN_TYPE_STRING;
-            t_k->literal_handle=vector_CreateByString(tmp_str);
-            free(tmp_str);
+            t_k->str=tmp_str;
 			postion=i;
 			postion++;
 			( *pos ) =postion;

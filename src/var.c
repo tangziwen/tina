@@ -200,12 +200,12 @@ double get_value(int index)
 	}
 
 }
-Var var_point_to(Var a,Var b)
+Var* var_point_to(Var a,Var b)
 {
-	Var result;
+    Var * result;
 
 	/*对象的成员访问*/
-    if(a.content.type==VAR_TYPE_HANDLE && b.content.type==VAR_TYPE_MESSAGE)
+    if(a.content.type==VAR_TYPE_OBJ && b.content.type==VAR_TYPE_MESSAGE)
 	{
 		/*找不到成员*/
         if(get_index_of_member(a.class_id,b.content.var_value.str)==-1)
@@ -213,13 +213,13 @@ Var var_point_to(Var a,Var b)
             printf("there is no such member which's called \"%s\" in type \"%s\" \n",b.content.var_value.str,struct_get_name(a.class_id));
 			exit(0);
 		}
-        result = *(GetObjectMemberAddress(a.content.var_value.handle_value,get_index_of_member(a.class_id,b.content.var_value.str)));
+        result = GetObjectMemberAddress(a.content.var_value.handle_value,get_index_of_member(a.class_id,b.content.var_value.str));
 	}
 
 	/*类的静态成员访问*/
     else if(a.content.type==VAR_TYPE_STRUCT_NAME && b.content.type==VAR_TYPE_MESSAGE)
 	{
-        int struct_id=get_class_id(a.content.var_value.str);
+        int struct_id=a.content.var_value.struct_id;
 		/*找不到成员*/
         if(get_index_of_member(struct_id,b.content.var_value.str)==-1)
 		{
@@ -446,7 +446,7 @@ double var_get_value(Var a)
     case VAR_TYPE_MESSAGE:
 		return 0;
 		break;
-	case VAR_TYPE_HANDLE:
+    case VAR_TYPE_OBJ:
 		return 0;
 		break;
 	case VAR_TYPE_FUNC:
@@ -552,11 +552,11 @@ Var var_equal(Var a,Var b)
 	{
         result.content.var_value.bool_value=1;
 	}
-    else if(a.content.type==VAR_TYPE_HANDLE && b.content.type==VAR_TYPE_INT)
+    else if(a.content.type==VAR_TYPE_OBJ && b.content.type==VAR_TYPE_INT)
 	{
         result.content.var_value.bool_value=(a.content.var_value.handle_value==b.content.var_value.int_value);
 	}
-    else if(a.content.type==VAR_TYPE_HANDLE && b.content.type ==VAR_TYPE_NILL)
+    else if(a.content.type==VAR_TYPE_OBJ && b.content.type ==VAR_TYPE_NILL)
 	{
         result.content.var_value.bool_value=(a.content.var_value.handle_value==0);
 	}
@@ -597,11 +597,11 @@ Var var_not_equal(Var a,Var b)
 	{
         result.content.var_value.bool_value=0;
 	}
-    else if(a.content.type==VAR_TYPE_HANDLE && b.content.type==VAR_TYPE_INT)
+    else if(a.content.type==VAR_TYPE_OBJ && b.content.type==VAR_TYPE_INT)
 	{
         result.content.var_value.bool_value=(a.content.var_value.handle_value!=b.content.var_value.int_value);
 	}
-    else if(a.content.type==VAR_TYPE_HANDLE && b.content.type ==VAR_TYPE_NILL)
+    else if(a.content.type==VAR_TYPE_OBJ && b.content.type ==VAR_TYPE_NILL)
 	{
         result.content.var_value.bool_value=(a.content.var_value.handle_value!=0);
 	}
@@ -670,7 +670,7 @@ Var var_large_or_qual(Var a,Var b)
 	{
         result.content.var_value.bool_value=a.content.var_value.bool_value>=b.content.var_value.int_value;
 	}
-    else if(a.content.type!=VAR_TYPE_HANDLE && b.content.type!=VAR_TYPE_HANDLE)
+    else if(a.content.type!=VAR_TYPE_OBJ && b.content.type!=VAR_TYPE_OBJ)
 	{
         result.content.var_value.bool_value= var_get_value(a)>=var_get_value(b);
 	}
@@ -688,6 +688,20 @@ double var_GetDouble(Var a)
 	{
 		STOP("ERROR  Var_GetDouble : invalid type");
 	}
+
+}
+
+/*获得Var变量的内容*/
+int var_GetStructId(Var a)
+{
+    if(var_GetType(a)==VAR_TYPE_STRUCT_NAME)
+    {
+        return a.content.var_value.struct_id;
+    }
+    else
+    {
+        STOP("ERROR  var_GetStructId : invalid type");
+    }
 
 }
 /*获得Var变量的内容*/
@@ -814,6 +828,11 @@ void var_Print(Var a)
 	}
 }
 
+void var_SetMsg(Var *a,char *str)
+{
+ a->content.var_value.str=str;
+ a->content.type=VAR_TYPE_MESSAGE;
+}
 
 
 

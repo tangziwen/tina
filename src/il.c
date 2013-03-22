@@ -43,14 +43,45 @@ Var IL_CallFunc (int args, int index, int mode);
 Var self_ptr;
 Var func_return_value;
 IL_list * current_list=NULL;
-static void set_tmp(int index,Var var)
+static void set_tmp(int index,Var * var,int type)
 {
-	current_list->tmp_var_list[index]=var;
+    if(current_list->tmp_var_list[index].tmp_type==TMP_ARITH)/*如果前一个是算术类型的，那么释放它的内存*/
+    {
+        free(current_list->tmp_var_list[index].result);
+    }
+
+
+    if(type==TMP_ARITH)/*如果当前的结果是算术类型，把值给拷下来*/
+    {
+        current_list->tmp_var_list[index].result=malloc(sizeof(Var));
+        memcpy (current_list->tmp_var_list[index].result,var,sizeof(Var));
+    }
+    else if(type==TMP_DEREFER)/*解引用运算，直接赋值地址*/
+    {
+        current_list->tmp_var_list[index].result=var;
+    }
+    //保存当前临时结果类型
+    current_list->tmp_var_list[index].tmp_type=type;
 }
-static Var get_tmp(int index)
+static Var * get_tmp(int index)
 {
-	return  current_list->tmp_var_list[index];
+    return  current_list->tmp_var_list[index].result;
 }
+
+
+/*获得表中成员*/
+static Var  * GetListElement(Var obj,int index)
+{
+    if(var_GetType (obj)==VAR_TYPE_VECTOR)
+    {
+       return vector_GetValue (obj,index);
+    }else
+        if(var_GetType (obj)==VAR_TYPE_VECTOR)
+        {
+            return tuple_GetValue (obj,index);
+        }
+}
+
 /*创建一个中间语言表达式节点*/
 IL_exp * IL_exp_create ( char op,IL_element var_a,IL_element var_b )
 {
@@ -244,6 +275,9 @@ void IL_ListInsertCall(int type,int tmp_index,int args,int function_index)
     case FUNC_DYNAMIC:
          node->type=IL_NODE_CALL_DYNAMIC;
          break;
+    case FUNC_METHOD:
+         node->type=IL_NODE_CALL_METHOD;
+         break;
         default:
          STOP("IL_ListInsertCall error!");
          break;
@@ -267,168 +301,167 @@ void IL_ListInsertCall(int type,int tmp_index,int args,int function_index)
 }
 
 /*打印表达式节点*/
-void IL_PrintExp ( IL_node * tmp )
+void IL_PrintExp (FILE *f, IL_node * tmp )
 {
-    printf("EXP:@%d",tmp->tmp_index);
-	printf ( "=" );
+    fprintf(f,"EXP %d ",tmp->tmp_index);
 	switch ( tmp->exp->A.type )
 	{
 	case ELEMENT_VAR:
-        printf ( "$%d",tmp->exp->A.index );
+        fprintf (f, "$%d",tmp->exp->A.index );
 		break;
     case ELEMENT_LITERAL:
-        printf("#%d ",tmp->exp->A.index);
+        fprintf(f,"#%d ",tmp->exp->A.index);
 		break;
 	case ELEMENT_TMP:
-		printf ( "@%d",tmp->exp->A.index );
+        fprintf (f,"@%d",tmp->exp->A.index );
 		break;
 	case ELEMENT_API:
-		printf ( "API %d",tmp->exp->A.index );
+        fprintf (f,"API %d",tmp->exp->A.index );
 		break;
 	case ELEMENT_FUNC:
-		printf ( "FUNC %d",tmp->exp->A.index );
+        fprintf (f,"FUNC %d",tmp->exp->A.index );
 		break;
 	case ELEMENT_CALL_BY_MEMBER:
-		printf ( "CALL MEMBER %d",tmp->exp->A.index );
-		break;
-	case ELEMENT_ARRAY:
-        printf("ARRAY <$%d,@%d>",tmp->exp->A.index,tmp->exp->A.info.array_index_tmp);
+        fprintf (f,"CALL MEMBER %d",tmp->exp->A.index );
 		break;
 	}
-	printf ( " %c ",tmp->exp->op );
+    fprintf (f," %d ",tmp->exp->op );
 	switch ( tmp->exp->B.type )
 	{
 	case ELEMENT_VAR:
-        printf ( "$%d",tmp->exp->B.index );
+        fprintf (f,"$%d",tmp->exp->B.index );
 		break;
     case ELEMENT_LITERAL:
-        printf("#%d ",tmp->exp->B.index);
+        fprintf(f,"#%d ",tmp->exp->B.index);
         break;
 	case ELEMENT_TMP:
-		printf ( "@%d",tmp->exp->B.index );
+        fprintf (f,"@%d",tmp->exp->B.index );
 		break;
 	case ELEMENT_API:
-		printf ( "API %d",tmp->exp->B.index );
+        fprintf (f,"API %d",tmp->exp->B.index );
 		break;
 	case ELEMENT_FUNC:
-		printf ( "FUNC %d",tmp->exp->B.index );
+        fprintf (f,"FUNC %d",tmp->exp->B.index );
 		break;
- printf("ARRAY <$%d,@%d>",tmp->exp->B.index,tmp->exp->B.info.array_index_tmp);
- break;
 	}
-	printf ( "\n" );
+    fprintf (f,"\n" );
 }
 
 
 
-void IL_print_jmp ( IL_node *node )
+void IL_PrintJmp (FILE *f,IL_node *node )
 {
-	printf ( "JMP TO %d\n",node->jmp->label );
+    fprintf (f,"JMP %d\n",node->jmp->label );
 }
-void IL_print_je ( IL_node * node )
+void IL_PrintJe (FILE *f,IL_node *node )
 {
-	printf ( "JE TO %d\n",node->jmp->label );
+    fprintf (f,"JE %d\n",node->jmp->label );
 }
-void IL_print_jne ( IL_node *node )
+void IL_PrintJne (FILE *f,IL_node *node )
 {
-	printf ( "JNE to %d\n",node->jmp->label );
+    fprintf (f,"JNE %d\n",node->jmp->label );
 }
-void IL_print_lab ( IL_node * node )
+void IL_PrintLab (FILE *f,IL_node *node )
 {
-	printf ( "LABEL : %d \n",node->jmp->label );
-}
-
-void IL_printf_prnt ( IL_node *node )
-{
-	printf ( "PRNT :\n" );
+    fprintf (f,"LABEL %d \n",node->jmp->label );
 }
 
-void IL_printf_call_list ( IL_node *node )
+void IL_PrintPrnt (FILE *f,IL_node *node )
 {
-    printf ( "LIST:@%d=[id:%d,args:%d]\n",node->tmp_index,node->call->list_id,node->call->args );
+    fprintf (f,"PRNT \n" );
 }
 
-void IL_printf_call_API ( IL_node *node )
+void IL_PrintCallList (FILE *f,IL_node *node )
 {
-     printf ( "API:@%d=[id:%d,args:%d]\n",node->tmp_index,node->call->list_id,node->call->args );
+    fprintf (f,"CALLF %d %d %d\n",node->tmp_index,node->call->list_id,node->call->args );
 }
 
-void IL_printf_call_dynamic ( IL_node *node )
+void IL_PrintCallAPI (FILE *f,IL_node *node )
 {
-     printf ( "DYNAMIC:@%d=[args:%d]\n",node->tmp_index,node->call->args );
+     fprintf (f,"CALLA %d %d %d\n",node->tmp_index,node->call->list_id,node->call->args );
 }
 
-void IL_printf_vector_creator(IL_node *node)
+void IL_PrintCallDynamic (FILE *f,IL_node *node )
 {
-    printf("VECTOR:@%d=[args:%d]\n",node->tmp_index,node->list_creator->init_args);
+     fprintf (f,"DYNAMIC %d %d %d\n",node->tmp_index,node->call->list_id,node->call->args );
 }
-void IL_printf_tuple_creator(IL_node *node)
+
+void IL_PrintVecCreator(FILE *f,IL_node *node )
 {
-    printf("TUPLE:@%d=[args:%d]\n",node->tmp_index,node->list_creator->init_args);
+    fprintf(f,"VECTOR %d %d\n",node->tmp_index,node->list_creator->init_args);
 }
-void IL_printf_struct_creator(IL_node * node)
+void IL_PrintTupleCreator(FILE *f,IL_node *node )
 {
- printf("STRUCT:@%d=[^%d %d]\n",node->tmp_index,node->struct_creator->id,node->struct_creator->init_args);
+    fprintf(f,"TUPLE %d %d\n",node->tmp_index,node->list_creator->init_args);
+}
+void IL_PrintStructCreator(FILE *f,IL_node *node )
+{
+ fprintf(f,"STRUCT_CREATOR %d %d %d\n",node->tmp_index,node->struct_creator->id,node->struct_creator->init_args);
+}
+void IL_PrintCallMethod(FILE *f,IL_node *node )
+{
+ fprintf(f,"METHOD %d %d\n",node->tmp_index, node->call->args);
 }
 
 /*打印中间代码执行序列*/
-void IL_list_print ( Function * func )
+void IL_list_print (FILE *f, Function * func )
 {
-    printf("IL BEGIN :\n");
 	IL_node * tmp=func->list.head;
 	while ( tmp!=NULL )
 	{
 		switch ( tmp->type )
 		{
 		case IL_NODE_EXP:
-            IL_PrintExp ( tmp );
+            IL_PrintExp (f, tmp );
 			break;
 		case IL_NODE_JE:
-			IL_print_je ( tmp );
+            IL_PrintJe (f, tmp );
 			break;
 		case IL_NODE_JMP:
-			IL_print_jmp ( tmp );
+            IL_PrintJmp (f, tmp );
 			break;
 		case IL_NODE_JNE:
-			IL_print_jne ( tmp );
+            IL_PrintJne (f, tmp );
 			break;
 		case IL_NODE_LAB:
-			IL_print_lab ( tmp );
+            IL_PrintLab (f, tmp );
 			break;
 		case IL_NODE_PRNT:
-			IL_printf_prnt ( tmp );
+            IL_PrintPrnt (f, tmp );
 			break;
         case IL_NODE_CALL_API:
-            IL_printf_call_API(tmp);
+            IL_PrintCallAPI(f,tmp);
             break;
         case IL_NODE_CALL_LIST:
-            IL_printf_call_list(tmp);
+            IL_PrintCallList(f,tmp);
             break;
         case IL_NODE_CALL_DYNAMIC:
-            IL_printf_call_dynamic(tmp);
+            IL_PrintCallDynamic(f,tmp);
             break;
 		case IL_NODE_RETURN:
-			printf ( "return node \n" );
+            fprintf ( f,"RETRN\n" );
 			break;
         case IL_NODE_VECTOR_CREATOR:
-            IL_printf_vector_creator (tmp);
+            IL_PrintVecCreator (f,tmp);
             break;
         case IL_NODE_TUPLE_CREATOR:
-            IL_printf_tuple_creator (tmp);
+            IL_PrintTupleCreator (f,tmp);
             break;
         case IL_NODE_STRUCT_CREATOR:
-            IL_printf_struct_creator(tmp);
+            IL_PrintStructCreator(f,tmp);
+            break;
+        case IL_NODE_CALL_METHOD:
+            IL_PrintCallMethod(f,tmp);
             break;
 		}
 		tmp=tmp->next;
 	}
-    printf("IL  END:\n");
 }
 
 /*根据函数名称打印中间代码*/
-void Tina_PrintIL ( const char * func_name )
+void Tina_PrintIL (FILE* f, const char * func_name )
 {
-	IL_list_print ( func_get_by_index ( func_get_index_by_name ( func_name ) ) );
+    IL_list_print (f, func_get_by_index ( func_get_index_by_name ( func_name ) ) );
 
 }
 
@@ -446,79 +479,58 @@ IL_node * IL_node_create_exp ( IL_exp * exp,int tmp_index )
 
 IL_node * IL_node_create_jmp ( int label ,int mode )
 {
-	IL_node * node = ( IL_node * ) malloc ( sizeof ( IL_node ) );
-	node->jmp = ( IL_jmp* ) malloc ( sizeof ( IL_jmp ) );
-	node->jmp->label=label;
-	node->type=mode;
-	return node;
+    IL_node * node = ( IL_node * ) malloc ( sizeof ( IL_node ) );
+    node->jmp = ( IL_jmp* ) malloc ( sizeof ( IL_jmp ) );
+    node->jmp->label=label;
+    node->type=mode;
+    return node;
 }
 
 IL_node * IL_node_create_prnt ( )
 {
-	IL_node * node = ( IL_node * ) malloc ( sizeof ( IL_node ) );
-	node->prnt= ( IL_print * ) malloc ( sizeof ( IL_print ) );
-	node->type=IL_NODE_PRNT;
-	return node;
+    IL_node * node = ( IL_node * ) malloc ( sizeof ( IL_node ) );
+    node->prnt= ( IL_print * ) malloc ( sizeof ( IL_print ) );
+    node->type=IL_NODE_PRNT;
+    return node;
 }
 
 
 
-/*求值器，用于将中间代码节点中的内容，求解成真正的变量*/
-static Var IL_rt_Evaluate ( IL_element element )
+/*统一求值器，输入原始用于将中间代码节点中的内容，求解成真正的变量*/
+static Var * IL_rt_Evaluate ( IL_element element )
 {
-	Var result ;
-	switch ( element.type )
-	{
-	case ELEMENT_VAR:
-		result= vm_rt_stack_var_get ( element.index );
-		break;
+    Var * result ;
+    switch ( element.type )
+    {
+    case ELEMENT_VAR:
+        result= vm_rt_stack_var_get_ptr( element.index );
+        break;
 
     case ELEMENT_LITERAL:/*字面量*/
     {
         /*从常量段寻找*/
-        Var src=ConstSegmentGetVar (element.index);
+        Var* src=ConstSegmentGetVar (element.index);
         result=src ;
-        if(var_GetType (src)==VAR_TYPE_VECTOR)/*如果是向量字面量，则拷贝一个副本*/
+        if(var_GetType (*src)==VAR_TYPE_STR)/*如果是向量字面量，则拷贝一个副本*/
         {
-            result=vector_Clone (src);
+          result->content.var_value.handle_value=  vector_CreateByString(src->content.var_value.str);
+          result->content.type=VAR_TYPE_VECTOR;
         }
     }
-		break;
-	case ELEMENT_TMP:
-		result= get_tmp(element.index);
-		break;
-		/*自指向*/
-	case ELEMENT_SELF:
-        result=self_ptr;
         break;
-    case ELEMENT_ARRAY:
-    {
-        Var a=vm_rt_stack_var_get ( element.index );
-        if ( a.content.type!=VAR_TYPE_TUPLE && a.content.type!=VAR_TYPE_VECTOR )
-        {
-            STOP( "error !!  only list can use '['  ']' to access!\n ");
-        }
-        else
-        {
-            int list_index=var_GetInt (get_tmp (element.info.array_index_tmp));
-            /*获得下标*/
-            if(a.content.type==VAR_TYPE_TUPLE)
-            {
-                result=tuple_GetValue(a,list_index);
-            }
-            else
-            {
-                result=vector_GetValue (a,list_index);
-            }
-		}
-	}
-	break;
-	default :
-		printf ( "can't resolve this element type : %d\n",element.type );
-		exit ( 0 );
-		return result;
-	}
-	return result;
+    case ELEMENT_TMP:
+        result= get_tmp(element.index);
+        break;
+        /*自指向*/
+    case ELEMENT_SELF:
+        result=&self_ptr;
+        break;
+    default :
+        printf ( "can't resolve this element type : %d\n",element.type );
+        exit ( 0 );
+        return result;
+    }
+    return result;
 }
 
 
@@ -526,12 +538,23 @@ static Var IL_rt_Evaluate ( IL_element element )
 /*在运行时解析节点的加法运算*/
 static void rt_eval_plus ( IL_node *tmp )
 {
-	Var value_a,value_b;
+    Var  *value_a, * value_b;
 	/*根据栈中的函数调用情况获取栈中绝对定位下的变量*/
     value_a=IL_rt_Evaluate ( tmp->exp->A );
     value_b=IL_rt_Evaluate ( tmp->exp->B );
-	last_tmp_value=var_add ( value_a,value_b );
-    set_tmp(tmp->tmp_index,last_tmp_value);
+    last_tmp_value=var_add ( *value_a,*value_b );
+    set_tmp(tmp->tmp_index,&last_tmp_value,TMP_ARITH);
+}
+
+/*在运行时解析下标运算*/
+static void rt_eval_subscript(IL_node *tmp)
+{
+    Var *value_a, *value_b,*result;
+    value_a=IL_rt_Evaluate ( tmp->exp->A );
+    value_b=IL_rt_Evaluate ( tmp->exp->B );
+    result=GetListElement (*value_a,var_GetInt (*value_b));
+    set_tmp(tmp->tmp_index,result,TMP_DEREFER);
+    last_tmp_value=*result;
 }
 
 /*在运行时解析对象成员指向运算*/
@@ -540,17 +563,16 @@ static void rt_eval_point_to(IL_node *tmp)
     if(tmp->exp->A.type!=ELEMENT_VAR && tmp->exp->A.type!=ELEMENT_API && tmp->exp->A.type!=ELEMENT_SELF
             &&  tmp->exp->A.type!=ELEMENT_TMP
             &&tmp->exp->A.type!=ELEMENT_LITERAL)
-	{
+    {
         printf("doesn't support this kind of point operate,A : index %d    type %d \n",tmp->tmp_index,tmp->exp->A.type);
-		exit(0);
-	}
-	Var value_a,value_b;
+        exit(0);
+    }
+    Var *value_a, *value_b,*result;
     value_a=IL_rt_Evaluate ( tmp->exp->A );
     value_b=IL_rt_Evaluate ( tmp->exp->B );
-	if(value_a.content.type==VAR_TYPE_STRUCT_NAME) /*类成员*/
+    if(value_a->content.type==VAR_TYPE_STRUCT_NAME) /*类成员*/
 	{
-		last_tmp_value=var_point_to ( value_a,value_b );
-        last_tmp_value.address=GetPrototypeMemberAddress(value_a.content.var_value.str,var_GetMsg(value_b));
+        result =var_point_to (* value_a,*value_b);
 		/*类成员，self指针失效，同时环境索引变为全局*/
 		self_ptr.class_id=env_index;
 		self_ptr.content.type=VAR_TYPE_NILL;
@@ -559,29 +581,28 @@ static void rt_eval_point_to(IL_node *tmp)
 	{
 
 		/*判断访问性*/
-        int acc=get_accessbility_of_member(value_a.class_id,get_index_of_member(value_a.class_id,var_GetMsg(value_b)));
-		if(acc!=STRUCT_PUBLIC && env_index != value_a.class_id)/*非公有且在外部*/
+        int acc=get_accessbility_of_member(value_a->class_id,get_index_of_member(value_a->class_id,var_GetMsg(*value_b)));
+        if(acc!=STRUCT_PUBLIC && env_index != value_a->class_id)/*非公有且在外部*/
 		{
 			printf("private or sealed member cannot be assinged outside\n");
 			exit(0);
 		}
-		last_tmp_value=var_point_to ( value_a,value_b );
+        result=var_point_to ( *value_a,*value_b );
 		/*设置self指针*/
-		self_ptr= value_a;
-		/*指向成员的运算的结果为其成员的地址*/
-        last_tmp_value.address=GetObjectMemberAddress(var_getHandle (value_a),get_index_of_member(value_a.class_id,var_GetMsg (value_b)));
+        self_ptr=* value_a;
 	}
-    set_tmp(tmp->tmp_index,last_tmp_value);
+    set_tmp(tmp->tmp_index,result,TMP_DEREFER);
+    last_tmp_value=(*result);
 }
 
 /*在运行时解析节点的乘法运算*/
 static void rt_eval_mutiple ( IL_node *tmp )
 {
-	Var value_a,value_b;
+    Var * value_a, *value_b;
     value_a=IL_rt_Evaluate ( tmp->exp->A );
     value_b=IL_rt_Evaluate ( tmp->exp->B );
-	last_tmp_value=var_multiple ( value_a,value_b );
-    set_tmp(tmp->tmp_index,last_tmp_value);
+    last_tmp_value=var_multiple ( *value_a,*value_b );
+    set_tmp(tmp->tmp_index,&last_tmp_value,TMP_ARITH);
 }
 
 
@@ -589,105 +610,105 @@ static void rt_eval_mutiple ( IL_node *tmp )
 /*在运行时解析节点的减法运算*/
 static void rt_eval_minus ( IL_node *tmp )
 {
-	Var value_a,value_b;
+    Var *value_a, *value_b;
     value_a=IL_rt_Evaluate ( tmp->exp->A );
     value_b=IL_rt_Evaluate ( tmp->exp->B );
-	last_tmp_value=var_minus ( value_a,value_b );
-    set_tmp(tmp->tmp_index,last_tmp_value);
+    last_tmp_value=var_minus ( *value_a,*value_b );
+    set_tmp(tmp->tmp_index,&last_tmp_value,TMP_ARITH);
 
 }
 /*在运行时解析节点的除法运算*/
 static void rt_eval_divide ( IL_node *tmp )
 {
-	Var value_a,value_b;
+    Var * value_a, *value_b;
     value_a=IL_rt_Evaluate ( tmp->exp->A );
     value_b=IL_rt_Evaluate ( tmp->exp->B );
-	last_tmp_value=var_divide ( value_a,value_b );
-    set_tmp(tmp->tmp_index,last_tmp_value);
+    last_tmp_value=var_divide ( *value_a,*value_b );
+    set_tmp(tmp->tmp_index,&last_tmp_value,TMP_ARITH);
 }
 
 
 
 static void rt_eval_large ( IL_node *tmp )
 {
-	Var value_a,value_b;
+    Var * value_a,*value_b;
     value_a=IL_rt_Evaluate ( tmp->exp->A );
     value_b=IL_rt_Evaluate ( tmp->exp->B );
-	last_tmp_value=var_large ( value_a,value_b );
-    set_tmp(tmp->tmp_index,last_tmp_value);
+    last_tmp_value=var_large ( *value_a, *value_b );
+    set_tmp(tmp->tmp_index,&last_tmp_value,TMP_ARITH);
 }
 
 
 static void rt_eval_less ( IL_node *tmp )
 {
-	Var value_a,value_b;
+    Var *value_a,*value_b;
     value_a=IL_rt_Evaluate ( tmp->exp->A );
     value_b=IL_rt_Evaluate ( tmp->exp->B );
-	last_tmp_value=var_less ( value_a,value_b );
-    set_tmp(tmp->tmp_index,last_tmp_value);
+    last_tmp_value=var_less (*value_a,*value_b );
+    set_tmp(tmp->tmp_index,&last_tmp_value,TMP_ARITH);
 }
 
 
 static void rt_eval_less_or_equal ( IL_node *tmp )
 {
-	Var value_a,value_b;
+    Var *value_a,*value_b;
     value_a=IL_rt_Evaluate ( tmp->exp->A );
     value_b=IL_rt_Evaluate ( tmp->exp->B );
-	last_tmp_value=var_less_or_equal ( value_a,value_b );
-    set_tmp(tmp->tmp_index,last_tmp_value);
+    last_tmp_value=var_less_or_equal ( *value_a,*value_b );
+    set_tmp(tmp->tmp_index,&last_tmp_value,TMP_DEREFER);
 }
 
 
 
 static void rt_eval_large_or_equal ( IL_node *tmp )
 {
-	Var value_a,value_b;
+    Var * value_a,*value_b;
     value_a=IL_rt_Evaluate ( tmp->exp->A );
     value_b=IL_rt_Evaluate ( tmp->exp->B);
-	last_tmp_value=var_large_or_qual ( value_a,value_b );
-    set_tmp(tmp->tmp_index,last_tmp_value);
+    last_tmp_value=var_large_or_qual (*value_a,*value_b );
+    set_tmp(tmp->tmp_index,&last_tmp_value,TMP_ARITH);
 }
 
 
 
 static void rt_eval_equal ( IL_node *tmp )
 {
-	Var value_a,value_b;
+    Var  *value_a, *value_b;
     value_a=IL_rt_Evaluate ( tmp->exp->A );
     value_b=IL_rt_Evaluate ( tmp->exp->B );
-	last_tmp_value=var_equal ( value_a,value_b );
-    set_tmp(tmp->tmp_index,last_tmp_value);
+    last_tmp_value=var_equal ( *value_a,*value_b );
+    set_tmp(tmp->tmp_index,&last_tmp_value,TMP_ARITH);
 }
 
 
 
 static void rt_eval_not_equal ( IL_node *tmp )
 {
-	Var value_a,value_b;
+    Var *value_a, *value_b;
     value_a=IL_rt_Evaluate ( tmp->exp->A );
     value_b=IL_rt_Evaluate ( tmp->exp->B );
-	last_tmp_value=var_not_equal ( value_a,value_b );
-    set_tmp(tmp->tmp_index,last_tmp_value);
+    last_tmp_value=var_not_equal ( *value_a,*value_b );
+    set_tmp(tmp->tmp_index,&last_tmp_value,TMP_ARITH);
 }
 
 
 static void rt_eval_and ( IL_node *tmp )
 {
-	Var value_a,value_b;
+    Var *value_a,*value_b;
     value_a=IL_rt_Evaluate ( tmp->exp->A );
     value_b=IL_rt_Evaluate ( tmp->exp->B );
-	last_tmp_value=var_and ( value_a,value_b );
-    set_tmp(tmp->tmp_index,last_tmp_value);
+    last_tmp_value=var_and ( *value_a,*value_b );
+    set_tmp(tmp->tmp_index,&last_tmp_value,TMP_ARITH);
 }
 
 
 static void rt_eval_or ( IL_node *tmp )
 {
-	Var value_a,value_b;
+    Var *value_a,*value_b;
     value_a=IL_rt_Evaluate ( tmp->exp->A );
     value_b=IL_rt_Evaluate ( tmp->exp->B );
-	last_tmp_value=var_or ( value_a,value_b );
-    set_tmp(tmp->tmp_index,last_tmp_value);
+    last_tmp_value=var_or ( *value_a, *value_b );
+    set_tmp(tmp->tmp_index,&last_tmp_value,TMP_ARITH);
 }
 
 static Var assign_get(Var a,Var b,int mode)
@@ -711,25 +732,16 @@ static Var assign_get(Var a,Var b,int mode)
 		break;
 	}
 }
-/*获得表中成员*/
-static Var GetListElement(Var obj,int index)
-{
-    if(var_GetType (obj)==VAR_TYPE_VECTOR)
-    {
-       return vector_GetValue (obj,index);
-    }else
-        if(var_GetType (obj)==VAR_TYPE_VECTOR)
-        {
-            return tuple_GetValue (obj,index);
-        }
-}
+
+
+
+
 
 static void rt_eval_assign ( IL_node *tmp ,int mode)
 {
 
 	if ( tmp->exp->A.type==ELEMENT_VAR /*局部变量*/
-			||tmp->exp->A.type==ELEMENT_ARRAY /*数组变量*/
-			||(tmp->exp->A.type==ELEMENT_TMP && get_tmp(tmp->exp->A.index).address)) /*对象成员*/
+            ||(tmp->exp->A.type==ELEMENT_TMP)) /*对象成员*/
 	{
 	}
 	else
@@ -737,85 +749,22 @@ static void rt_eval_assign ( IL_node *tmp ,int mode)
 		printf ( "only var can BE l-value!!%d \n ",tmp->exp->A.type );
 		exit ( 0 );
 	}
-	Var	value_b;
-    value_b=IL_rt_Evaluate ( tmp->exp->B );
+    Var * l_value=IL_rt_Evaluate (tmp->exp->A);
+    Var * r_value=IL_rt_Evaluate (tmp->exp->B);
+    int l_t=var_GetType(*l_value);
+    int r_t=var_GetType(*r_value);
 
-	switch (tmp->exp->A.type)
-	{
-		/*为数组元素赋值*/
-	case ELEMENT_ARRAY:
+    if(r_t==VAR_TYPE_OBJ || r_t==VAR_TYPE_TUPLE || r_t==VAR_TYPE_VECTOR)
     {
-        Var var_array=vm_rt_stack_var_get( tmp->exp->A.index);
-        int list_index= var_GetInt (get_tmp(tmp->exp->A.info.array_index_tmp));
-        int array_type=var_GetType (var_array);
-        int l_t=var_GetType(var_array);
-        /*进行赋值运算*/
-        Var r_value =assign_get(GetListElement(var_array,list_index),value_b,mode);
-		int r_t=var_GetType(r_value);
-        if(r_t==VAR_TYPE_HANDLE || r_t==VAR_TYPE_TUPLE ||r_t==VAR_TYPE_VECTOR)
-		{
-            RefCountIncrease(r_t,r_value.content.var_value.handle_value);
-		}
-        if(l_t==VAR_TYPE_HANDLE || r_t==VAR_TYPE_TUPLE ||r_t==VAR_TYPE_VECTOR)
-		{
-            RefCountDecrease(l_t,var_array.content.var_value.handle_value);
-		}
-        if(array_type==VAR_TYPE_TUPLE)
-        {
-         tuple_SetValue(var_array,list_index,r_value);
-        }
-        else if(array_type==VAR_TYPE_VECTOR )
-        {
-        vector_SetValue(var_array,list_index,r_value);
-        }
-	}
-	break;
-	/*为变量赋值*/
-	case ELEMENT_VAR:
-	{
-		Var r_value=assign_get(vm_rt_stack_var_get(tmp->exp->A.index),value_b,mode);
-		Var l_value=vm_rt_stack_var_get(tmp->exp->A.index);
-		int l_t=var_GetType(l_value);
-		int r_t=var_GetType(r_value);
-
-        if(r_t==VAR_TYPE_HANDLE || r_t==VAR_TYPE_TUPLE || r_t==VAR_TYPE_VECTOR)
-		{
-            RefCountIncrease(r_t,var_getHandle (r_value));
-		}
-        if(l_t==VAR_TYPE_HANDLE || l_t==VAR_TYPE_TUPLE || l_t==VAR_TYPE_VECTOR)
-		{
-            RefCountDecrease(l_t,var_getHandle (l_value));
-		}
-		vm_rt_stack_var_set (tmp->exp->A.index ,r_value);
-	}
-	break;
-	case ELEMENT_TMP:  /*为对象的成员赋值*/
-	{
-		Var* member=(Var *) (get_tmp(tmp->exp->A.index).address);
-		Var l_value= (*member);
-		Var r_value=assign_get((*member),value_b,mode);
-		int l_t=var_GetType(l_value);
-		int r_t=var_GetType(r_value);
-
-        if(r_t==VAR_TYPE_HANDLE || r_t==VAR_TYPE_TUPLE ||r_t==VAR_TYPE_VECTOR )
-		{
-            RefCountIncrease(r_t,var_getHandle (r_value));
-		}
-        if(l_t==VAR_TYPE_HANDLE || l_t==VAR_TYPE_TUPLE ||l_t==VAR_TYPE_VECTOR )
-		{
-            RefCountDecrease(l_t,var_getHandle (l_value));
-		}
-		(*member)=r_value;
-		Var  a= get_tmp(tmp->exp->A.index);
-		/*用完之后,马上把临时变量表的地址给抹去,防止把其他变量当成对象*/
-		a.address=NULL;
-		set_tmp(tmp->exp->A.index,a);
-	}
-	break;
-	}
-	last_tmp_value=value_b;
-    set_tmp(tmp->tmp_index,last_tmp_value);
-
+        RefCountIncrease(r_t,var_getHandle (*r_value));
+    }
+    if(l_t==VAR_TYPE_OBJ || l_t==VAR_TYPE_TUPLE || l_t==VAR_TYPE_VECTOR)
+    {
+        RefCountDecrease(l_t,var_getHandle (*l_value));
+    }
+    (*l_value)= assign_get(*l_value,*r_value,mode);
+    set_tmp(tmp->tmp_index,l_value,TMP_ARITH);
+    last_tmp_value=(*l_value);
 }
 
 
@@ -878,6 +827,9 @@ static void handle_exp ( IL_node *tmp )
 	case '.':
 		rt_eval_point_to(tmp);
 		break;
+    case OP_SUBSCRIPT:
+        rt_eval_subscript(tmp);
+        break;
 	}
 
 }
@@ -905,10 +857,7 @@ void ExecPrintNode(Var the_var)
     case VAR_TYPE_MESSAGE:
         printf ( "%s\n",var_GetMsg (the_var));
 		break;
-	case VAR_TYPE_REF:
-        printf ( "ref to %d  type :ref \n",var_getHandle (the_var));
-		break;
-	case VAR_TYPE_HANDLE:
+    case VAR_TYPE_OBJ:
         printf ( "handle %d \n",var_getHandle (the_var));
 		break;
 	case VAR_TYPE_NILL:
@@ -961,11 +910,11 @@ Var IL_exec ( Function *func )
             Var init_var[c];
             for(;c>0;c--)
             {
-                init_var[c-1]=get_tmp (i->tmp_index);
+                init_var[c-1]=(* get_tmp (i->tmp_index));
                 i=i->pre;
             }
         last_tmp_value= the_vector_creator(tmp->list_creator->init_args,init_var);
-        set_tmp (tmp->tmp_index,last_tmp_value);
+        set_tmp (tmp->tmp_index,&last_tmp_value,TMP_DEREFER);
         }
             break;
         case IL_NODE_STRUCT_CREATOR:
@@ -975,11 +924,11 @@ Var IL_exec ( Function *func )
             Var init_var[c];
             for(;c>0;c--)
             {
-                init_var[c-1]=get_tmp (i->tmp_index);
+                init_var[c-1]= (*get_tmp (i->tmp_index));
                 i=i->pre;
             }
             last_tmp_value =struct_Create(tmp->struct_creator->id,init_var,tmp->struct_creator->init_args);
-            set_tmp (tmp->tmp_index,last_tmp_value);
+            set_tmp (tmp->tmp_index,&last_tmp_value,TMP_DEREFER);
         }
             break;
         case IL_NODE_TUPLE_CREATOR:
@@ -990,11 +939,11 @@ Var IL_exec ( Function *func )
             Var init_var[c];
             for(;c>0;c--)
             {
-                init_var[c-1]=get_tmp (i->tmp_index);
+                init_var[c-1]= (*get_tmp (i->tmp_index));
                 i=i->pre;
             }
         last_tmp_value= the_tuple_creator (tmp->list_creator->init_args,init_var);
-        set_tmp (tmp->tmp_index,last_tmp_value);
+        set_tmp (tmp->tmp_index,&last_tmp_value,TMP_DEREFER);
         }
             break;
 		case IL_NODE_JMP:
@@ -1045,19 +994,25 @@ Var IL_exec ( Function *func )
         case IL_NODE_CALL_LIST:
         {
             last_tmp_value =IL_CallFunc (tmp->call->args,tmp->call->list_id,FUNC_NORMAL);
-            set_tmp (tmp->tmp_index,last_tmp_value);
+            set_tmp (tmp->tmp_index,&last_tmp_value,TMP_ARITH);
         }
             break;
         case IL_NODE_CALL_API:
         {
             last_tmp_value=IL_CallFunc (tmp->call->args,tmp->call->list_id,FUNC_API);
-            set_tmp (tmp->tmp_index,last_tmp_value);
+            set_tmp (tmp->tmp_index,&last_tmp_value,TMP_ARITH);
         }
             break;
         case IL_NODE_CALL_DYNAMIC:
         {
             last_tmp_value =IL_CallFunc (tmp->call->args,tmp->call->list_id,FUNC_DYNAMIC);
-            set_tmp (tmp->tmp_index,last_tmp_value);
+            set_tmp (tmp->tmp_index,&last_tmp_value,TMP_ARITH);
+        }
+            break;
+        case IL_NODE_CALL_METHOD:
+        {
+            last_tmp_value =IL_CallFunc (tmp->call->args,tmp->call->list_id,FUNC_METHOD);
+            set_tmp (tmp->tmp_index,&last_tmp_value,TMP_ARITH);
         }
             break;
         case IL_NODE_JNE:
@@ -1110,7 +1065,6 @@ Var IL_CallFunc (int args, int f_index,int mode)
 	Var result;
     Var arg_list[args];
 
-
     /*回溯添加参数,并把当前层的开头的相应的*/
     /*局部变量赋值为此*/
     {
@@ -1120,28 +1074,32 @@ Var IL_CallFunc (int args, int f_index,int mode)
                 i<args;
                 i++)
         {
-            Var source=get_tmp(tmp->tmp_index);
+            Var source= (*get_tmp(tmp->tmp_index));
             tmp=tmp->pre;
             arg_list[args-i-1]=source;
         }
         if(mode==FUNC_DYNAMIC)/*说延迟绑定函数索引，这是需要在开头寻找*/
         {
-            f_index=get_tmp(tmp->tmp_index).content.var_value.func.func_index;
-            mode=get_tmp(tmp->tmp_index).content.var_value.func.func_type;
+            f_index=vm_RTstackVarGetAbs (f_index)->content.var_value.func.func_index;
+            mode=vm_RTstackVarGetAbs(f_index)->content.var_value.func.func_type;
         }
-
+        if(mode==FUNC_METHOD)
+        {
+            f_index=get_tmp(tmp->tmp_index)->content.var_value.func.func_index;
+            mode=get_tmp(tmp->tmp_index)->content.var_value.func.func_type;
+        }
     }
 
 
 	if(mode==FUNC_NORMAL)/*普通的脚本函数调用*/
 	{
 		Function * f =func_get_by_index ( f_index);
-		/*检查执行时刻的参数是否与所对应的函数的参数数目相符*/
+        /*检查执行时刻的参数是否与所对应的函数的参数数目相符*/
         if(f->arg_counts!=args)
-		{
+        {
             printf("error,%s  the args count is not match 形式：%d 实际：%d\n",f->name,f->arg_counts,args);
-			exit(0);
-		}
+            exit(0);
+        }
 		int i=0;
 		vm_RTstackPush();
 		for ( i=0;
@@ -1151,7 +1109,7 @@ Var IL_CallFunc (int args, int f_index,int mode)
             Var source=arg_list[i];
 			int r_t=var_GetType(source);
 			/*为函数的参数赋值*/
-            if(r_t==VAR_TYPE_TUPLE  || r_t==VAR_TYPE_VECTOR|| r_t==VAR_TYPE_HANDLE)/*若右值为引用型引用计数自增*/
+            if(r_t==VAR_TYPE_TUPLE  || r_t==VAR_TYPE_VECTOR|| r_t==VAR_TYPE_OBJ)/*若右值为引用型引用计数自增*/
 			{
                 RefCountIncrease(r_t,var_getHandle (source));
 			}
@@ -1177,4 +1135,178 @@ Var IL_CallFunc (int args, int f_index,int mode)
 		return return_value;
 	}
 	return result;
+}
+
+/*将函数所在中间代码节点编译到指定字节码文件中*/
+void IL_ListCompile(FILE *f,int func_index)
+{
+    IL_list_print(f,func_get_by_index (func_index));
+}
+
+/*从字节码文件中读入表达式节点*/
+void IL_ExpLoad(char * str)
+{
+    IL_element A,B;
+    char exp_str[5][32];
+    sscanf (str,"%s %s %s %s %s",exp_str[0],exp_str[1],exp_str[2],exp_str[3],exp_str[4]);
+    int tmp_result_index=atoi (exp_str[1]);
+    switch(exp_str[2][0])
+    {
+    case '$':
+        A.type=ELEMENT_VAR;
+        A.index=atoi(exp_str[2]+1);
+        break;
+    case '#':
+        A.type=ELEMENT_LITERAL;
+        A.index=atoi(exp_str[2]+1);
+        break;
+    case '@':
+        A.type=ELEMENT_TMP;
+        A.index=atoi(exp_str[2]+1);
+        break;
+    default:
+        STOP("THIS EXP NOT SUPPORT YET");
+        break;
+    }
+    int op=atoi(exp_str[3]);
+    switch(exp_str[4][0])
+    {
+    case '$':
+        B.type=ELEMENT_VAR;
+        B.index=atoi(exp_str[4]+1);
+        break;
+    case '#':
+        B.type=ELEMENT_LITERAL;
+        B.index=atoi(exp_str[4]+1);
+        break;
+    case '@':
+        B.type=ELEMENT_TMP;
+        B.index=atoi(exp_str[4]+1);
+        break;
+    default:
+        STOP("THIS EXP NOT SUPPORT YET");
+        break;
+    }
+    IL_ListInsertEXP (IL_exp_create( op,A,B ),tmp_result_index);
+}
+
+
+
+/*从字节码文件中读入打印节点*/
+void IL_PRNTLoad()
+{
+    IL_ListInsertNode( IL_node_create_prnt());
+}
+
+/*从字节码文件中读入返回节点*/
+void IL_RETRNLoad()
+{
+    IL_ListInsertReturn();
+}
+
+
+/*从字节码文件中读入列表调用节点*/
+void IL_CallFuncLoad(char * str)
+{
+    char func_str[4][32];
+    sscanf (str,"%s %s %s %s",func_str[0],func_str[1],func_str[2],func_str[3]);
+    int tmp_result_index=atoi(func_str[1]);
+    int call_list=atoi(func_str[2]);
+    int arg=atoi(func_str[3]);
+    IL_ListInsertCall (FUNC_NORMAL,tmp_result_index,arg,call_list);
+}
+
+/*从字节码文件中读入标记节点*/
+void IL_LableLoad(char *str)
+{
+    char label_str[2][32];
+    sscanf (str,"%s %s",label_str[0],label_str[1]);
+    int index=atoi(label_str[1]);
+    IL_ListInsertNode( IL_node_create_jmp(index,IL_NODE_LAB));
+}
+
+
+/*从字节码文件中读入判零跳转节点*/
+void IL_JELoad(char *str)
+{
+    char JE_str[2][32];
+    sscanf (str,"%s %s",JE_str[0],JE_str[1]);
+    int index=atoi(JE_str[1]);
+    IL_ListInsertNode(IL_node_create_jmp(index,IL_NODE_JE))   ;
+}
+
+/*从字节码文件中读入无条件跳转节点*/
+void IL_JMPLoad(char *str)
+{
+    char JMP_str[2][32];
+    sscanf (str,"%s %s",JMP_str[0],JMP_str[1]);
+    int index=atoi(JMP_str[1]);
+    IL_ListInsertNode( IL_node_create_jmp(index,IL_NODE_JMP));
+}
+
+
+/*从字节码文件中读入非零跳转节点*/
+void IL_JNELoad(char *str)
+{
+    char JMP_str[2][32];
+    sscanf (str,"%s %s",JMP_str[0],JMP_str[1]);
+    int index=atoi(JMP_str[1]);
+    IL_ListInsertNode (IL_node_create_jmp(index,IL_NODE_JNE) );
+}
+
+
+/*从字节码文件中读入动态调用节点*/
+void IL_DynamicLoad(char *str)
+{
+    char dyn_str[4][32];
+    sscanf (str,"%s %s %s %s",dyn_str[0],dyn_str[1],dyn_str[2],dyn_str[3]);
+    int tmp_result_index=atoi(dyn_str[1]);
+    int index=atoi(dyn_str[2]);
+    int arg=atoi(dyn_str[3]);
+    IL_ListInsertCall (FUNC_DYNAMIC,tmp_result_index,arg,index);
+}
+
+/*从字节码中读入调用成员方法节点*/
+void IL_MethodCallLoad(char *str)
+{
+    char met_str[3][32];
+    sscanf (str,"%s %s %s",met_str[0],met_str[1],met_str[2]);
+    int tmp_result_index=atoi(met_str[1]);
+    int arg=atoi(met_str[2]);
+    IL_ListInsertCall (FUNC_METHOD,tmp_result_index,arg,-1);
+}
+
+
+/*从字节码中读入构造方法节点*/
+void IL_StructCreatorLoad(char * str)
+{
+char cre_str[4][32];
+sscanf (str,"%s %s %s %s",cre_str[0],cre_str[1],cre_str[2],cre_str[3]);
+int tmp_result_index=atoi(cre_str[1]);
+int struct_id=atoi(cre_str[2]);
+int arg=atoi(cre_str[3]);
+IL_ListInsertStructCreator(struct_id,tmp_result_index,arg);
+}
+
+
+/*从字节码中读入向量构造节点*/
+void IL_VectorCreatorLoad(char * str)
+{
+char the_str[3][32];
+sscanf (str,"%s %s %s",the_str[0],the_str[1],the_str[2]);
+int tmp_result_index=atoi(the_str[1]);
+int args=atoi(the_str[2]);
+IL_ListInsertListCreator (ELEMENT_VECTOR_CREATE,tmp_result_index,args);
+}
+
+
+
+/*从字节码中读入元组构造节点*/
+void IL_TupleCreatorLoad(char * str)
+{
+char the_str[3][32];
+sscanf (str,"%s %s %s",the_str[0],the_str[1],the_str[2]);
+int tmp_result_index=atoi(the_str[1]);
+int args=atoi(the_str[2]);
+IL_ListInsertListCreator (ELEMENT_TUPLE_CREATE,tmp_result_index,args);
 }

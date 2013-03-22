@@ -34,6 +34,7 @@ PURPOSE.
 #define OP_AND 9
 #define OP_OR 10
 #define OP_CALL 11
+#define OP_SUBSCRIPT 12 /*取索引*/
 
 //标志类型
 #define TOKEN_TYPE_INVALID 0
@@ -69,7 +70,6 @@ PURPOSE.
 #define TOKEN_TYPE_NIL 30 //空
 #define TOKEN_TYPE_MIX 31 //继承符号
 #define TOKEN_TYPE_PRIVATE 32
-#define TOKEN_TYPE_SEALED 33
 #define TOKEN_TYPE_MODULE 34
 #define TOKEN_TYPE_USING 35
 #define TOKEN_TYPE_STRUCT_NAME 36

@@ -24,5 +24,11 @@ int ConstSegmentPush(Var const_var);
 /*返回当前常量段中拥有的常量的数量*/
 int ConstSegmentGetCount();
 /*返回指定索引的常量段中的变量*/
-Var ConstSegmentGetVar(int index);
+Var * ConstSegmentGetVar(int index);
+
+/*把常量段写入字节码文件中*/
+void ConstSegmentWrite(FILE *f);
+
+/*把常量段从字节码中读取到内存中*/
+void ConstSegmentLoad(char *str);
 #endif // CONST_SEGMENT_H

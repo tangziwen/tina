@@ -21,7 +21,7 @@ PURPOSE.
 #include "type.h"
 #include "def.h"
 /*获得数组指定元素的值*/
-Var tuple_GetValue(Var array_obj,int index );
+Var * tuple_GetValue(Var array_obj,int index );
 /*数组初始化*/
 void tuple_init();
 

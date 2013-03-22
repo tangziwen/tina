@@ -44,21 +44,24 @@ int Tina_API_GetTag();
 int Tina_FuncGetCount();
 
 //根据函数名称打印中间代码
-void Tina_PrintIL(const char * func_name);
+void Tina_PrintIL(FILE*f,const char * func_name);
 
 /*创建一个结构体原型,返回其索引*/
-extern int Tina_CreateProtype( const char * name);
+extern int Tina_CreateProtype(const char * name, int index);
 
 
 /*为指定结构体原型添加成员,并指定其值.
 返回其索引
 */
-extern int Tina_ProtypeAddMember(int id, const char * member_name, Var value,int is_sealed);
+extern int Tina_ProtypeAddMember(int id, const char * member_name, Var value);
 
 /*
 未指定的结构体原型的指定成员赋值
 */
 extern void Tina_ProtypeSetMember(int struct_id,int member_id,Var value);
+
+/*载入一个字节码文件*/
+void Tina_Load(const char *file_name);
 //初始化tina
 extern void Tina_Init();
 #endif

@@ -46,6 +46,7 @@ PURPOSE.
 #define IL_NODE_TUPLE_CREATOR 13
 #define IL_NODE_NILL 14 /*空节点，无实际意义*/
 #define IL_NODE_STRUCT_CREATOR 15 /*结构体构造器*/
+#define IL_NODE_CALL_METHOD 16 /*调用一个动态的方法，可能是LIST也可能是API，将由虚拟机在运行时判定*/
 
 #define ELEMENT_VAR 1
 #define ELEMENT_LITERAL 2
@@ -53,13 +54,12 @@ PURPOSE.
 #define ELEMENT_TMP 4
 #define ELEMENT_API 5
 #define ELEMENT_FUNC 6
-#define ELEMENT_ARRAY 7
-#define ELEMENT_CALL_BY_PTR 8
-#define ELEMENT_CALL_BY_MEMBER 9
-#define ELEMENT_SELF 10
-#define ELEMENT_VECTOR_CREATE 11
-#define ELEMENT_TUPLE_CREATE 12
-#define ELEMENT_STRUCT_CREATOR 13
+#define ELEMENT_CALL_BY_PTR 7
+#define ELEMENT_CALL_BY_MEMBER 8
+#define ELEMENT_SELF 9
+#define ELEMENT_VECTOR_CREATE 10
+#define ELEMENT_TUPLE_CREATE 11
+#define ELEMENT_STRUCT_CREATOR 12
 /*当前的标签数*/
 extern int label_index;
 
@@ -89,7 +89,7 @@ void IL_ListInsertEXP(IL_exp *exp, int tmp_index);
 void IL_ListInsertNode(IL_node *node);
 
 /*打印中间代码序列*/
-void IL_list_print(Function * func);
+void IL_list_print(FILE *f, Function * func);
 
 /*执行中间代码*/
 Var IL_exec(Function *func);
@@ -110,4 +110,43 @@ void IL_ListInsertListCreator(int type,int tmp_index,int init_args);
 void IL_ListInsertStructCreator(int id,int tmp_index,int init_args);
 /*向节点中添加*/
 IL_node * IL_CreateNode(int tmp_index);
+/*将函数所在中间代码节点编译到指定字节码文件中*/
+void IL_ListCompile(FILE *f,int func_index);
+
+/*从字节码文件中读入表达式节点*/
+void IL_ExpLoad(char * str);
+
+/*从字节码文件中读入打印节点*/
+void IL_PRNTLoad();
+
+/*从字节码文件中读入返回节点*/
+void IL_RETRNLoad();
+
+/*从字节码文件中读入列表调用节点*/
+void IL_CallFuncLoad(char * str);
+
+
+/*从字节码文件中读入判零跳转节点*/
+void IL_JELoad(char *str);
+
+/*从字节码文件中读入无条件跳转节点*/
+void IL_JMPLoad(char *str);
+
+/*从字节码文件中读入非零跳转节点*/
+void IL_JNELoad(char *str);
+
+/*从字节码文件中读入标记节点*/
+void IL_LableLoad(char *str);
+
+/*从字节码文件中读入动态调用节点*/
+void IL_DynamicLoad(char *str);
+
+/*从字节码中读入构造方法节点*/
+void IL_StructCreatorLoad(char * str);
+
+/*从字节码中读入向量构造节点*/
+void IL_VectorCreatorLoad(char * str);
+
+/*从字节码中读入元组构造节点*/
+void IL_TupleCreatorLoad(char * str);
 #endif

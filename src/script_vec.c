@@ -52,14 +52,14 @@ static vec_chunk * CreateVec(int tuple_size)
 
 
 /*获得数组指定元素的值*/
-Var vector_GetValue(Var array_obj,int index )
+Var *vector_GetValue(Var array_obj,int index )
 {
     vec_chunk * a;
     a=(vec_chunk *)var_getHandle (array_obj);
     if(index <a->vec_size+1&& index>0)
 	{
         Var * the_tuple =a->var_handle;
-        return the_tuple[index-1];
+        return &(the_tuple[index-1]);
 	}
 	else
 	{
@@ -141,7 +141,7 @@ static void free_vector(vec_chunk * ptr)
     for(;i<ptr->vec_size;i++)
 	{
 		int t=var_GetType(ptr->var_handle[i]);
-        if(t==VAR_TYPE_VECTOR || t==VAR_TYPE_HANDLE ||t==VAR_TYPE_TUPLE)
+        if(t==VAR_TYPE_VECTOR || t==VAR_TYPE_OBJ ||t==VAR_TYPE_TUPLE)
 		{
             RefCountDecrease(t,var_getHandle (ptr->var_handle[i]));
 		}
@@ -236,14 +236,14 @@ void vector_Print(Var vec)
     int vec_size=the_vec->vec_size;
     for(;i<vec_size+1;i++)
     {
-        var_Print (vector_GetValue (vec,i));
+        var_Print (*vector_GetValue (vec,i));
     }
     printf("\n");
 }
 
 
 /*从原位置克隆一个向量*/
-Var vector_Clone(Var src)
+Var * vector_Clone(Var src)
 {
     if(var_GetType (src)!=VAR_TYPE_VECTOR)
     {
@@ -252,19 +252,19 @@ Var vector_Clone(Var src)
 
     vec_chunk * src_vec, *new_vec;
     src_vec=var_getHandle (src);
-   new_vec= CreateVec (src_vec->vec_size);
-   new_vec=src_vec;/*拷贝所有属性*/
-   /*拷贝成员*/
-   int i=1;
-   for(;i<=src_vec->vec_size;i++)
-   {
-       new_vec->var_handle[i]=src_vec->var_handle[i];
-   }
-   /*装箱成Var 类型*/
-   Var new_obj;
-   new_obj.content.type=VAR_TYPE_VECTOR;
-   new_obj.content.var_value.handle_value=new_vec;
-   return new_obj;
+    new_vec= CreateVec (src_vec->vec_size);
+    new_vec=src_vec;/*拷贝所有属性*/
+    /*拷贝成员*/
+    int i=1;
+    for(;i<=src_vec->vec_size;i++)
+    {
+        new_vec->var_handle[i]=src_vec->var_handle[i];
+    }
+    /*装箱成Var 类型*/
+    Var  *new_obj=malloc(sizeof (Var));
+    new_obj->content.type=VAR_TYPE_VECTOR;
+    new_obj->content.var_value.handle_value=new_vec;
+    return new_obj;
 }
 
 /*获得指定向量维护的类型*/
@@ -306,7 +306,7 @@ char * vector_ToString(Var vec)
     int i=0;
     for(;i<obj->vec_size;i++)
     {
-        str[i]=var_GetChar (vector_GetValue (vec,i+1));
+        //str[i]=var_GetChar (vector_GetValue (vec,i+1));
     }
     return str;
 }

@@ -25,9 +25,8 @@ PURPOSE.
 
 #define VAR_TYPE_NILL 0
 #define VAR_TYPE_INT 1
-#define VAR_TYPE_HANDLE 2
+#define VAR_TYPE_OBJ 2
 #define VAR_TYPE_BOOL 3
-#define VAR_TYPE_REF 4
 #define VAR_TYPE_TUPLE 5 /*元组类型*/
 #define VAR_TYPE_REAL 6
 #define VAR_TYPE_FUNC 7 /*函数指针类型*/
@@ -35,7 +34,7 @@ PURPOSE.
 #define VAR_TYPE_VECTOR 9
 #define VAR_TYPE_CHAR 10 /*字符类型*/
 #define VAR_TYPE_MESSAGE 11
-#define VAR_TYPE_ELEMENT 12 /*用于保存一个表的元素*/
+#define VAR_TYPE_STR 12
 /*null只能作为右操作数,a+null返回a的值*/
 
 
@@ -85,7 +84,7 @@ Var var_and(Var a, Var b);
 
 Var var_or(Var a, Var b);
 
-Var var_point_to(Var a,Var b);
+Var *var_point_to(Var a,Var b);
 /*设置当前函数*/
 void func_set_current(Function * func);
 /*变量模块初始化*/
@@ -104,6 +103,8 @@ char var_GetChar(Var a);
 int var_GetType(Var a);
 /*获得变量的句柄类型*/
 void * var_getHandle(Var a);
+/*获得Var变量的结构体索引*/
+int var_GetStructId(Var a);
 /*获得变量的消息*/
 char * var_GetMsg(Var a);
 /*设置Var变量的实数值，如果其不为实数，类型将会强制转换*/
@@ -120,4 +121,6 @@ void var_SetNil(Var *a);
 void var_SetAPI(Var *a ,int API_index);
 /*设置Var变量的字符值，如果其不为字符，类型将会强制转换*/
 void var_SetChar(Var *a,int ch);
+/*设置Var变量的字符值，如果其不为字符，类型将会强制转换*/
+void var_SetMsg(Var *a,char *str);
 #endif

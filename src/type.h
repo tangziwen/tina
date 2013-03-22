@@ -46,6 +46,7 @@ typedef struct token_info_t
 #define FUNC_NORMAL 0
 #define FUNC_API  1
 #define FUNC_DYNAMIC 2
+#define FUNC_METHOD 3
 struct func_info
 {
     int func_type;
@@ -70,6 +71,7 @@ union var_value_t {
     char *str;
     char char_value;
     struct element_info element;
+    int struct_id;
 };
 
 
@@ -82,7 +84,6 @@ struct var_content
 typedef struct
 {
     char name[TOKEN_NAME_SIZE];
-    void * address;
     struct var_content content;
     int class_id;
     int layer;//变量所在的层数
@@ -186,12 +187,19 @@ typedef struct IL_node_t
     struct IL_node_t * pre;
 } IL_node;
 
+#define TMP_ARITH 1 /*算术类型*/
+#define TMP_DEREFER 2 /*解引用类型，比如下标运算，"."运算*/
 
+struct tmp_result
+{
+    Var * result;/*存放临时结果的地址*/
+    int tmp_type;/*临时过程产生的类型*/
+};
 
 //中间语言执行序列
 typedef struct
 {
-    Var tmp_var_list [32];
+    struct tmp_result tmp_var_list [32];
     IL_node * head;
 } IL_list;
 

@@ -26,21 +26,18 @@ PURPOSE.
 #include "var.h"
 #include "vm.h"
 #include "il.h"
-#include "return.h"
-#include "while.h"
-#include "if.h"
-#include "for.h"
 #include "script_struct.h"
 #include "script_tuple.h"
 #include "module.h"
 #include "debug.h"
+#include "block.h"
 /*函数列表*/
 Function function_list[FUNCTION_MAX];
 int current_func_index=0;
 /*当前的被扫描函数*/
 Function * current_func=NULL;
 static int plain_get_index_by_name(  char * func_name);
-static void CreatFunction(int args,char *name )
+static void CreateFunction(int args,char *name )
 {
     function_list[current_func_index].arg_counts=args;
     if(plain_get_index_by_name(name)!=-1)
@@ -67,7 +64,7 @@ static int plain_get_index_by_name(  char * func_name)
 	}
 	return -1;
 }
-int func_get_index_by_name( char * func_name)
+int func_get_index_by_name(const char * func_name)
 {
 	char name[128]= {0};
 	int result=-1, i;
@@ -80,7 +77,7 @@ int func_get_index_by_name( char * func_name)
 	}
 
 	/*再检查导入模块是否有该名字*/
-	for(i=0; i<module_index; i++)
+    for(i=1; i<=module_GetMoudleCount (); i++)
 	{
 		result=plain_get_index_by_name(module_MangledName(i,func_name));
 		if(result>=0)
@@ -105,7 +102,7 @@ int Tina_FuncGetCount()
 void func_ParseDeclare(int *postion)
 {
 	TokenInfo t_k;
-	token_get(postion,&t_k);/*获取函数名称*/
+    token_Get(postion,&t_k);/*获取函数名称*/
 	/*加上模块前缀*/
 	char  unique_name[32]= {0};
 	strcpy(unique_name,module_ContextMangledName(t_k.content));
@@ -130,7 +127,7 @@ void func_ParseDeclare(int *postion)
 void method_parse_declare(int *postion,char * class_name)
 {
 	TokenInfo t_k;
-	token_get(postion,&t_k);/*获取函数名称*/
+    token_Get(postion,&t_k);/*获取函数名称*/
 	/*加上后缀*/
 	strcat(t_k.content,"#");
 	strcat(t_k.content,class_name);
@@ -176,12 +173,12 @@ Var func_invoke(int index)
 int is_parsing_func_def=0;
 
 /*解析函数的定义*/
-Function * func_parse_def(int *postion )
+Function * func_ParseDef(int *postion )
 {
 	is_parsing_func_def=1;
 	TokenInfo t_k;
 	/*获得函数的名字*/
-	token_get(postion,&t_k);
+    token_Get(postion,&t_k);
 	/*我们已经预扫描过了函数的声明.现在我们直接通过函数的名字获取该函数的结构*/
 	Function *f =func_get_by_index(func_get_index_by_name(t_k.content));
 	int index =func_get_index_by_name(t_k.content);
@@ -190,7 +187,7 @@ Function * func_parse_def(int *postion )
 	/*解析参数形如  (a,b,c)*/
 	/*我们把参数当作函数的最外层的最前面的*/
 	/*几个变量.*/
-	token_get(postion,&t_k);
+    token_Get(postion,&t_k);
 	if(t_k.type!=TOKEN_TYPE_OP&&t_k.content[0]!='(')
 	{
 		printf("error miss '(' in function args list \n");
@@ -199,7 +196,7 @@ Function * func_parse_def(int *postion )
 	int type=VAR_TYPE_INT;
 	do
 	{
-		token_get(postion,&t_k);
+        token_Get(postion,&t_k);
 		switch(t_k.type)
 		{
 		case TOKEN_TYPE_SYMBOL:
@@ -243,120 +240,12 @@ end:
 	int current_layer=0;
 	int scan_pos=*postion;
 	var_parse_local(&scan_pos,f->arg_counts);/*初始化变量模块*/
-	token_get_assert(postion,&t_k,TOKEN_TYPE_LEFT_BRACE,"invalid function body");/*跳过一个左花括号*/
-	int brace =-1;
-	do
-	{
-		/*因为需要更多的信息,所以我们有两个变量控制*/
-		/*步进关系*/
-		int test_pos=*postion;
-		token_get(&test_pos,&t_k);
-		switch(t_k.type)
-		{
-		case TOKEN_TYPE_EOF:
-			break;
-		case TOKEN_TYPE_VAR_DEF:
+    int result =block_Parse(postion,current_layer,-1,-1,FUNC_GLOBAL);
+    if(result!=0)
+    {
+        STOP("illegal function define %s",block_GetLastStateStr ());
+    }
 
-            (*postion)=test_pos;
-			exp_Parse(postion,EXP_NORMAL,current_layer);
-			break;
-		case TOKEN_TYPE_NUM:
-			/*回退一格,解析表达式*/
-			exp_Parse(postion,EXP_NORMAL,current_layer);
-			break;
-		case TOKEN_TYPE_SELF:
-			printf("can not use \"self\" in global function \n");
-			exit(0);
-			break;
-		case TOKEN_TYPE_SYMBOL:
-			;
-            /*回退一格,解析表达式*/
-			exp_Parse(postion,EXP_NORMAL,current_layer);
-			break;
-		case TOKEN_TYPE_TRUE:
-            /*回退一格,解析表达式*/
-			exp_Parse(postion,EXP_NORMAL,current_layer);
-			break;
-        case TOKEN_TYPE_CHAR:
-            /*回退一格,解析表达式*/
-            exp_Parse(postion,EXP_NORMAL,current_layer);
-            break;
-		case TOKEN_TYPE_RETURN:/*解析返回值表达式*/
-			(*postion)=test_pos;
-			return_parse(postion,current_layer);
-			break;
-		case TOKEN_TYPE_FALSE:
-			/*回退一个,解析表达式*/
-			exp_Parse(postion,EXP_NORMAL,current_layer);
-			break;
-		case TOKEN_TYPE_API:
-			/*回退一个,解析表达式*/
-			exp_Parse(postion,EXP_NORMAL,current_layer);
-			break;
-		case TOKEN_TYPE_STRUCT_NAME:
-			/*回退一个,解析表达式*/
-			exp_Parse(postion,EXP_NORMAL,current_layer);
-			break;
-		case TOKEN_TYPE_FUNC:
-			/*回退一个,解析表达式*/
-			exp_Parse(postion,EXP_NORMAL,current_layer);
-			break;
-			/*遇到左括号,当前层次增加*/
-		case TOKEN_TYPE_LEFT_BRACE:
-			(*postion)=test_pos;
-			current_layer++;
-			brace--;
-			break;
-			/*遇到右括号当前层次减少,整段的销毁原先最内层次的变量.*/
-		case TOKEN_TYPE_RIGHT_BRACE:
-			(*postion)=test_pos;
-			current_layer--;
-			brace++;
-			/*括号平衡的话,则函数定义结束*/
-			if(brace==0)
-			{
-				is_parsing_func_def=0;
-				return f;
-			}
-			break;
-		case TOKEN_TYPE_WHILE:
-			(*postion) =test_pos;
-			while_parse(postion,current_layer,FUNC_GLOBAL);
-			break;
-		case TOKEN_TYPE_FOR:
-			(*postion)=test_pos;
-			for_parse(postion,current_layer,FUNC_GLOBAL);
-			break;
-			/*解析if语句*/
-		case TOKEN_TYPE_IF:
-			(*postion) =test_pos;
-			if_parse(postion,current_layer,-1,-1,FUNC_GLOBAL);
-			break;
-		case TOKEN_TYPE_PRINT:
-			(*postion) =test_pos;
-			print_parse(postion,current_layer);
-			break;
-		case TOKEN_TYPE_OP:
-			/*如果是左小括号的话,回退一格,进行表达式求值,如果不是*/
-			/*则是一个编译错误*/
-			if(t_k.content[0]=='(')
-			{
-				exp_Parse(postion,EXP_NORMAL,current_layer);
-			}
-			else
-			{
-				printf("illigal '(' \n");
-				exit(0);
-			}
-			break;
-		default :
-            printf("the token %d is put on a ilegal place %s\n",t_k.type,t_k.content);
-			printf("error !!\n");
-			exit(0);
-			break;
-		}
-	}
-	while(t_k.type!=TOKEN_TYPE_EOF);
     //在函数的结尾处，始终增加一个return
     IL_ListInsertReturn();
 	return f;
@@ -368,7 +257,7 @@ Function * method_parse_def(int *postion,char * class_name )
 {
 	is_parsing_func_def=1;
 	TokenInfo t_k;
-	token_get(postion,&t_k);
+    token_Get(postion,&t_k);
 	strcat(t_k.content,"#");
 	strcat(t_k.content,class_name);
 
@@ -380,7 +269,7 @@ Function * method_parse_def(int *postion,char * class_name )
 	/*解析参数形如  (a,b,c)*/
 	/*我们把参数当作函数的最外层的最前面的*/
 	/*几个变量.*/
-	token_get(postion,&t_k);
+    token_Get(postion,&t_k);
 	if(t_k.type!=TOKEN_TYPE_OP&&t_k.content[0]!='(')
 	{
 		printf("error miss '(' in function args list \n");
@@ -389,7 +278,7 @@ Function * method_parse_def(int *postion,char * class_name )
 	int type=VAR_TYPE_INT;
 	do
 	{
-		token_get(postion,&t_k);
+        token_Get(postion,&t_k);
 		switch(t_k.type)
 		{
 		case TOKEN_TYPE_SYMBOL:
@@ -433,118 +322,11 @@ end:
 	int current_layer=0;
 	int scan_pos=*postion;
 	var_parse_local(&scan_pos,f->arg_counts);/*初始化变量模块*/
-	token_get_assert(postion,&t_k,TOKEN_TYPE_LEFT_BRACE,"invalid function body");/*跳过一个左花括号*/
-	int brace =-1;
-	do
-	{
-		/*因为需要更多的信息,所以我们有两个变量控制*/
-		/*步进关系*/
-		int test_pos=*postion;
-		token_get(&test_pos,&t_k);
-		switch(t_k.type)
-		{
-		case TOKEN_TYPE_EOF:
-			break;
-		case TOKEN_TYPE_VAR_DEF:
-
-			(*postion)=test_pos;
-			exp_Parse(postion,EXP_NORMAL,current_layer);
-			break;
-		case TOKEN_TYPE_NUM:
-			/*回退一格,解析表达式*/
-			exp_Parse(postion,EXP_NORMAL,current_layer);
-			break;
-		case TOKEN_TYPE_SELF:
-			/*回退一格,解析表达式*/
-			exp_Parse(postion,EXP_NORMAL,current_layer);
-			break;
-		case TOKEN_TYPE_SYMBOL:
-
-			;
-			/*回退一个,解析表达式*/
-			exp_Parse(postion,EXP_NORMAL,current_layer);
-			break;
-		case TOKEN_TYPE_TRUE:
-			/*回退一个,解析表达式*/
-			exp_Parse(postion,EXP_NORMAL,current_layer);
-			break;
-		case TOKEN_TYPE_RETURN:/*解析返回值表达式*/
-			(*postion)=test_pos;
-			return_parse(postion,current_layer);
-			break;
-		case TOKEN_TYPE_FALSE:
-			/*回退一个,解析表达式*/
-			exp_Parse(postion,EXP_NORMAL,current_layer);
-			break;
-		case TOKEN_TYPE_API:
-			/*回退一个,解析表达式*/
-			exp_Parse(postion,EXP_NORMAL,current_layer);
-			break;
-		case TOKEN_TYPE_STRUCT_NAME:
-			/*回退一个,解析表达式*/
-			exp_Parse(postion,EXP_NORMAL,current_layer);
-			break;
-		case TOKEN_TYPE_FUNC:
-			/*回退一个,解析表达式*/
-			exp_Parse(postion,EXP_NORMAL,current_layer);
-			break;
-			/*遇到左括号,当前层次增加*/
-		case TOKEN_TYPE_LEFT_BRACE:
-			(*postion)=test_pos;
-			current_layer++;
-			brace--;
-			break;
-			/*遇到右括号当前层次减少,整段的销毁原先最内层次的变量.*/
-		case TOKEN_TYPE_RIGHT_BRACE:
-			(*postion)=test_pos;
-			current_layer--;
-			brace++;
-			/*括号平衡的话,则函数定义结束*/
-			if(brace==0)
-			{
-				is_parsing_func_def=0;
-				return f;
-			}
-			break;
-		case TOKEN_TYPE_WHILE:
-			(*postion) =test_pos;
-			while_parse(postion,current_layer,FUNC_MEMBER);
-			break;
-		case TOKEN_TYPE_FOR:
-			(*postion)=test_pos;
-			for_parse(postion,current_layer,FUNC_MEMBER);
-			break;
-			/*解析if语句*/
-		case TOKEN_TYPE_IF:
-			(*postion) =test_pos;
-			if_parse(postion,current_layer,-1,-1,FUNC_MEMBER);
-			break;
-		case TOKEN_TYPE_PRINT:
-			(*postion) =test_pos;
-			print_parse(postion,current_layer);
-			break;
-		case TOKEN_TYPE_OP:
-			/*如果是左小括号的话,回退一格,进行表达式求值,如果不是*/
-			/*则是一个编译错误*/
-			if(t_k.content[0]=='(')
-			{
-				exp_Parse(postion,EXP_NORMAL,current_layer);
-			}
-			else
-			{
-				printf("illigal '(' \n");
-				exit(0);
-			}
-			break;
-		default :
-			printf("the token %d is unknown %s\n",t_k.type,t_k.content);
-			printf("error !!\n");
-			exit(0);
-			break;
-		}
-	}
-	while(t_k.type!=TOKEN_TYPE_EOF);
-
+    int result =block_Parse(postion,current_layer,-1,-1,FUNC_MEMBER);
+    if(result!=0)
+    {
+        STOP("illegal method define %s",block_GetLastStateStr ());
+    }
 	return f;
 }
 
@@ -623,5 +405,5 @@ void func_Load(char *str)
     char func_char[3][32];
     sscanf (str,"%s %s %s",func_char[0],func_char[1],func_char[2]);
     int args=atoi(func_char[1]);
-    CreatFunction(args,func_char[2]);
+    CreateFunction(args,func_char[2]);
 }

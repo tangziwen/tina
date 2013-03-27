@@ -105,29 +105,29 @@ static int plain_get_class_id(const char * name)
 
 
 	int i;
-	for(i=0; i<30; i++)
+    for(i=1; i<30; i++)
 	{
         if(strcmp(struct_list[i].name,name)==0)
 		{
 			return i;
 		}
 	}
-	return -1;
+    return 0;
 }
 /*通过指定字符串找到类的id*/
 int get_class_id(const char * name)
 {
-	int result=-1;
+    int result=0;
 	/*检查当前环境所在模块*/
 	result=plain_get_class_id(module_ContextMangledName(name));
-	if(result==-1)
+    if(result==0)
 	{
 		int i=0;
 		/*检查被using的模块*/
-		for( ; i<module_index; i++)
+        for( ; i<=module_GetMoudleCount (); i++)
 		{
 			result=plain_get_class_id(module_MangledName(i,name));
-			if(result!=-1)
+            if(result!=0)
 			{
 				return result;
 			}
@@ -140,7 +140,7 @@ int get_class_id(const char * name)
 	{
 		return result;
 	}
-	return -1;
+    return 0;
 }
 /*清空临时对象池*/
 void struct_CleanTmpPool()
@@ -159,7 +159,7 @@ const char * struct_get_name(int ID)
     return struct_list[ID].name;
 }
 /*创建类型*/
-static void create_type(int ID,char * name)
+static void create_type(int ID,const char * name)
 {
 	/*变换成唯一名称形式(有模块名修饰)*/
 	char unique_name[128]= {0};
@@ -171,10 +171,10 @@ static void create_type(int ID,char * name)
 /*创建一个结构体原型,返回其索引*/
 extern int Tina_CreateProtype( const char * name,int index)
 {
+    struct_index++;
 	create_type(struct_index,name);
     struct_list[struct_index].initializer_index=index;
-	struct_index++;
-	return struct_index-1;
+    return struct_index;
 }
 
 
@@ -349,7 +349,7 @@ int get_accessbility_of_member(int ID,int member_id)
 void script_struct_init()
 {
 	int i;
-	for(i=0; i<30; i++)
+    for(i=1; i<30; i++)
 	{
         struct_list[i].initializer_index=-1;
         int j=0;
@@ -360,127 +360,104 @@ void script_struct_init()
 /*扫描类的声明*/
 void struct_ParseDeclare(int * pos)
 {
+    struct_index++;
 	TokenInfo t_k;
-	token_get ( pos,&t_k );/*获取类的名字*/
+	token_Get ( pos,&t_k );/*获取类的名字*/
 	char class_name[128];
 	strcpy(class_name,t_k.content);
 	create_type(struct_index,t_k.content);/*创建类型*/
-	struct_index++;
 }
 
 /*扫描类*/
 void struct_ParseDefine(int * pos)
 {
 
-	TokenInfo t_k;
-	token_get ( pos,&t_k );/*获取类的名字*/
-	char class_name [128]= {0};
-	strcpy(class_name,module_ContextMangledName(t_k.content));
-	/*获取*/
-	int struct_index =get_class_id(class_name);
-	/*探测是否有继承符号*/
-	int inherit_pos =*pos;
-	token_get ( &inherit_pos,&t_k );
-	/*如果有混入符号?*/
-	if(t_k.type==TOKEN_TYPE_MIX)
-	{
+    TokenInfo t_k;
+    token_Get ( pos,&t_k );/*获取类的名字*/
+    char class_name [128]= {0};
+    strcpy(class_name,module_ContextMangledName(t_k.content));
+    /*获取*/
+    int struct_index =get_class_id(class_name);
+    token_get_assert ( pos,&t_k,TOKEN_TYPE_LEFT_BRACE,class_name);
+    int pre_scan_pos=(*pos);
+    do
+    {
+        token_Get(&pre_scan_pos,&t_k);
+        switch(t_k.type)
+        {
+        /*发现函数的定义符号,声明函数*/
+        case TOKEN_TYPE_FUNC_DEF:
 
-		*pos =inherit_pos;
-		/*获取基类的名字*/
-		token_get_assert ( pos,&t_k,TOKEN_TYPE_STRUCT_NAME,"invalid mix" );
-		int base_class_id =get_class_id(t_k.content);/*获取基类的id*/
-		int i=0;
-		/*填充基类成员*/
-        for(i=0; i<struct_list[base_class_id].member_count; i++)
-		{
-            AddMember(struct_index,struct_list[base_class_id].member[i],struct_list[base_class_id].accessibility[i]);
-		}
-		token_get_assert ( pos,&t_k,TOKEN_TYPE_LEFT_BRACE, class_name);/*获得左花括号*/
-	}
-	else
-	{
-		token_get_assert ( pos,&t_k,TOKEN_TYPE_LEFT_BRACE,class_name);
-	}
-
-	int pre_scan_pos=(*pos);
-	do
-	{
-		token_get(&pre_scan_pos,&t_k);
-		switch(t_k.type)
-		{
-			/*发现函数的定义符号,声明函数*/
-		case TOKEN_TYPE_FUNC_DEF:
-
-			method_parse_declare(&pre_scan_pos,class_name);
-			token_SkipBlock(&pre_scan_pos);/*略过类定义块*/
-			break;
-			/*遇到右大括号*/
-		case TOKEN_TYPE_RIGHT_BRACE:
-			goto
-			DEF; /*跳到*/
-			break;
-		}
-	}
-	while(t_k.type!=TOKEN_TYPE_EOF);
+            method_parse_declare(&pre_scan_pos,class_name);
+            token_SkipBlock(&pre_scan_pos);/*略过类定义块*/
+            break;
+            /*遇到右大括号*/
+        case TOKEN_TYPE_RIGHT_BRACE:
+            goto
+            DEF; /*跳到*/
+            break;
+        }
+    }
+    while(t_k.type!=TOKEN_TYPE_EOF);
 DEF:
-	;
-	/*访问性*/
-	char acc=STRUCT_PUBLIC;
-	do
-	{
-		token_get ( pos,&t_k );
-		switch(t_k.type)
-		{
-			/*访问性限制,私有*/
-		case TOKEN_TYPE_PRIVATE:
-			acc=STRUCT_PRIVATE;
-			break;
-			/*类变量成员*/
-		case TOKEN_TYPE_VAR_DEF:
-		{
-			Var value;
-			token_get(pos,&t_k);
-			strcpy(value.name,t_k.content);
-			value.content.type=VAR_TYPE_NILL;
+    ;
+    /*访问性*/
+    char acc=STRUCT_PUBLIC;
+    do
+    {
+        token_Get ( pos,&t_k );
+        switch(t_k.type)
+        {
+        /*访问性限制,私有*/
+        case TOKEN_TYPE_PRIVATE:
+            acc=STRUCT_PRIVATE;
+            break;
+            /*类变量成员*/
+        case TOKEN_TYPE_VAR_DEF:
+        {
+            Var value;
+            token_Get(pos,&t_k);
+            strcpy(value.name,t_k.content);
+            value.content.type=VAR_TYPE_NILL;
             AddMember(struct_index,value,acc);
-			token_get ( pos,&t_k );/*跳过分号*/
-			if(t_k.type!=TOKEN_TYPE_SEMICOLON)
-			{
-				printf("illegal def in class %s  %d \n  ", t_k.content,*pos);
-				exit(0);
-			}
-			/*恢复到默认为公有*/
-			acc=STRUCT_PUBLIC;
-		}
-		break;
-		/*发现函数的定义符号,定义成员函数*/
-		case TOKEN_TYPE_FUNC_DEF:
-		{
-			/*成员函数被变了形,所以我们先试探获得他的名义名字*/
-			int test_pos= *pos;
-			token_get(&test_pos,&t_k);
-			char member_name [128];
-			strcpy(member_name,t_k.content);
+            token_Get ( pos,&t_k );/*跳过分号*/
+            if(t_k.type!=TOKEN_TYPE_SEMICOLON)
+            {
+                printf("illegal def in class %s  %d \n  ", t_k.content,*pos);
+                exit(0);
+            }
+            /*恢复到默认为公有*/
+            acc=STRUCT_PUBLIC;
+        }
+            break;
+            /*发现函数的定义符号,定义成员函数*/
+        case TOKEN_TYPE_FUNC_DEF:
+        {
+            /*成员函数被变了形,所以我们先试探获得他的名义名字*/
+            int test_pos= *pos;
+            token_Get(&test_pos,&t_k);
+            char member_name [128];
+            strcpy(member_name,t_k.content);
 
-			Function *f=method_parse_def(pos,class_name);
+            Function *f=method_parse_def(pos,class_name);
 
 
-			/*检测是否为一个初始化函数*/
+            /*检测是否为一个初始化函数*/
             if(strcmp(module_ContextMangledName(member_name),struct_list[struct_index].name)==0)
-			{
+            {
                 struct_list[struct_index].initializer_index=func_get_index_by_name(f->name);
-			}
-			else	/*否则是一个普通的函数*/
-			{
-				Var func_ptr;
-				func_ptr.content.type=VAR_TYPE_FUNC;
+            }
+            else	/*否则是一个普通的函数*/
+            {
+                Var func_ptr;
+                func_ptr.content.type=VAR_TYPE_FUNC;
                 func_ptr.content.var_value.func.func_index=func_get_index_by_name(f->name);
                 func_ptr.content.var_value.func.func_type=FUNC_NORMAL;
-				strcpy(func_ptr.name,member_name);
+                strcpy(func_ptr.name,member_name);
                 AddMember(struct_index,func_ptr,acc);
-			}
-			/*恢复到默认为公有*/
-			acc=STRUCT_PUBLIC;
+            }
+            /*恢复到默认为公有*/
+            acc=STRUCT_PUBLIC;
         }
             break;
         default:
@@ -514,10 +491,10 @@ static void member_Compile(FILE *f,struct_info * prototype)
         switch(var_GetType (prototype->member[i]))
         {
         case VAR_TYPE_FUNC:
-        fprintf(f,"f %d\n",prototype->member[i].content.var_value.func.func_index);
+            fprintf(f,"f %d\n",prototype->member[i].content.var_value.func.func_index);
             break;
         case VAR_TYPE_NILL:
-        fprintf(f,"n nill\n");
+            fprintf(f,"n nill\n");
             break;
         }
     }
@@ -526,8 +503,8 @@ static void member_Compile(FILE *f,struct_info * prototype)
 /*将结构体信息写入字节码中*/
 void struct_Compile(FILE *f)
 {
-    int i=0;
-    for( ; i<struct_index;i++)
+    int i=1;
+    for( ; i<=struct_index;i++)
     {
         fprintf(f,"S %d %s\n",struct_list[i].initializer_index,struct_list[i].name);
         /*将成员写入字节码中*/
@@ -559,13 +536,13 @@ void struct_MemberLoad(char *str)
         member.content.type=VAR_TYPE_FUNC;
         member.content.var_value.func.func_index=index;
         member.content.var_value.func.func_type=FUNC_NORMAL;
-        AddMember (struct_index-1,member,acc);
+        AddMember (struct_index,member,acc);
     }
         break;
     case MEMBER_TYPE_NILL:
     {
         var_SetNil(&member);
-        AddMember (struct_index-1,member,acc);
+        AddMember (struct_index,member,acc);
     }
         break;
     }

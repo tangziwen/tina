@@ -16,20 +16,12 @@ PURPOSE.
 发布此程序是希望它有助于您,但是作者对其不做任何担保,即使是商业上或
 合于特定用途的隐式担保亦无
 *********************tzw <tzwtangziwen@gmail.com>******************************/
+#ifndef TINA_BLOCK_H
+#define TINA_BLOCK_H
 
+/*该模块用于解析被一对花括号所包围的代码块的内容，并将其翻译成中间字节码,返回零成功，非零值解析失败*/
+int block_Parse(int * pos,int layer,int break_label,int continue_label,int mode);
 
-/********************此头文件用来存放全局使用的宏定义，通常与编译的属性相关*******
-*********************************************************************************/
-#ifndef DEF_H
-#define DEF_H
-#include <stdlib.h>
-#include <stdio.h>
-#define PLATFORM_WINDOWS 0
-/*#define PLATFORM_LINUX*/
-/*#define PLATFORM_MAC*/
-#define INIT( A ) {   extern void    A##_init();    A##_init();  }
-
-#define STOP(A,...) {  printf(A, ##__VA_ARGS__); exit(0);}
-
-#define PRINT(A) { printf("%s\n",A);}
-#endif /* DEF_H*/
+/*获取最近一次block_Parse状态信息*/
+char * block_GetLastStateStr();
+#endif

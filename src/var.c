@@ -97,13 +97,13 @@ static void local_declare_parse(int offset,int layer,int * pos)
 	a++;
 	int index =offset;/*索引,最开始在偏移量处*/
 	TokenInfo t_k;
-	token_get(pos,&t_k);/*先跳过本层的左括号*/
+	token_Get(pos,&t_k);/*先跳过本层的左括号*/
 	do
 	{
 		/*因为需要更多的信息,所以我们有两个变量控制*/
 		/*步进关系*/
 		int test_pos=(*pos);
-		token_get(&test_pos,&t_k);/*开始读取*/
+		token_Get(&test_pos,&t_k);/*开始读取*/
 		switch(t_k.type)
 		{
 			/*遇到变量的声明式*/
@@ -121,8 +121,8 @@ static void local_declare_parse(int offset,int layer,int * pos)
 
 			/*for语句较为特殊,因为其初始化表达式可能有定义式*/
 		case TOKEN_TYPE_FOR:
-			token_get(&test_pos,&t_k);/*跳过左小括号*/
-			token_get(&test_pos,&t_k);/*判定for语句的初始化表达式是否有定义式*/
+			token_Get(&test_pos,&t_k);/*跳过左小括号*/
+			token_Get(&test_pos,&t_k);/*判定for语句的初始化表达式是否有定义式*/
 			(*pos)=test_pos;
 			if(t_k.type==TOKEN_TYPE_VAR_DEF)
 			{

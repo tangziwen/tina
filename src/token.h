@@ -68,7 +68,6 @@ PURPOSE.
 #define TOKEN_TYPE_STRUCT 28
 #define TOKEN_TYPE_SELF 29 //指向自身的指针
 #define TOKEN_TYPE_NIL 30 //空
-#define TOKEN_TYPE_MIX 31 //继承符号
 #define TOKEN_TYPE_PRIVATE 32
 #define TOKEN_TYPE_MODULE 34
 #define TOKEN_TYPE_USING 35
@@ -82,7 +81,7 @@ PURPOSE.
 /*从当前位置(pos)解析一个词法标记，并将词法标记的相关信息存储进t_k所指向的TokenInfo对象里
  解 析之后，当前位置会向后跳跃一个词法标记               *
  我们假设整个待输入的缓存中的词法是无错的(即不存在无效的词法单元)*/
-void token_get (int *pos,TokenInfo *t_k);
+void token_Get (int *pos,TokenInfo *t_k);
 
 //跳过一个语句
 void token_skip_statement(int *pos);

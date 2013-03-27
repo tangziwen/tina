@@ -30,7 +30,7 @@ PURPOSE.
 #include "script_vec.h"
 
 
-#define KEYWORD_MAX 25
+#define KEYWORD_MAX 24
 #define KEYWORD_IF 0
 #define KEYWORD_WHILE 1
 #define KEYWORD_VAR 2
@@ -48,19 +48,18 @@ PURPOSE.
 #define KEYWORD_STRUCT 14
 #define KEYWORD_SELF 15
 #define KEYWORD_NIL 16
-#define KEYWORD_MIX 17
-#define KEYWORD_PRIVATE 18
-#define KEYWORD_SEALED 19
-#define KEYWORD_MODULE 20
-#define KEYWORD_USING 21
-#define KEYWORD_DELETE 22
-#define KEYWORD_VECTOR 23
-#define KEYWORD_TUPLE 24
+#define KEYWORD_PRIVATE 17
+#define KEYWORD_SEALED 18
+#define KEYWORD_MODULE 19
+#define KEYWORD_USING 20
+#define KEYWORD_DELETE 21
+#define KEYWORD_VECTOR 22
+#define KEYWORD_TUPLE 23
 static char pre_is_dot=0;
 static char * key_word_list[KEYWORD_MAX]=
 {
 	"if","while","var","else","print","true",
-	"false","function","return","and","or","for","break","continue","struct","self","nil","mix"
+    "false","function","return","and","or","for","break","continue","struct","self","nil"
     ,"private","sealed","module","using","delete","vector","tuple"
 };
 
@@ -221,7 +220,7 @@ static int escape_char(int c)
 /*从当前位置(pos)解析一个词法标记，并将词法标记的相关信息存储进t_k所指向的TokenInfo对象里
 解析之后，当前位置会向后跳跃一个词法标记
 我们假设整个待输入的缓存中的词法是无错的(即不存在无效的词法单元)*/
-void token_get ( int * pos,TokenInfo * t_k )
+void token_Get ( int * pos,TokenInfo * t_k )
 {
 	static int pre_tk_type=TOKEN_TYPE_INVALID;
 	if ( t_k==NULL )
@@ -462,7 +461,7 @@ void token_get ( int * pos,TokenInfo * t_k )
 		int tmp =lookup_keyword ( tmp_token );
 		strcpy ( t_k->content,tmp_token );
 		/*检查是否为一个关键字*/
-		switch ( tmp )
+        switch (tmp)
 		{
 		case -1:/*不是一个关键字*/
 			/*判断是否为一个引用成员运算*/
@@ -491,7 +490,7 @@ void token_get ( int * pos,TokenInfo * t_k )
 			t_k->type=TOKEN_TYPE_FUNC;
 			break;
 		}
-		else if( get_class_id(tmp_token)>=0) /*检查是否为一个结构体名称*/
+        else if( get_class_id(tmp_token)!=0) /*检查是否为一个结构体名称*/
 		{
 			t_k->type=TOKEN_TYPE_STRUCT_NAME;
 			break;
@@ -557,9 +556,6 @@ void token_get ( int * pos,TokenInfo * t_k )
 			break;
 		case KEYWORD_NIL:
 			t_k->type=TOKEN_TYPE_NIL;
-			break;
-		case KEYWORD_MIX:
-			t_k->type=TOKEN_TYPE_MIX;
 			break;
 		case KEYWORD_PRIVATE:
 			t_k->type=TOKEN_TYPE_PRIVATE;
@@ -642,56 +638,56 @@ void token_get ( int * pos,TokenInfo * t_k )
 
 void token_SkipBlock(int * pos)
 {
-	TokenInfo t_k;
-	do
-	{
-		token_get ( pos,&t_k );
-	}
-	while(t_k.type!=TOKEN_TYPE_LEFT_BRACE  && t_k.type!=TOKEN_TYPE_EOF);
+    TokenInfo t_k;
+    do
+    {
+        token_Get ( pos,&t_k );
+    }
+    while(t_k.type!=TOKEN_TYPE_LEFT_BRACE  && t_k.type!=TOKEN_TYPE_EOF);
 
-	int brace =-1;
-	do
-	{
-		token_get ( pos,&t_k );
-		switch(t_k.type)
-		{
-		case TOKEN_TYPE_LEFT_BRACE:
-			brace--;
-			break;
-		case TOKEN_TYPE_RIGHT_BRACE:
-			brace++;
-			break;
-		}
-		if(brace==0)
-		{
-			return;
-		}
-	}
-	while(t_k.type!=TOKEN_TYPE_EOF);
+    int brace =-1;
+    do
+    {
+        token_Get ( pos,&t_k );
+        switch(t_k.type)
+        {
+        case TOKEN_TYPE_LEFT_BRACE:
+            brace--;
+            break;
+        case TOKEN_TYPE_RIGHT_BRACE:
+            brace++;
+            break;
+        }
+        if(brace==0)
+        {
+            return;
+        }
+    }
+    while(t_k.type!=TOKEN_TYPE_EOF);
 }
 
 /*越过一条语句*/
 void token_skip_statement ( int *pos )
 {
-	while ( 1 )
-	{
-		TokenInfo t_k;
-		token_get ( pos,&t_k );
-		switch ( t_k.type )
-		{
-		default:
-			break;
-		case TOKEN_TYPE_SEMICOLON:
-			return ;
-			break;
-		}
-	}
+    while ( 1 )
+    {
+        TokenInfo t_k;
+        token_Get ( pos,&t_k );
+        switch ( t_k.type )
+        {
+        default:
+            break;
+        case TOKEN_TYPE_SEMICOLON:
+            return ;
+            break;
+        }
+    }
 }
 
 /*带断言的解析词法标记,如果不符合规定的词法类型,则中断,并抛出一个错误的信息*/
 void token_get_assert(int * pos,TokenInfo * t_k,int type, char * info )
 {
-	token_get(pos,t_k);
+	token_Get(pos,t_k);
 	/*不符合断言的类型,抛出错误*/
 	if(t_k->type!=type)
 	{

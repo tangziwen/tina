@@ -53,7 +53,7 @@ static int OpAssociativity(char op)
 static int GetArgCount(int pos )
 {
     TokenInfo t_k;
-    token_get(&pos,&t_k);
+    token_Get(&pos,&t_k);
     int P=0;/*记录括号的平衡性，若为零则平衡，遇左括号减一，右括号加一*/
     int IsEmpty=1;/*此标记用于判断，在两括号之间，是否是空的.即是否夹着别的东西*/
     int comma_count=0;/*记录逗号的数量*/
@@ -68,7 +68,7 @@ static int GetArgCount(int pos )
     }
     while(1)
     {
-        token_get(&pos,&t_k);
+        token_Get(&pos,&t_k);
         switch(t_k.type)
         {
         case  TOKEN_TYPE_OP:
@@ -150,6 +150,17 @@ static  int IsTokenCompatible(int pre ,int current,int pos)
             exit(0);
         }
     }
+    /*不允许右方括号后直接连接具有算子属性的实体出现*/
+    if(pre==TOKEN_TYPE_RIGHT_BRACKET)
+        {
+
+        if(current==TOKEN_TYPE_NUM||current==TOKEN_TYPE_SELF || current==TOKEN_TYPE_STRUCT_NAME )
+        {
+
+            printf("error expression in %d\n",pos);
+            exit(0);
+        }
+    }
 }
 
 /*解析表达式*/
@@ -157,13 +168,12 @@ void exp_Parse ( int * pos,int mode,int layer )
 {
     is_exp_parsing=1;
     int brace =-1;
-    /*记录前一个词法单元的类型，*/
-    /*遇到不可能遇到的类型组合当即报错，使得错误寻找更加准确*/
+    /*记录先前的标记，遇到不可能遇到的类型组合当即报错，使得错误寻找更加准确*/
     int pre_tk_type=TOKEN_TYPE_NIL;
     while ( 1 )
     {
         TokenInfo t_k;
-        token_get ( pos,&t_k );
+        token_Get ( pos,&t_k );
         IsTokenCompatible(pre_tk_type,t_k.type,*pos);
         switch ( t_k.type )
         {
@@ -204,7 +214,7 @@ void exp_Parse ( int * pos,int mode,int layer )
             int test_pos = *pos;
             /*试探读取下一个字符,看是否是左括号,如果是的话,那么就是一个构造函数。*/
             TokenInfo next;
-            token_get ( &test_pos,&next );
+            token_Get ( &test_pos,&next );
             if(next.type==TOKEN_TYPE_OP&& next.content[0]=='(')
             {
                 /*出现了左括号，那么寻找该结构体类型的构造函数，并把它压入*/
@@ -226,7 +236,7 @@ void exp_Parse ( int * pos,int mode,int layer )
             /*试探读取下一个字符,看是否是左括号,如果是的话,那么就是一个普通的*/
             /*函数,否则就退化一个函数指针.*/
             TokenInfo next;
-            token_get ( &test_pos,&next );
+            token_Get ( &test_pos,&next );
             if(next.type==TOKEN_TYPE_OP&& next.content[0]=='(')
             {
                 push_API_to_RPN_stack ( API_Search ( t_k.content ) );
@@ -248,13 +258,13 @@ void exp_Parse ( int * pos,int mode,int layer )
             /*遇见vector关键字，说明是构造向量的节点*/
         case TOKEN_TYPE_VECTOR:
         {
-            PushListCreatorToStack (ELEMENT_VECTOR_CREATE,GetArgCount(*pos));
+            PushListCreatorToStack (ELEMENT_VECTOR_CREATOR,GetArgCount(*pos));
         }
             break;
             /*遇见tuple关键字，说明是构造向量的节点*/
         case TOKEN_TYPE_TUPLE:
         {
-            PushListCreatorToStack (ELEMENT_TUPLE_CREATE,GetArgCount(*pos));
+            PushListCreatorToStack (ELEMENT_TUPLE_CREATOR,GetArgCount(*pos));
         }
             break;
         case TOKEN_TYPE_FUNC:
@@ -264,7 +274,7 @@ void exp_Parse ( int * pos,int mode,int layer )
             /*试探读取下一个字符,看是否是左括号,如果是的话,那么就是一个普通的*/
             /*函数,否则就退化一个函数指针.*/
             TokenInfo next;
-            token_get ( &test_pos,&next );
+            token_Get ( &test_pos,&next );
             if(next.type==TOKEN_TYPE_OP&& next.content[0]=='(')
             {
 
@@ -341,7 +351,7 @@ void exp_Parse ( int * pos,int mode,int layer )
             /*试探读取下一个字符,看是否是左括号,如果是的话,那么就是一个普通的*/
             /*函数,否则就退化一个函数指针.*/
             TokenInfo next;
-            token_get ( &test_pos,&next );
+            token_Get ( &test_pos,&next );
 
             /*将该变量升格为函数调用*/
             if(next.type==TOKEN_TYPE_OP && next.content[0]=='(')
@@ -368,7 +378,7 @@ void exp_Parse ( int * pos,int mode,int layer )
             /*试探读取下一个字符,看是否是左括号,如果是的话,那么就是一个普通的*/
             /*函数,否则就退化一个函数指针.*/
             TokenInfo next;
-            token_get ( &test_pos,&next );
+            token_Get ( &test_pos,&next );
             /*把字符串压入*/
             Var a;
             a.content.type=VAR_TYPE_MESSAGE;
@@ -397,6 +407,14 @@ void exp_Parse ( int * pos,int mode,int layer )
         }
             break;
         case TOKEN_TYPE_OP:
+            if(t_k.content[0]=='(' )
+            {
+                if(mode==EXP_CONTROL)
+                {
+                    brace--;
+                }
+            }
+
             if ( isRPN_StackEmpty() ==1 )
             {
 
@@ -418,15 +436,11 @@ void exp_Parse ( int * pos,int mode,int layer )
                 {
                     if ( t_k.content[0]=='[' )/*遇到左方括号，则说明前一个为数组名*/
                     {
-                        STOP("ALLRIGHT!!!!");
                         push_op_to_RPN_stack(OP_SUBSCRIPT);//放入取下标运算符
                     }
                     else
                     {
-                        if(mode==EXP_CONTROL)
-                        {
-                            brace--;
-                        }
+
                     }
                     push_op_to_RPN_stack ( t_k.content[0] );
                 }
@@ -482,7 +496,8 @@ void exp_Parse ( int * pos,int mode,int layer )
                    || RPN_GetStackTopType() ==ELEMENT_FUNC
                    ||RPN_GetStackTopType()==ELEMENT_CALL_BY_PTR
                    ||RPN_GetStackTopType()==ELEMENT_CALL_BY_MEMBER
-                   ||RPN_GetStackTopType()==ELEMENT_VECTOR_CREATE
+                   ||RPN_GetStackTopType()==ELEMENT_VECTOR_CREATOR
+                   ||RPN_GetStackTopType()==ELEMENT_TUPLE_CREATOR
                    ||RPN_GetStackTopType()==ELEMENT_STRUCT_CREATOR
                    )
                  )
@@ -508,7 +523,8 @@ void exp_Parse ( int * pos,int mode,int layer )
                      || RPN_GetStackTopType() ==ELEMENT_FUNC
                      ||RPN_GetStackTopType()==ELEMENT_CALL_BY_PTR
                      || RPN_GetStackTopType()==ELEMENT_CALL_BY_MEMBER
-                     ||RPN_GetStackTopType()==ELEMENT_VECTOR_CREATE
+                     ||RPN_GetStackTopType()==ELEMENT_VECTOR_CREATOR
+                     ||RPN_GetStackTopType()==ELEMENT_TUPLE_CREATOR
                      ||RPN_GetStackTopType()==ELEMENT_STRUCT_CREATOR
                      )
                 {
@@ -528,11 +544,13 @@ void exp_Parse ( int * pos,int mode,int layer )
                 TransferStackTop();
                 i++;
             }
-            /*删除左方号括*/
+            /*删除左方号括，并将数组运算符*/
             RemoveRPN_StackTop();
+            TransferStackTop();
         }
             break;
         default:
+            STOP("illegal expression!");
             break;
         }
         pre_tk_type=t_k.type;
@@ -914,7 +932,7 @@ void generate_IL()
         }
             break;
             /*向量构造函数*/
-        case ELEMENT_VECTOR_CREATE:
+        case ELEMENT_VECTOR_CREATOR:
         {
 
             /*向栈前去寻找参数.*/
@@ -924,7 +942,7 @@ void generate_IL()
             IL_StackIndex=k;
             /*把结果加入到中间语言执行序列中去*/
             tmp_index++;
-            IL_ListInsertListCreator (ELEMENT_VECTOR_CREATE,tmp_index,e.info.func_args);
+            IL_ListInsertListCreator (ELEMENT_VECTOR_CREATOR,tmp_index,e.info.func_args);
             /*同时把中间结果写回栈中*/
             IL_StackIndex++;
             IL_Stack[IL_StackIndex].type=ELEMENT_TMP;
@@ -932,7 +950,7 @@ void generate_IL()
         }
             break;
             /*元组构造函数*/
-        case ELEMENT_TUPLE_CREATE:
+        case ELEMENT_TUPLE_CREATOR:
         {
             /*向栈前去寻找参数.*/
             Element e =RPN_Queue[i];
@@ -941,7 +959,7 @@ void generate_IL()
             IL_StackIndex=k;
             /*把结果加入到中间语言执行序列中去*/
             tmp_index++;
-            IL_ListInsertListCreator (ELEMENT_TUPLE_CREATE,tmp_index,e.info.func_args);
+            IL_ListInsertListCreator (ELEMENT_TUPLE_CREATOR,tmp_index,e.info.func_args);
             /*同时把中间结果写回栈中*/
             IL_StackIndex++;
             IL_Stack[IL_StackIndex].type=ELEMENT_TMP;

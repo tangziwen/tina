@@ -19,9 +19,6 @@ PURPOSE.
 #ifndef TINA_ENABLE_MODULE_H
 #define TINA_ENABLE_MODULE_H
 #include "def.h"
-extern  char module_context_name[100];
-extern int module_index;
-extern char module_list[10][100];
 
 
 //扫描模块的声明
@@ -34,8 +31,10 @@ void module_parse_def(int * pos);
 #endif // TINA_ENABLE_MODULE_H
 
 //查询当前符号被模块修饰后的名字
-char * module_MangledName(int module_id,char * the_symbol);
+char * module_MangledName(int module_id, const char *the_symbol);
 
 //查询当前符号在当前上下文模块的修饰后的名字
-char * module_ContextMangledName(char * the_symbol);
+char * module_ContextMangledName(const char *the_symbol);
 
+/*获得当前一共创建了的模块数量*/
+int module_GetMoudleCount();

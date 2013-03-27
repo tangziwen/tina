@@ -26,14 +26,14 @@ PURPOSE.
 
 
 /*解析函数的定义*/
-Function *  func_parse_def(int *pos);
+Function *  func_ParseDef(int *pos);
 
 /*解析函数声明*/
 void func_ParseDeclare(int *pos);
 
 /*通过名称检索函数,如果存在,返回索引*/
 /*如果不存在,则返回-1*/
-int func_get_index_by_name( char * func_name);
+int func_get_index_by_name(const char *func_name);
 
 
 /*通过索引返回函数的指针*/

@@ -31,6 +31,7 @@ PURPOSE.
 #include  "module.h"
 #include "const_segment.h"
 #include "script_struct.h"
+#include "token.h"
 #define MAX_KEYWORD_LIST 17
 #define BYTE_KEYWORD_CONST 0
 #define BYTE_KEYWORD_FUNC 1
@@ -200,7 +201,7 @@ void Tina_Build(const char *file_name)
 			/*因为需要更多的信息,所以我们有两个变量控制*/
 			/*步进关系*/
 			int test_pos=postion;
-			token_get(&test_pos,&t_k);
+            token_Get(&test_pos,&t_k);
 			switch(t_k.type)
 			{
 				/*发现模块定义标识符，扫描模块的声明*/
@@ -238,7 +239,7 @@ void Tina_Build(const char *file_name)
 			/*因为需要更多的信息,所以我们有两个变量控制*/
 			/*步进关系*/
 			int test_pos=postion;
-			token_get(&test_pos,&t_k);
+            token_Get(&test_pos,&t_k);
 			switch(t_k.type)
 			{
 			case TOKEN_TYPE_EOF:
@@ -256,7 +257,7 @@ void Tina_Build(const char *file_name)
 				/*发现函数的定义符号,定义函数*/
 			case TOKEN_TYPE_FUNC_DEF:
 				postion =test_pos;
-				func_parse_def(&postion);
+                func_ParseDef(&postion);
 				break;
 				/*发现类的定义*/
 			case TOKEN_TYPE_STRUCT:

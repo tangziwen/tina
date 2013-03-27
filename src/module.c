@@ -20,33 +20,38 @@ PURPOSE.
 此文件用以实现tina的模块机制
 
 */
+#include <string.h>
 #include "module.h"
 #include "token.h"
 #include "script_struct.h"
 #include "function.h"
 /*模块名,默认情况下表示为全局*/
-extern  char module_context_name[100]= {0};
+static  char module_context_name[100]= {0};
 
-extern int module_index=0;
+static int module_index=0;
 /*模块列表*/
-extern char module_list[10][100]= {0};
+static char module_list[10][100]= {0};
 
 static void set_context(char * str);
 
+/*获得当前一共创建了的模块数量*/
+int module_GetMoudleCount()
+{
+return module_index;
+}
 
 void module_parse_using(int * pos)
 {
-	module_index=0;
 	TokenInfo t_k;
 	do
 	{
-		token_get(pos,&t_k);
+		token_Get(pos,&t_k);
 		switch(t_k.type)
 		{
 			/*拷入要导入的包*/
 		case TOKEN_TYPE_SYMBOL:
+            module_index++;
 			strcpy(module_list[module_index],t_k.content);
-			module_index++;
 			break;
 		case TOKEN_TYPE_COMMA:
 			break;
@@ -69,17 +74,17 @@ void module_parse_using(int * pos)
 void module_parse_declare(int * pos)
 {
 	TokenInfo t_k;
-	token_get(pos,&t_k);
+	token_Get(pos,&t_k);
 	/*更新模块名*/
 	set_context(t_k.content);
 	/*跳过左边的花括号*/
-	token_get(pos,&t_k);
+	token_Get(pos,&t_k);
 	int brace=-1;
 	{
 		/*扫描模块内部的声明*/
 		do
 		{
-			token_get(pos,&t_k);
+			token_Get(pos,&t_k);
 			switch(t_k.type)
 			{
 			case TOKEN_TYPE_EOF:
@@ -116,23 +121,23 @@ void module_parse_declare(int * pos)
 void module_parse_def(int * pos)
 {
 	TokenInfo t_k;
-	token_get(pos,&t_k);
+	token_Get(pos,&t_k);
 	/*更新模块名*/
 	set_context(t_k.content);
-	token_get(pos,&t_k);
+	token_Get(pos,&t_k);
 	int brace=-1;
 	/*第二遍扫描,扫描所有函数以及类的定义*/
 	{
 		do
 		{
-			token_get(pos,&t_k);
+			token_Get(pos,&t_k);
 			switch(t_k.type)
 			{
 			case TOKEN_TYPE_EOF:
 				break;
 				/*发现函数的定义符号,定义函数*/
 			case TOKEN_TYPE_FUNC_DEF:
-				func_parse_def(pos);
+				func_ParseDef(pos);
 				break;
 			case TOKEN_TYPE_USING:
 				module_parse_using(pos);
@@ -165,7 +170,7 @@ void module_parse_def(int * pos)
 }
 
 /*查询当前符号被模块修饰后的名字*/
-char * module_MangledName(int module_id,char * the_symbol)
+char * module_MangledName(int module_id,const char * the_symbol)
 {
 	static char  result[100];
 	memset(result,0,sizeof(result));
@@ -177,7 +182,7 @@ char * module_MangledName(int module_id,char * the_symbol)
 
 
 /*查询当前符号在当前上下文模块的修饰后的名字*/
-char * module_ContextMangledName(char * the_symbol)
+char * module_ContextMangledName(const char * the_symbol)
 {
 	static char  result[100];
 	memset(result,0,sizeof(result));

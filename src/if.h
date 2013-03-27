@@ -27,8 +27,4 @@ PURPOSE.
 /*{.......}*/
 /*if代码块结束的位置之后*/
 void if_parse(int * pos,int layer,int break_label,int continue_label,int mode);
-
-/*解析else分语句*/
-void if_else_parse(int *pos,int layer,int break_label,int continue_label,int mode);
-
 #endif

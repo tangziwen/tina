@@ -76,7 +76,7 @@ static Var  * GetListElement(Var obj,int index)
     {
        return vector_GetValue (obj,index);
     }else
-        if(var_GetType (obj)==VAR_TYPE_VECTOR)
+        if(var_GetType (obj)==VAR_TYPE_TUPLE)
         {
             return tuple_GetValue (obj,index);
         }
@@ -205,7 +205,6 @@ void IL_ListInsertStructCreator(int id,int tmp_index,int init_args)
 {
     IL_node * node=IL_CreateNode (tmp_index);
     node->struct_creator=IL_CreateStructCreator(id,init_args);
-    printf("%d %d\n",id,init_args);
     node->type=IL_NODE_STRUCT_CREATOR;
     if ( func_get_current()->list.head==NULL )
     {
@@ -231,10 +230,10 @@ void IL_ListInsertListCreator(int type,int tmp_index,int init_args)
      node->list_creator=IL_CreateListCreator(init_args);
      switch(type)
      {
-     case ELEMENT_VECTOR_CREATE:
+     case ELEMENT_VECTOR_CREATOR:
          node->type=IL_NODE_VECTOR_CREATOR;
          break;
-    case ELEMENT_TUPLE_CREATE:
+    case ELEMENT_TUPLE_CREATOR:
          node->type=IL_NODE_TUPLE_CREATOR;
          break;
         default:
@@ -973,7 +972,7 @@ Var IL_exec ( Function *func )
             }
             else
             {
-                STOP(" illigal je");
+                STOP(" illegal je");
             }
             if ( can_jmp==1 )
             {
@@ -1027,7 +1026,7 @@ Var IL_exec ( Function *func )
             }
             else
             {
-                STOP(" illigal jne");
+                STOP("illegal jne");
             }
 			if ( can_jmp==1 )
 			{
@@ -1097,7 +1096,7 @@ Var IL_CallFunc (int args, int f_index,int mode)
         /*检查执行时刻的参数是否与所对应的函数的参数数目相符*/
         if(f->arg_counts!=args)
         {
-            printf("error,%s  the args count is not match 形式：%d 实际：%d\n",f->name,f->arg_counts,args);
+            printf("error,%s  the args count is not match par：%d arg：%d\n",f->name,f->arg_counts,args);
             exit(0);
         }
 		int i=0;
@@ -1296,7 +1295,7 @@ char the_str[3][32];
 sscanf (str,"%s %s %s",the_str[0],the_str[1],the_str[2]);
 int tmp_result_index=atoi(the_str[1]);
 int args=atoi(the_str[2]);
-IL_ListInsertListCreator (ELEMENT_VECTOR_CREATE,tmp_result_index,args);
+IL_ListInsertListCreator (ELEMENT_VECTOR_CREATOR,tmp_result_index,args);
 }
 
 
@@ -1308,5 +1307,5 @@ char the_str[3][32];
 sscanf (str,"%s %s %s",the_str[0],the_str[1],the_str[2]);
 int tmp_result_index=atoi(the_str[1]);
 int args=atoi(the_str[2]);
-IL_ListInsertListCreator (ELEMENT_TUPLE_CREATE,tmp_result_index,args);
+IL_ListInsertListCreator (ELEMENT_TUPLE_CREATOR,tmp_result_index,args);
 }

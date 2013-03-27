@@ -69,7 +69,7 @@ int  Tina_API_GetTag()
 
 /*搜索该字符串是否为一个API函数*/
 /*若是,则返回其索引,若不是则返回 -1*/
-static int plain_API_Search (  char * the_string )
+static int plain_API_Search (const char * the_string )
 {
 	int i;
 	for ( i=0; i<API_list_index; i++ )
@@ -93,7 +93,7 @@ int API_Search ( const char * the_string )
 		return result;
 	}
 	/*再检查导入模块是否有该名字*/
-	for(i=0; i<module_index; i++)
+    for(i=1; i<=module_GetMoudleCount(); i++)
 	{
 		result=plain_API_Search(module_MangledName(i,the_string));
 		if(result>=0)

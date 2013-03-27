@@ -42,7 +42,6 @@ void for_parse ( int *pos,int layer ,int mode)
 	int l3=l2+1;
 	int l4=l3+1;
 	label_index+=4;
-	int brace =-1;
 	layer+=1;
 
 	IL_node * n1= IL_node_create_jmp ( l1,IL_NODE_JNE );
@@ -55,12 +54,12 @@ void for_parse ( int *pos,int layer ,int mode)
 	IL_node * lab3= IL_node_create_jmp ( l3,IL_NODE_LAB );
 	IL_node * lab4= IL_node_create_jmp ( l4,IL_NODE_LAB );
 	TokenInfo t_k;
-	token_get(pos,&t_k);
+    token_Get(pos,&t_k);
 	{
 		/*允许for语句的首个表达式出现定义语句,*/
 		/*所以要检查有无 var关键字*/
 		int test=*pos;
-		token_get ( &test,&t_k );
+        token_Get ( &test,&t_k );
 		/*有var关键字?那么跳过*/
 		if ( t_k.type==TOKEN_TYPE_VAR_DEF )
 		{
@@ -73,150 +72,26 @@ void for_parse ( int *pos,int layer ,int mode)
 	/*略过exp2*/
 	do
 	{
-		token_get ( &exp_3_pos,&t_k );
+        token_Get ( &exp_3_pos,&t_k );
 	}
 	while ( t_k.type!=TOKEN_TYPE_SEMICOLON );
 	int postion=exp_3_pos;/*储存正式语句的位置*/
-	/*略过表达式3*/
-	do
-	{
-		token_get ( &postion,&t_k );
-	}
-	while ( t_k.type!=TOKEN_TYPE_LEFT_BRACE );
+
+
 	IL_ListInsertNode ( n3 );
 	IL_ListInsertNode ( lab1 );
-
-	while ( 1 )
-	{
-		TokenInfo t_k;
-		/*因为需要更多的信息,所以我们有两个变量控制*/
-		/*步进关系*/
-		int test_pos=postion;
-		token_get ( &test_pos,&t_k );
-
-		switch ( t_k.type )
-		{
-		case TOKEN_TYPE_EOF:
-			exit ( 0 );
-			break;
-		case TOKEN_TYPE_BREAK:
-			postion=test_pos;
-			token_get ( &postion,&t_k );
-			IL_ListInsertNode ( n4 );
-			break;
-		case TOKEN_TYPE_PRINT:
-			postion =test_pos;
-			print_parse ( &postion,layer );
-			break;
-		case TOKEN_TYPE_VAR_DEF:
-
-			postion=test_pos;
-			exp_Parse ( &postion,EXP_NORMAL,layer );
-			break;
-        case TOKEN_TYPE_CHAR:
-            /*回退一个,解析表达式*/
-            exp_Parse(&postion,EXP_NORMAL,layer);
-            break;
-		case TOKEN_TYPE_SELF:
-			if(mode ==FUNC_GLOBAL)
-			{
-				printf("can not use \"self\" in global function \n");
-				exit(0);
-			}
-			else
-			{
-				if(mode==FUNC_MEMBER)
-				{
-					/*回退一格,解析表达式*/
-					exp_Parse(&postion,EXP_NORMAL,layer);
-				}
-			}
-			break;
-		case TOKEN_TYPE_TRUE:
-			/*回退一个,解析表达式*/
-			exp_Parse ( &postion,EXP_NORMAL,layer );
-			break;
-		case TOKEN_TYPE_FALSE:
-			/*回退一个,解析表达式*/
-			exp_Parse ( &postion,EXP_NORMAL,layer );
-			break;
-		case TOKEN_TYPE_NUM:
-			/*回退一格,解析表达式*/
-			exp_Parse ( &postion,EXP_NORMAL,layer );
-			break;
-		case TOKEN_TYPE_SYMBOL:
-			/*回退一个,解析表达式*/
-			exp_Parse ( &postion,EXP_NORMAL,layer );
-			break;
-		case TOKEN_TYPE_RETURN:/*解析返回值表达式*/
-			postion=test_pos;
-			return_parse ( &postion,layer );
-			break;
-		case TOKEN_TYPE_API:
-			/*回退一个,解析表达式*/
-			exp_Parse ( &postion,EXP_NORMAL,layer );
-			break;
-		case TOKEN_TYPE_STRUCT_NAME:
-			/*回退一个,解析表达式*/
-			exp_Parse(&postion,EXP_NORMAL,layer);
-			break;
-		case TOKEN_TYPE_FUNC:
-			/*回退一个,解析表达式*/
-			exp_Parse ( &postion,EXP_NORMAL,layer );
-			break;
-			/*遇到左括号,当前层次增加*/
-		case TOKEN_TYPE_LEFT_BRACE:
-			brace--;
-			postion=test_pos;
-			layer++;
-			break;
-			/*遇到右括号当前层次减少,整段的销毁原先最内层次的变量.*/
-		case TOKEN_TYPE_RIGHT_BRACE:
-			brace++;
-			layer--;
-			postion=test_pos;
-			if ( brace==0 )
-			{
-				goto end;
-			}
-			break;
-
-			/*解析if语句*/
-		case TOKEN_TYPE_IF:
-			postion =test_pos;
-			/*这里直接修改外部的位置了*/
-			if_parse ( &postion,layer,l4,l2,mode );
-			break;
-		case TOKEN_TYPE_WHILE:
-			postion =test_pos;
-			while_parse ( &postion,layer,mode );
-			break;
-		case TOKEN_TYPE_FOR:
-			postion =test_pos;
-			for_parse ( &postion,layer ,mode);
-			break;
-		case TOKEN_TYPE_OP:
-			/*如果是左小括号的话,回退一格,进行表达式求值,如果不是*/
-			/*则是一个编译错误*/
-			if ( t_k.content[0]=='(' )
-			{
-				exp_Parse ( &postion,EXP_NORMAL,layer );
-			}
-			else
-			{
-				printf ( "illigal '(' \n" );
-				exit ( 0 );
-			}
-			break;
-		default :
-			printf ( "error !!\n" );
-			printf ( "tok %d is unknown %s\n",t_k.type,t_k.content );
-			exit ( 0 );
-			break;
-		}
-	}
-end :
-	;
+        /*略过表达式3*/
+    do
+    {
+        (*pos)=postion;
+        token_Get ( &postion,&t_k );
+    }
+    while ( t_k.type!=TOKEN_TYPE_LEFT_BRACE );
+    int result =block_Parse(pos,layer,l4,l2,mode);
+    if(result!=0)
+    {
+        STOP("illegal for statement %s",block_GetLastStateStr ());
+    }
 	IL_ListInsertNode ( lab2 );
 	/*注意这里的两个表达式都属于for内层的语句,但是因为是在*/
 	/*跳出了for的括号之后才解析的,所以layer需要增加*/
@@ -226,6 +101,5 @@ end :
 
 	IL_ListInsertNode ( n1 );
 	IL_ListInsertNode ( lab4 );
-	( *pos ) =postion;
 }
 

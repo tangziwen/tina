@@ -147,4 +147,8 @@ int API_Search_cnstructor(char * struct_name)
 	return API_Search(result);
 }
 
-
+/*清除所有的数据资源*/
+void API_Dump()
+{
+    API_list_index=0;
+}

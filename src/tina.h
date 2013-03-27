@@ -26,7 +26,7 @@ PURPOSE.
 void Tina_Run(const char *name);
 
 //通过指定一个tina脚本文件并将其编译为中间代码,放入内存中以便运行
-void Tina_Build(const char * file_name);
+void Tina_Compile(const char * file_name);
 
 
 /*向脚本注册一个API*/
@@ -64,4 +64,9 @@ extern void Tina_ProtypeSetMember(int struct_id,int member_id,Var value);
 void Tina_Load(const char *file_name);
 //初始化tina
 extern void Tina_Init();
+
+/*载入字节码链表，并执行main 函数*/
+void Tina_ExcuteByteCodeList(const char * file);
+/*根据字节码列表文件，逐个编译*/
+void Tina_Buid(const char * file);
 #endif

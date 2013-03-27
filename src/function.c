@@ -389,7 +389,7 @@ Var Tina_CallScriptFunc(int func_id)
 }
 
 //函数编译成字节码
-void func_Compile(FILE * f)
+void func_WriteByteCode(FILE * f)
 {
     int i=0;
     for(; i<current_func_index;i++)
@@ -406,4 +406,12 @@ void func_Load(char *str)
     sscanf (str,"%s %s %s",func_char[0],func_char[1],func_char[2]);
     int args=atoi(func_char[1]);
     CreateFunction(args,func_char[2]);
+}
+
+/*将函数的数据清空，以方便下次编译*/
+void func_Dump()
+{
+    current_func=NULL;
+    current_func_index=0;
+    current_list=NULL;
 }

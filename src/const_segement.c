@@ -224,3 +224,8 @@ void ConstSegmentLoad(char *str)
         break;
     }
 }
+/*清除已有的记录，方便下次编译*/
+void ConstSegmentDump()
+{
+const_index=0;
+}

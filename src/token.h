@@ -77,6 +77,7 @@ PURPOSE.
 #define TOKEN_TYPE_STRING 39
 #define TOKEN_TYPE_VECTOR 40
 #define TOKEN_TYPE_TUPLE 41
+#define TOKEN_TYPE_IMPORT 42
 
 /*从当前位置(pos)解析一个词法标记，并将词法标记的相关信息存储进t_k所指向的TokenInfo对象里
  解 析之后，当前位置会向后跳跃一个词法标记               *

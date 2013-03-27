@@ -30,7 +30,7 @@ PURPOSE.
 #include "script_vec.h"
 
 
-#define KEYWORD_MAX 24
+#define KEYWORD_MAX 25
 #define KEYWORD_IF 0
 #define KEYWORD_WHILE 1
 #define KEYWORD_VAR 2
@@ -55,12 +55,13 @@ PURPOSE.
 #define KEYWORD_DELETE 21
 #define KEYWORD_VECTOR 22
 #define KEYWORD_TUPLE 23
+#define KEYWORD_IMPORT 24
 static char pre_is_dot=0;
 static char * key_word_list[KEYWORD_MAX]=
 {
 	"if","while","var","else","print","true",
     "false","function","return","and","or","for","break","continue","struct","self","nil"
-    ,"private","sealed","module","using","delete","vector","tuple"
+    ,"private","sealed","module","using","delete","vector","tuple","import"
 };
 
 static int lookup_keyword ( char * _str )
@@ -574,6 +575,9 @@ void token_Get ( int * pos,TokenInfo * t_k )
             break;
         case KEYWORD_TUPLE:
             t_k->type=TOKEN_TYPE_TUPLE;
+            break;
+        case KEYWORD_IMPORT:
+            t_k->type=TOKEN_TYPE_IMPORT;
             break;
 		default :
 			break;

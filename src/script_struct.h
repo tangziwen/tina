@@ -63,9 +63,14 @@ Var *GetMember(int ID ,int member_id);
 void struct_CleanTmpPool();
 Var * GetPrototypeMemberAddress(char * struct_name,char * struct_member_name);
 /*将结构体信息写入字节码中*/
-void struct_Compile(FILE *f);
+void struct_WriteByteCode(FILE *f);
 /*从字节码中读入成员信息*/
 void struct_MemberLoad(char *str);
 /*从字节码中读入结构体信息*/
 void struct_Load(char *str);
+
+/*将结构体中的数据清除，方便下次调用*/
+void struct_Dump();
+/*通过指定字符串找到类的id*/
+int struct_GetPlainId(const char * name);
 #endif

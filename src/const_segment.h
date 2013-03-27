@@ -31,4 +31,7 @@ void ConstSegmentWrite(FILE *f);
 
 /*把常量段从字节码中读取到内存中*/
 void ConstSegmentLoad(char *str);
+
+/*清除已有的记录，方便下次编译*/
+void ConstSegmentDump();
 #endif // CONST_SEGMENT_H

@@ -107,7 +107,7 @@ void IL_ListInsertCall(int type,int tmp_index, int args, int function_index);
 void IL_ListInsertListCreator(int type,int tmp_index,int init_args);
 
 /*像中间代码添加列表构造器中间代码*/
-void IL_ListInsertStructCreator(int id,int tmp_index,int init_args);
+IL_node * IL_ListInsertStructCreator(int id,int tmp_index,int init_args);
 /*向节点中添加*/
 IL_node * IL_CreateNode(int tmp_index);
 /*将函数所在中间代码节点编译到指定字节码文件中*/
@@ -149,4 +149,7 @@ void IL_VectorCreatorLoad(char * str);
 
 /*从字节码中读入元组构造节点*/
 void IL_TupleCreatorLoad(char * str);
+
+/*返回当前一共有的结构体*/
+int struct_GetCount();
 #endif

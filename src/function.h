@@ -68,7 +68,10 @@ void Tina_SetScriptFuncArg(Var arg,int id);
 Var  func_PlainInvoke(int index);
 
 //函数编译成字节码
-void func_Compile(FILE * f);
+void func_WriteByteCode(FILE * f);
 /*从字节码中载入函数定义*/
 void func_Load(char *str);
+
+/*将函数的数据清空，以方便下次编译*/
+void func_Dump();
 #endif

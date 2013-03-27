@@ -30,7 +30,7 @@ PURPOSE.
 #include "script_vec.h"
 #include "const_segment.h"
 #include "script_struct.h"
-
+#include "build.h"
 /*当前运行到节点*/
 static IL_node * current_node=NULL;
 /*当前的标签数*/
@@ -201,7 +201,7 @@ IL_StructCreatorNode *  IL_CreateStructCreator(int id,int init_args)
     return node;
 }
 /*像中间代码添加列表构造器中间代码*/
-void IL_ListInsertStructCreator(int id,int tmp_index,int init_args)
+IL_node * IL_ListInsertStructCreator(int id,int tmp_index,int init_args)
 {
     IL_node * node=IL_CreateNode (tmp_index);
     node->struct_creator=IL_CreateStructCreator(id,init_args);
@@ -222,6 +222,7 @@ void IL_ListInsertStructCreator(int id,int tmp_index,int init_args)
         node->pre=tmp;
         node->next=NULL;
     }
+    return node;
 }
 /*像中间代码添加列表构造器中间代码*/
 void IL_ListInsertListCreator(int type,int tmp_index,int init_args)
@@ -1157,7 +1158,7 @@ void IL_ExpLoad(char * str)
         break;
     case '#':
         A.type=ELEMENT_LITERAL;
-        A.index=atoi(exp_str[2]+1);
+        A.index=atoi(exp_str[2]+1)+build_GetConstOffset();
         break;
     case '@':
         A.type=ELEMENT_TMP;
@@ -1176,7 +1177,7 @@ void IL_ExpLoad(char * str)
         break;
     case '#':
         B.type=ELEMENT_LITERAL;
-        B.index=atoi(exp_str[4]+1);
+        B.index=atoi(exp_str[4]+1)+build_GetConstOffset();
         break;
     case '@':
         B.type=ELEMENT_TMP;
@@ -1279,12 +1280,35 @@ void IL_MethodCallLoad(char *str)
 /*从字节码中读入构造方法节点*/
 void IL_StructCreatorLoad(char * str)
 {
-char cre_str[4][32];
-sscanf (str,"%s %s %s %s",cre_str[0],cre_str[1],cre_str[2],cre_str[3]);
-int tmp_result_index=atoi(cre_str[1]);
-int struct_id=atoi(cre_str[2]);
-int arg=atoi(cre_str[3]);
-IL_ListInsertStructCreator(struct_id,tmp_result_index,arg);
+    char cre_str[4][32];
+    sscanf (str,"%s %s %s %s",cre_str[0],cre_str[1],cre_str[2],cre_str[3]);
+    int tmp_result_index=atoi(cre_str[1]);
+    int struct_id=atoi(cre_str[2]);
+            int arg=atoi(cre_str[3]);
+    if(struct_id<0)/*负数说明符号是一个待解析的符号*/
+    {
+         struct_id-=build_GetUnresolvedOffset();/*重定向带解析标识符*/
+        char *str=module_GetUnresolvedSymbol(-struct_id);
+        int id=struct_GetPlainId(str);/*先查找看是否该结构已被实现*/
+        if(id!=0)/*已被实现*/
+        {
+            struct_id=id;
+            IL_ListInsertStructCreator(struct_id,tmp_result_index,arg);
+        }
+        else/*没有被实现，则要把其压入引用表中，待之后寻找*/
+        {
+           IL_node*node= IL_ListInsertStructCreator(struct_id,tmp_result_index,arg);
+           /*将字符串压入到未解析的原子表中*/
+           module_PutUnresolvedAtom(str,&(node->struct_creator->id));
+        }
+    }
+    else
+    {
+        struct_id+= build_GetStructOffset();/*重定向结构标识符*/
+        IL_ListInsertStructCreator(struct_id,tmp_result_index,arg);
+    }
+
+
 }
 
 

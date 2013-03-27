@@ -38,3 +38,27 @@ char * module_ContextMangledName(const char *the_symbol);
 
 /*获得当前一共创建了的模块数量*/
 int module_GetMoudleCount();
+
+/*导入模块*/
+void module_ImportParse(int * pos);
+
+/*检查模块*/
+int module_ImportedSearch(char *name);
+
+/*将导入信息写入字节码中去*/
+void module_ImportedCompile(FILE * f);
+
+/*从字节码中读入导入信息*/
+void module_ImportedLoad(char *str);
+
+/*通过索引获取为解析的符号*/
+char * module_GetUnresolvedSymbol(int index);
+
+/*将字符串压入到未解析的原子表中*/
+void module_PutUnresolvedAtom(char * symbol,int * index_address);
+
+/*判断一个字符串是否在原子表中，若是存在的话，则将他们替换成索引的值，并将其从表中删除*/
+void module_CheckUnresolvedAtomListt(char *symbol,int index);
+
+/*返回当前共有的未解析的标识符*/
+int module_GetUnresolvedCount();

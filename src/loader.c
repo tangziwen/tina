@@ -27,7 +27,7 @@ void loader_load_buf(const char * file_name)
 	buffer_file= fopen(file_name,"rb");
     if(!buffer_file)
     {
-        STOP("invalid file input!!!");
+        STOP("invalid file input!!! %s\n",file_name);
     }
 	fseek(buffer_file,0,SEEK_END);
 	buffer_size =ftell(buffer_file);

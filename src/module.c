@@ -29,8 +29,12 @@ PURPOSE.
 static  char module_context_name[100]= {0};
 
 static int module_index=0;
+
+static int import_index=0;
 /*模块列表*/
 static char module_list[10][100]= {0};
+
+static char import_list[10][100]={0};
 
 static void set_context(char * str);
 
@@ -204,3 +208,171 @@ static void set_context(char * str)
 }
 
 
+static int plain_ImportedSearch(char * str)
+{
+    int i=1;
+    for(;i<=import_index;i++)
+    {
+        if(strcmp(str,import_list[i])==0)
+            return -i;
+    }
+    return 0;
+}
+
+/*检查模块*/
+int module_ImportedSearch(char *name)
+{
+    int result=0;
+    /*搜查当前模块*/
+    result=plain_ImportedSearch( module_ContextMangledName(name));
+    if(result==0)
+    {
+        int i=0;
+        /*检查被using的模块*/
+        for( ; i<module_index; i++)
+        {
+            result=plain_ImportedSearch(module_MangledName(i,name));
+            if(result!=0)
+            {
+                break;
+            }
+        }
+    }
+    /*无限定全名*/
+    if(result==0)
+    {
+        result=plain_ImportedSearch(name);
+    }
+    return result;
+}
+
+/*导入模块*/
+void module_ImportParse(int * pos)
+{
+    TokenInfo t_k;
+    do
+    {
+        token_Get (pos,&t_k);
+        switch(t_k.type)
+        {
+            /*拷入要导入的包*/
+        case TOKEN_TYPE_SYMBOL:
+            import_index++;
+            strcpy(import_list[import_index],t_k.content);
+            break;
+        case TOKEN_TYPE_COMMA:
+            break;
+        case TOKEN_TYPE_SEMICOLON:
+            break;
+        case TOKEN_TYPE_EOF:
+            break;
+        default:
+            printf("illigal import !\n");
+            exit(0);
+            break;
+        }
+    }
+    while(t_k.type!=TOKEN_TYPE_EOF && t_k.type!=TOKEN_TYPE_SEMICOLON);
+}
+
+/*将导入信息写入字节码中去*/
+void module_ImportedCompile(FILE *f)
+{
+    int i=1;
+    for( ;i<=import_index;i++)
+    {
+        fprintf(f,"IMPORT %s\n",import_list[i]);
+    }
+}
+#define UNRESOLVED_LIST_MAX 64
+static int unresolved_index=0;
+static char unresolved_list[UNRESOLVED_LIST_MAX][32];
+struct unresolved_atom_element
+{
+    char name[32];
+    int * address[32];
+    int account;
+};
+
+static int atom_list_count=0;
+struct unresolved_atom{
+    struct unresolved_atom_element element[UNRESOLVED_LIST_MAX];
+}atom_list;
+
+/*从字节码中读入导入信息*/
+void module_ImportedLoad(char *str)
+{
+    char import_str[2][32];
+    sscanf (str,"%s %s",import_str[0],import_str[1]);
+    unresolved_index++;
+    strcpy (unresolved_list[unresolved_index],import_str[1]);/*拷贝入未解析的符号表中*/
+    return;
+}
+
+/*通过索引获取为解析的符号*/
+char * module_GetUnresolvedSymbol(int index)
+{
+    return unresolved_list[index];
+}
+
+/*将字符串压入到未解析的原子表中*/
+void module_PutUnresolvedAtom(char * symbol,int * index_address)
+{
+    int i=1;
+    for(;i<=atom_list_count;i++)
+    {
+        if(strcmp (symbol,atom_list.element[i].name)==0)/*当前原子已存在？，把地址挂到该原子上*/
+        {
+            atom_list.element[i].address[atom_list.element[i].account]=index_address;
+            atom_list.element[i].account++;
+            atom_list.element[i].address[atom_list.element[i].account]=NULL;
+            return;
+        }
+    }
+    /*不存在，则是新的字符串，需要扩展原子表*/
+    atom_list_count++;
+    strcpy(atom_list.element[atom_list_count].name,symbol);
+    atom_list.element[atom_list_count].account=0;
+    atom_list.element[atom_list_count].address[0]=index_address;
+    atom_list.element[atom_list_count].account++;
+    atom_list.element[atom_list_count].address[1]=NULL;
+}
+
+
+/*判断一个字符串是否在原子表中，若是存在的话，则将他们替换成索引的值，并将其从表中删除*/
+void module_CheckUnresolvedAtomListt(char *symbol,int index)
+{
+    int i=1;
+    for(;i<=atom_list_count;i++)
+    {
+
+        if(strcmp (symbol,atom_list.element[i].name)==0)/*当前原子已存在*/
+        {
+            int j=0;
+            for( ;j<atom_list.element[atom_list_count].account;j++)
+            {
+                if(atom_list.element[atom_list_count].address[j]!=NULL)
+                {
+                    *(atom_list.element[atom_list_count].address[j])=index;
+                }
+                else/*遇到NULL，则说明替换已经完成，把该原子从中删除*/
+                {
+                    int k=j;
+                    for(;k+1<=atom_list_count;k++)
+                    {
+                        atom_list.element[k]=atom_list.element[k+1];
+                    }
+                    atom_list_count--;
+                    return;
+                }
+            }
+            return;
+        }
+    }
+}
+
+/*返回当前共有的未解析的标识符*/
+int module_GetUnresolvedCount()
+{
+return unresolved_index;
+}

@@ -19,7 +19,6 @@ PURPOSE.
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <time.h>
 #include "tina.h"
 //#define NDEBUG
 #include "debug.h"
@@ -28,7 +27,7 @@ PURPOSE.
 
 void SayHello()
 {
-	printf("holla you boy\n");
+    printf("holla you boy\n");
 }
 
 
@@ -43,35 +42,43 @@ int main ( int argc,char * argv[] )
     case 1:
     {
         printf("tina is a dynamic type script language compiler & virtual machine\n");
-        Tina_Build ("test");
-        printf("test run\n");
-        Tina_Run("main");
+        Tina_Compile("main");
     }
         break;
     case 3:
-        switch(argv[1][0])
+    {
+        /*单个文件编译*/
+        if(strcmp (argv[1],"-c")==0||strcmp (argv[1],"--compile")==0)
         {
-        case 'c':
-        {
-        Tina_Build (argv[2]);
-        }
-        break;
-        case 'r':
-        {
-            Tina_Load(argv[2]);
-            Tina_Run("main");
-        }
+            Tina_Compile(argv[2]);
             break;
-        default:
-            STOP("INVALID ARG!");
         }
+        /*文件链执行*/
+        if(strcmp (argv[1],"-x")==0 ||strcmp (argv[1],"--excute")==0)
+        {
+            Tina_ExcuteByteCodeList(argv[2]);
+            break;
+        }
+        /*单个字节码文件执行*/
+        if(strcmp (argv[1],"-r") ==0||strcmp (argv[1],"--run")==0)
+        {
+            Tina_Load (argv[2]);
+            Tina_Run ("main");
+            break;
+        }
+        /*文件链编译*/
+        if(strcmp (argv[1],"-b") ==0||strcmp (argv[1],"--build")==0)
+        {
+            Tina_Buid (argv[2]);
+            break;
+        }
+        STOP("INVALID ARG");
+    }
         break;
     default:
         STOP("INVALID ARG!");
         break;
     }
-
-    exit(EXIT_SUCCESS);
     return 0;
 }
 

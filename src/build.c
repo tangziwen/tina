@@ -32,7 +32,8 @@ PURPOSE.
 #include "const_segment.h"
 #include "script_struct.h"
 #include "token.h"
-#define MAX_KEYWORD_LIST 17
+#include "api.h"
+#define MAX_KEYWORD_LIST 18
 #define BYTE_KEYWORD_CONST 0
 #define BYTE_KEYWORD_FUNC 1
 #define BYTE_KEYWORD_EXP 2
@@ -50,6 +51,7 @@ PURPOSE.
 #define BYTE_KEYWORD_STRUCT_CREATOR 14
 #define BYTE_KEYWORD_VECTOR 15
 #define BYTE_KEYWORD_TUPLE 16
+#define BYTE_KEYWORD_IMPORT 17
 static char * ByteCodeKeyWordList[MAX_KEYWORD_LIST]={"C","F",
                                                     "EXP","PRNT",
                                                      "RETRN","CALLF",
@@ -57,7 +59,7 @@ static char * ByteCodeKeyWordList[MAX_KEYWORD_LIST]={"C","F",
                                                      "JMP","JNE",
                                                      "DYNAMIC","S",
                                                      "M","METHOD",
-                                                     "STRUCT_CREATOR","VECTOR","TUPLE"};
+                                                     "STRUCT_CREATOR","VECTOR","TUPLE","IMPORT"};
 
 static int LookUpByteCodeType(char *str)
 {
@@ -131,14 +133,27 @@ static void ParseByteCodeLine(char *str)
     case BYTE_KEYWORD_TUPLE:
         IL_TupleCreatorLoad (str);
         break;
+    case BYTE_KEYWORD_IMPORT:
+          module_ImportedLoad(str);
+
+         break;
     default:
         printf("this kind of byte code not support yet");
         break;
     }
 }
 
+/*将所有的编译相关数据清空，以方便连续的编译*/
+static void Dump()
+{
+    struct_Dump ();
+    API_Dump();
+    ConstSegmentDump ();
+    func_Dump ();
+}
+
 /*编译成字节码文件*/
-static void Compile(const char *file_name)
+static void WriteByteCode(const char *file_name)
 {
     /*添加.tzw的后缀名*/
     char file_tzw[128];
@@ -146,18 +161,24 @@ static void Compile(const char *file_name)
     strcat(file_tzw,".tzw");
     FILE * f=fopen (file_tzw,"w");
 
+    /*导入写入*/
+    module_ImportedCompile( f);
     //常量写入
     ConstSegmentWrite(f);
 
     //结构体写入
-    struct_Compile(f);
+    struct_WriteByteCode(f);
 
     //函数写入
-    func_Compile(f);
+    func_WriteByteCode(f);
 
     fclose(f);
 }
 
+static int struct_offset=0;
+static int unresolved_offset=0;
+static int function_offset=0;
+static int const_offset=0;
 /*载入一个字节码文件*/
 void Tina_Load(const char *file_name)
 {
@@ -168,21 +189,44 @@ void Tina_Load(const char *file_name)
     FILE * f=fopen (file_tzw,"r");
     if(f==NULL)
     {
-        STOP("INVALID BYTE CODE FILE");
+        STOP("INVALID BYTE CODE FILE:%s\n",file_tzw);
     }
     //逐行读入字节码
-
     for(; ;){
 
         char str_buff[128];
         memset (str_buff,0,sizeof str_buff);
         fgets(str_buff,128,f);
-                if(feof(f)!=0) break;
+        if(feof(f)!=0) break;
         ParseByteCodeLine(str_buff);
+
     }
+    struct_offset= struct_GetCount();
+    unresolved_offset=module_GetUnresolvedCount();
+    function_offset= Tina_FuncGetCount();
+    const_offset=ConstSegmentGetCount ();
+}
+int build_GetStructOffset()
+{
+    return struct_offset;
 }
 
-void Tina_Build(const char *file_name)
+int build_GetUnresolvedOffset()
+{
+    return unresolved_offset;
+}
+int build_GetFunctionOffset()
+{
+return function_offset;
+}
+
+int build_GetConstOffset()
+{
+    return const_offset;
+}
+
+
+void Tina_Compile(const char *file_name)
 {
     char file_tina[128];
     strcpy (file_tina,file_name);
@@ -242,8 +286,13 @@ void Tina_Build(const char *file_name)
             token_Get(&test_pos,&t_k);
 			switch(t_k.type)
 			{
-			case TOKEN_TYPE_EOF:
-				break;
+            case TOKEN_TYPE_EOF:
+                break;
+                /*检查导入*/
+                 case TOKEN_TYPE_IMPORT:
+                     postion =test_pos;
+                     module_ImportParse(&postion);
+                     break;
 				/*插入引用*/
 			case TOKEN_TYPE_USING:
 				postion =test_pos;
@@ -265,7 +314,7 @@ void Tina_Build(const char *file_name)
 				postion =test_pos;
 				break;
 			default :
-				printf("the token %d is unknown %s\n",t_k.type,t_k.content);
+                printf("the pos %d token %d is unknown %s\n",postion,t_k.type,t_k.content);
 				printf("error !!\n");
 				exit(0);
 				break;
@@ -274,5 +323,49 @@ void Tina_Build(const char *file_name)
 		while(t_k.type!=TOKEN_TYPE_EOF);
 	}
     /*编译成字节码*/
-    Compile(file_name);
+    WriteByteCode(file_name);
+    printf("compile finish\n");
+}
+
+
+/*载入字节码链表，并执行main 函数*/
+void Tina_ExcuteByteCodeList(const char * file)
+{
+    char file_name[128];
+    strcpy(file_name,file);
+    strcat (file_name,".tbl");
+    FILE * f =fopen(file_name,"r");
+    if(!f)
+    {
+        STOP("there is no such %s Tina bytecode list file\n",file_name);
+    }
+    for(;;)
+    {
+        char byte_code_name[32];
+        fscanf (f,"%s\n",byte_code_name);
+        Tina_Load (byte_code_name);
+        if(feof(f)) break;
+    }
+    Tina_Run ("main");
+}
+
+/*根据字节码列表文件，逐个编译*/
+void Tina_Buid(const char * file)
+{
+    char file_name[128];
+    strcpy(file_name,file);
+    strcat (file_name,".tbl");
+    FILE * f =fopen(file_name,"r");
+    if(!f)
+    {
+        STOP("there is no such %s Tina bytecode list file\n",file_name);
+    }
+    for(;;)
+    {
+        char byte_code_name[32];
+        fscanf (f,"%s\n",byte_code_name);
+        Tina_Compile (byte_code_name);
+        Dump ();
+        if(feof(f)) break;
+    }
 }

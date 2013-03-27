@@ -62,6 +62,8 @@ Var API_GetArg(int index);
 int API_Search_cnstructor(char * struct_name);
 
 
+/*清除所有的数据资源*/
+void API_Dump();
 
 /*提供一个快速注册同名函数的方法*/
 #define Tina_API_REG( FUNC_REG) Tina_API_Register ( #FUNC_REG , FUNC_REG , 0 )

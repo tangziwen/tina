@@ -100,47 +100,50 @@ Var  struct_Create(int id,Var init_arg[],int args)
 }
 
 /*通过指定字符串找到类的id*/
-static int plain_get_class_id(const char * name)
+int struct_GetPlainId(const char * name)
 {
 
 
-	int i;
+    int i;
     for(i=1; i<30; i++)
-	{
+    {
         if(strcmp(struct_list[i].name,name)==0)
-		{
-			return i;
-		}
-	}
+        {
+            return i;
+        }
+    }
     return 0;
 }
 /*通过指定字符串找到类的id*/
 int get_class_id(const char * name)
 {
     int result=0;
-	/*检查当前环境所在模块*/
-	result=plain_get_class_id(module_ContextMangledName(name));
+    /*检查当前环境所在模块*/
+    result=struct_GetPlainId(module_ContextMangledName(name));
     if(result==0)
-	{
-		int i=0;
-		/*检查被using的模块*/
-        for( ; i<=module_GetMoudleCount (); i++)
-		{
-			result=plain_get_class_id(module_MangledName(i,name));
+    {
+        int i=1;
+        /*检查被using的模块*/
+        for( ; i<module_GetMoudleCount (); i++)
+        {
+            result=struct_GetPlainId(module_MangledName(i,name));
             if(result!=0)
-			{
-				return result;
-			}
-		}
-		/*检查全局或者完全限定*/
-		result=plain_get_class_id(name);
-		return result;
-	}
-	else
-	{
-		return result;
-	}
-    return 0;
+            {
+                break;
+            }
+        }
+    }
+    /*检查全局或者完全限定*/
+    if(result==0)
+    {
+    result=struct_GetPlainId(name);
+    }
+    /*检查模块*/
+    if(result==0)
+    {
+    result=module_ImportedSearch(name);
+    }
+    return result;
 }
 /*清空临时对象池*/
 void struct_CleanTmpPool()
@@ -352,7 +355,6 @@ void script_struct_init()
     for(i=1; i<30; i++)
 	{
         struct_list[i].initializer_index=-1;
-        int j=0;
 	}
 }
 
@@ -501,7 +503,7 @@ static void member_Compile(FILE *f,struct_info * prototype)
 }
 
 /*将结构体信息写入字节码中*/
-void struct_Compile(FILE *f)
+void struct_WriteByteCode(FILE *f)
 {
     int i=1;
     for( ; i<=struct_index;i++)
@@ -514,9 +516,15 @@ void struct_Compile(FILE *f)
 /*从字节码中读入结构体信息*/
 void struct_Load(char *str)
 {
-    char struct_str[2][32];
+    char struct_str[3][32];
     sscanf (str,"%s %s %s",struct_str[0],struct_str[1],struct_str[2]);
-    Tina_CreateProtype(struct_str[2],atoi(struct_str[1]));
+    int init_index=atoi(struct_str[1]);
+    if(init_index>=0)
+    {
+        init_index+=build_GetFunctionOffset();
+    }
+    int id=Tina_CreateProtype(struct_str[2],init_index);
+    module_CheckUnresolvedAtomListt( struct_str[2], id);
 }
 
 /*从字节码中读入成员信息*/
@@ -546,4 +554,17 @@ void struct_MemberLoad(char *str)
     }
         break;
     }
+}
+
+/*将结构体中的数据清除，方便下次调用*/
+void struct_Dump()
+{
+    struct_index=0;
+    script_struct_init();
+}
+
+/*返回当前一共有的结构体*/
+int struct_GetCount()
+{
+return struct_index;
 }

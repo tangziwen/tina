@@ -19,5 +19,14 @@ PURPOSE.
 #ifndef TINA_BUILD_H
 #define TINA_BUILD_H
 #include "def.h"
-void Tina_Build(const char * file_name);
+
+void Tina_Compile(const char * file_name);
+/*载入字节码链表，并执行main 函数*/
+void Tina_ExcuteByteCodeList(const char * file);
+/*根据字节码列表文件，逐个编译*/
+void Tina_Buid(const char * file);
+int build_GetStructOffset();
+int build_GetUnresolvedOffset();
+int build_GetFunctionOffset();
+int build_GetConstOffset();
 #endif

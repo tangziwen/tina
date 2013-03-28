@@ -240,6 +240,7 @@ end:
 	int current_layer=0;
 	int scan_pos=*postion;
 	var_parse_local(&scan_pos,f->arg_counts);/*初始化变量模块*/
+    /*分析代码块*/
     int result =block_Parse(postion,current_layer,-1,-1,FUNC_GLOBAL);
     if(result!=0)
     {

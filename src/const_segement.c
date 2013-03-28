@@ -2,7 +2,8 @@
 #include "var.h"
 #include <stdio.h>
 #include <string.h>
-
+#include "module.h"
+#include "build.h"
 
 #define CONST_MAX_SIZE 100
 
@@ -163,9 +164,36 @@ void ConstSegmentLoad(char *str)
     {
         int value=atoi(const_char[2]);
          Var a;
-        a.content.var_value.struct_id =value;
-        a.content.type=VAR_TYPE_STRUCT_NAME;
-        ConstSegmentPush (a);
+         if(value<0)/*负数说明符号是一个待解析的符号*/
+         {
+
+              value-=build_GetUnresolvedOffset();/*重定向带解析标识符*/
+             char *str=module_GetUnresolvedSymbol(-value);
+             int id=struct_GetPlainId(str);/*先查找看是否该结构已被实现*/
+             if(id!=0)/*已被实现*/
+             {
+                a.content.var_value.struct_id =id;
+                a.content.type=VAR_TYPE_STRUCT_NAME;
+                ConstSegmentPush (a);
+             }
+             else/*没有被实现，则要把其压入引用表中，待之后寻找*/
+             {
+                 a.content.var_value.struct_id =value;
+                 a.content.type=VAR_TYPE_STRUCT_NAME;
+                int id= ConstSegmentPush (a);
+                Var * const_var=ConstSegmentGetVar (id);
+                /*将字符串压入到未解析的原子表中*/
+                module_PutUnresolvedAtom(str,&(const_var->content.var_value.struct_id));
+             }
+         }
+         else
+         {
+             value+= build_GetStructOffset();/*重定向结构标识符*/
+             a.content.var_value.struct_id =value;
+             a.content.type=VAR_TYPE_STRUCT_NAME;
+             ConstSegmentPush (a);
+         }
+
     }
         break;
     case CONST_TYPE_FUNC:

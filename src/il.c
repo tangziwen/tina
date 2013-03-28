@@ -1062,7 +1062,7 @@ Var IL_exec ( Function *func )
 Var IL_CallFunc (int args, int f_index,int mode)
 {
 
-	Var result;
+    Var result;
     Var arg_list[args];
 
     /*回溯添加参数,并把当前层的开头的相应的*/
@@ -1091,50 +1091,50 @@ Var IL_CallFunc (int args, int f_index,int mode)
     }
 
 
-	if(mode==FUNC_NORMAL)/*普通的脚本函数调用*/
-	{
-		Function * f =func_get_by_index ( f_index);
+    if(mode==FUNC_NORMAL)/*普通的脚本函数调用*/
+    {
+        Function * f =func_get_by_index ( f_index);
         /*检查执行时刻的参数是否与所对应的函数的参数数目相符*/
         if(f->arg_counts!=args)
         {
-            printf("error,%s  the args count is not match par：%d arg：%d\n",f->name,f->arg_counts,args);
+            printf("error,%s  the args count is not match 形式：%d 实际：%d\n",f->name,f->arg_counts,args);
             exit(0);
         }
-		int i=0;
-		vm_RTstackPush();
-		for ( i=0;
+        int i=0;
+        vm_RTstackPush();
+        for ( i=0;
                 i<args;
-				i++)
-		{
+                i++)
+        {
             Var source=arg_list[i];
-			int r_t=var_GetType(source);
-			/*为函数的参数赋值*/
+            int r_t=var_GetType(source);
+            /*为函数的参数赋值*/
             if(r_t==VAR_TYPE_TUPLE  || r_t==VAR_TYPE_VECTOR|| r_t==VAR_TYPE_OBJ)/*若右值为引用型引用计数自增*/
-			{
+            {
                 RefCountIncrease(r_t,var_getHandle (source));
-			}
+            }
             vm_rt_stack_var_set ( i,source);
-		}
-		/*保存当前的表环境*/
-		IL_list * old_list =current_list;
-		result =func_invoke ( f_index);
-		current_list=old_list;
-		/*函数的栈弹出*/
-		vm_RTstackPop();
-	}
-	else if(mode==FUNC_API)/*API函数调用情况*/
-	{
+        }
+        /*保存当前的表环境*/
+        IL_list * old_list =current_list;
+        result =func_invoke ( f_index);
+        current_list=old_list;
+        /*函数的栈弹出*/
+        vm_RTstackPop();
+    }
+    else if(mode==FUNC_API)/*API函数调用情况*/
+    {
 
-		int i=0;
+        int i=0;
         for ( i=0; i<args; i++ )
-		{
+        {
             API_argument_list[i]=arg_list[i];
-		}
+        }
         API_SetArgCount(args);
-		Var return_value=API_InovkeByIndex ( f_index);
-		return return_value;
-	}
-	return result;
+        Var return_value=API_InovkeByIndex ( f_index);
+        return return_value;
+    }
+    return result;
 }
 
 /*将函数所在中间代码节点编译到指定字节码文件中*/

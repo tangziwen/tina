@@ -28,6 +28,7 @@ PURPOSE.
 #include "function.h"
 #include "il.h"
 #include "module.h"
+#include "build.h"
 #define NDEBUG
 #include "debug.h"
 
@@ -124,7 +125,7 @@ int get_class_id(const char * name)
     {
         int i=1;
         /*检查被using的模块*/
-        for( ; i<module_GetMoudleCount (); i++)
+        for( ; i<=module_GetMoudleCount (); i++)
         {
             result=struct_GetPlainId(module_MangledName(i,name));
             if(result!=0)
@@ -542,7 +543,7 @@ void struct_MemberLoad(char *str)
     {
         int index=atoi (member_str[4]);
         member.content.type=VAR_TYPE_FUNC;
-        member.content.var_value.func.func_index=index;
+        member.content.var_value.func.func_index=index+build_GetFunctionOffset();;
         member.content.var_value.func.func_type=FUNC_NORMAL;
         AddMember (struct_index,member,acc);
     }

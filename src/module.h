@@ -42,6 +42,9 @@ int module_GetMoudleCount();
 /*导入模块*/
 void module_ImportParse(int * pos);
 
+/*清除模块的数据*/
+void module_Dump();
+
 /*检查模块*/
 int module_ImportedSearch(char *name);
 

@@ -60,6 +60,7 @@ static char * ByteCodeKeyWordList[MAX_KEYWORD_LIST]={"C","F",
                                                      "DYNAMIC","S",
                                                      "M","METHOD",
                                                      "STRUCT_CREATOR","VECTOR","TUPLE","IMPORT"};
+static void OffsetReset();
 
 static int LookUpByteCodeType(char *str)
 {
@@ -150,6 +151,8 @@ static void Dump()
     API_Dump();
     ConstSegmentDump ();
     func_Dump ();
+    module_Dump();
+    OffsetReset();
 }
 
 /*编译成字节码文件*/
@@ -224,7 +227,13 @@ int build_GetConstOffset()
 {
     return const_offset;
 }
-
+static void OffsetReset()
+{
+    struct_offset=0;
+    unresolved_offset=0;
+     function_offset=0;
+    const_offset=0;
+}
 
 void Tina_Compile(const char *file_name)
 {
@@ -324,7 +333,7 @@ void Tina_Compile(const char *file_name)
 	}
     /*编译成字节码*/
     WriteByteCode(file_name);
-    printf("compile finish\n");
+    Dump();
 }
 
 
@@ -364,8 +373,8 @@ void Tina_Buid(const char * file)
     {
         char byte_code_name[32];
         fscanf (f,"%s\n",byte_code_name);
+        printf("the byte code is %s\n",byte_code_name);
         Tina_Compile (byte_code_name);
-        Dump ();
         if(feof(f)) break;
     }
 }

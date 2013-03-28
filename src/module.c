@@ -64,7 +64,7 @@ void module_parse_using(int * pos)
 		case TOKEN_TYPE_EOF:
 			break;
 		default:
-			printf("illigal import !\n");
+            printf("illigal using !\n");
 			exit(0);
 			break;
 		}
@@ -267,7 +267,7 @@ void module_ImportParse(int * pos)
         case TOKEN_TYPE_EOF:
             break;
         default:
-            printf("illigal import !\n");
+            printf("illigal import %d!\n",t_k.type);
             exit(0);
             break;
         }
@@ -375,4 +375,13 @@ void module_CheckUnresolvedAtomListt(char *symbol,int index)
 int module_GetUnresolvedCount()
 {
 return unresolved_index;
+}
+
+/*清除模块的数据*/
+void module_Dump()
+{
+    module_index=0;
+    import_index=0;
+    atom_list_count=0;
+    unresolved_index=0;
 }

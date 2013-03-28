@@ -88,7 +88,7 @@ Var *var_point_to(Var a,Var b);
 /*设置当前函数*/
 void func_set_current(Function * func);
 /*变量模块初始化*/
-void var_parse_local(int *pos,int arg_counts);
+void var_parse_local(int *pos);
 
 
 /*获得Var变量的浮点值*/

@@ -343,8 +343,7 @@ void token_Get ( int * pos,TokenInfo * t_k )
 		if(buffer[postion]=='.')
 		{
 			extern int is_exp_parsing;
-			extern int is_parsing_func_def;
-			if(is_exp_parsing==1 && is_parsing_func_def==1)
+            if(is_exp_parsing==1)
 			{
 				pre_is_dot=1;
 			}
@@ -468,9 +467,8 @@ void token_Get ( int * pos,TokenInfo * t_k )
 			/*判断是否为一个引用成员运算*/
 		{
 			extern int is_exp_parsing;
-			extern int is_parsing_func_def;
             /*如果之前遇到 "."运算符，则此处为一个消息.*/
-			if(pre_is_dot==1 &&is_exp_parsing==1 &&is_parsing_func_def==1)
+            if(pre_is_dot==1 &&is_exp_parsing==1)
 			{
 				t_k->str=malloc(strlen(tmp_token)+1);
 				strcpy(t_k->str,tmp_token);
@@ -486,7 +484,7 @@ void token_Get ( int * pos,TokenInfo * t_k )
 			t_k->type=TOKEN_TYPE_API;
 			break;
 		}
-		else	if ( func_get_index_by_name ( tmp_token ) >=0 )/*检查是否为一个脚本函数*/
+        else	if ( func_get_index_by_name ( tmp_token ) !=0 )/*检查是否为一个脚本函数*/
 		{
 			t_k->type=TOKEN_TYPE_FUNC;
 			break;

@@ -36,42 +36,46 @@ Function function_list[FUNCTION_MAX];
 int current_func_index=0;
 /*当前的被扫描函数*/
 Function * current_func=NULL;
-static int plain_get_index_by_name(  char * func_name);
-static void CreateFunction(int args,char *name )
+
+/*通过名称检索函数,如果存在,返回索引
+如果不存在,则返回0*/
+static int plain_get_index_by_name(const  char * func_name)
 {
-    function_list[current_func_index].arg_counts=args;
-    if(plain_get_index_by_name(name)!=-1)
+    int i;
+    for(i=1; i<=current_func_index; i++)
     {
-        printf("%s\n",name);
-        STOP("FUNC NAME CONFLICT!!");
+        if(strcmp(function_list[i].name,func_name)==0)
+        {
+            return i;
+        }
+    }
+    return 0;
+}
+
+
+static void CreateFunctionFromByteCode(int args,char *name )
+{
+    current_func_index++;
+    function_list[current_func_index].arg_counts=args;
+    if(plain_get_index_by_name(name)!=0)
+    {
+        STOP("function name conflict %s\n",name);
     }
     strcpy (function_list[current_func_index].name,name);
     func_set_current( & (function_list[current_func_index]));
-    current_func_index++;
 }
 
-/*通过名称检索函数,如果存在,返回索引*/
-/*如果不存在,则返回-1*/
-static int plain_get_index_by_name(  char * func_name)
-{
-	int i;
-    for(i=0; i<current_func_index; i++)
-	{
-		if(strcmp(function_list[i].name,func_name)==0)
-		{
-			return i;
-		}
-	}
-	return -1;
-}
+
+
+
 int func_get_index_by_name(const char * func_name)
 {
 	char name[128]= {0};
-	int result=-1, i;
+    int result=0, i;
 	/*先检查本模块内部*/
 	strcpy(name,module_ContextMangledName(func_name));
 	result=plain_get_index_by_name(name);
-	if(result>=0)
+    if(result>0)
 	{
 		return result;
 	}
@@ -80,13 +84,13 @@ int func_get_index_by_name(const char * func_name)
     for(i=1; i<=module_GetMoudleCount (); i++)
 	{
 		result=plain_get_index_by_name(module_MangledName(i,func_name));
-		if(result>=0)
+        if(result>0)
 		{
 			return result;
 		}
 	}
 	/*最后进行全局检查,用户使用完全限定的标识符也在此类*/
-	if(result<0)
+    if(result<=0)
 	{
 		result=plain_get_index_by_name(func_name);
 	}
@@ -106,46 +110,35 @@ void func_ParseDeclare(int *postion)
 	/*加上模块前缀*/
 	char  unique_name[32]= {0};
 	strcpy(unique_name,module_ContextMangledName(t_k.content));
-	/*检查有无重名函数*/
-	{
-		int i;
-        for(i=0; i<current_func_index; i++)
-		{
-			if(strcmp(function_list[i].name,unique_name)==0)
-			{
-				printf("error !! the function has already been defined!!\n");
-				exit(0);
-			}
-		}
-	}
+
+    int result=plain_get_index_by_name(unique_name);
+    if(result!=0)
+    {
+        STOP("error !! the function %s  has already been defined!!\n",unique_name);
+    }
+     current_func_index++;
 	/*创建函数*/
     strcpy(function_list[current_func_index].name,unique_name);
-    current_func_index++;
 }
 
 /*解析方法（成员函数）的声明*/
 void method_parse_declare(int *postion,char * class_name)
 {
 	TokenInfo t_k;
+    char unique_name [32];
     token_Get(postion,&t_k);/*获取函数名称*/
+    strcpy (unique_name,t_k.content);
 	/*加上后缀*/
-	strcat(t_k.content,"#");
-	strcat(t_k.content,class_name);
-	/*检查有无重名函数*/
-	{
-		int i;
-        for(i=0; i<current_func_index; i++)
-		{
-			if(strcmp(function_list[i].name,t_k.content)==0)
-			{
-				printf("error !! the function has already been defined!!\n");
-				exit(0);
-			}
-		}
-	}
-	/*创建函数*/
-    strcpy(function_list[current_func_index].name,t_k.content);
+    strcat(unique_name,"#");
+    strcat(unique_name,class_name);
+    int result=plain_get_index_by_name(unique_name);
+    if(result!=0)
+    {
+        STOP("error !! the method  has already been defined!!\n");
+    }
     current_func_index++;
+	/*创建函数*/
+    strcpy(function_list[current_func_index].name,unique_name);
 }
 
 Function * func_get_by_index(int index)
@@ -170,83 +163,83 @@ Var func_invoke(int index)
 	tuple_CleanTmpPool();
 	return return_value;
 }
-int is_parsing_func_def=0;
+
+
+/*解析字节码*/
+static void parse_parameter(Function *f,int *postion)
+{
+    /*设置该函数为当前扫描函数*/
+    func_set_current(f);
+    TokenInfo t_k;
+    /*解析参数形如  (a,b,c)*/
+    /*我们把参数当作函数的最外层的最前面的*/
+    /*几个变量.*/
+    token_Get(postion,&t_k);
+    if(t_k.type!=TOKEN_TYPE_OP&&t_k.content[0]!='(')
+    {
+        printf("error miss '(' in function args list \n");
+        exit(0);
+    }
+    int type=VAR_TYPE_INT;
+    do
+    {
+        token_Get(postion,&t_k);
+        switch(t_k.type)
+        {
+        case TOKEN_TYPE_SYMBOL:
+        {
+            int i=0;
+            for(i=0; i<f->var_counts; i++)
+            {
+                if(strcmp(t_k.content,f->var_list[i].name)==0)
+                {
+                    printf("error the args name conflict!!!\n");
+                    exit(0);
+                }
+            }
+            strcpy(f->var_list[f->var_counts].name
+                   , t_k.content);
+            f->var_list[f->var_counts].content.type=type;
+            f->var_list[f->var_counts].layer=0;
+            f->arg_counts++;
+            f->var_counts++;
+            type=VAR_TYPE_INT;
+        }
+        break;
+        case TOKEN_TYPE_COMMA:
+            break;
+        case TOKEN_TYPE_RIGHT_PARENTHESIS:
+            goto end;
+            break;
+        default:
+            printf("error in function arg list \n");
+            exit(0);
+            break;
+        }
+
+    }
+    while(t_k.type!=TOKEN_TYPE_RIGHT_PARENTHESIS);
+end:
+    ;
+}
 
 /*解析函数的定义*/
 Function * func_ParseDef(int *postion )
 {
-	is_parsing_func_def=1;
 	TokenInfo t_k;
 	/*获得函数的名字*/
     token_Get(postion,&t_k);
 	/*我们已经预扫描过了函数的声明.现在我们直接通过函数的名字获取该函数的结构*/
 	Function *f =func_get_by_index(func_get_index_by_name(t_k.content));
-	int index =func_get_index_by_name(t_k.content);
-	/*设置该函数为当前扫描函数*/
-	func_set_current(f);
-	/*解析参数形如  (a,b,c)*/
-	/*我们把参数当作函数的最外层的最前面的*/
-	/*几个变量.*/
-    token_Get(postion,&t_k);
-	if(t_k.type!=TOKEN_TYPE_OP&&t_k.content[0]!='(')
-	{
-		printf("error miss '(' in function args list \n");
-		exit(0);
-	}
-	int type=VAR_TYPE_INT;
-	do
-	{
-        token_Get(postion,&t_k);
-		switch(t_k.type)
-		{
-		case TOKEN_TYPE_SYMBOL:
-		{
-			int i=0;
-			for(i=0; i<f->var_counts; i++)
-			{
-				if(strcmp(t_k.content,f->var_list[i].name)==0)
-				{
-					printf("error the args name conflict!!!\n");
-					exit(0);
-				}
-			}
-			strcpy(f->var_list[f->var_counts].name
-			       , t_k.content);
-			f->var_list[f->var_counts].content.type=type;
-			f->var_list[f->var_counts].layer=0;
-			f->arg_counts++;
-
-			f->var_counts++;
-			type=VAR_TYPE_INT;
-		}
-		break;
-		case TOKEN_TYPE_COMMA:
-			break;
-		case TOKEN_TYPE_RIGHT_PARENTHESIS:
-			goto end;
-			break;
-
-		default:
-			printf("error in function arg list \n");
-			exit(0);
-			break;
-		}
-
-	}
-	while(t_k.type!=TOKEN_TYPE_RIGHT_PARENTHESIS);
-end:
-	;
-
-	int current_layer=0;
-	int scan_pos=*postion;
-	var_parse_local(&scan_pos,f->arg_counts);/*初始化变量模块*/
+    parse_parameter(f,postion);
+    int scan_pos=(*postion);
+    var_parse_local(&scan_pos);/*初始化变量模块*/
     /*分析代码块*/
-    int result =block_Parse(postion,current_layer,-1,-1,FUNC_GLOBAL);
+    int result =block_Parse(postion,0,-1,-1,FUNC_GLOBAL);
     if(result!=0)
     {
-        STOP("illegal function define %s",block_GetLastStateStr ());
+        STOP("illegal function define %s\n",block_GetLastStateStr ());
     }
-
     //在函数的结尾处，始终增加一个return
     IL_ListInsertReturn();
 	return f;
@@ -256,7 +249,6 @@ end:
 /*解析方法（成员函数）的定义*/
 Function * method_parse_def(int *postion,char * class_name )
 {
-	is_parsing_func_def=1;
 	TokenInfo t_k;
     token_Get(postion,&t_k);
 	strcat(t_k.content,"#");
@@ -264,69 +256,13 @@ Function * method_parse_def(int *postion,char * class_name )
 
 	/*我们已经预扫描过了函数的声明.现在我们直接通过函数的名字获取该函数的结构*/
 	Function *f =func_get_by_index(func_get_index_by_name(t_k.content));
-	int index =func_get_index_by_name(t_k.content);
-	/*设置该函数为当前扫描函数*/
-	func_set_current(f);
-	/*解析参数形如  (a,b,c)*/
-	/*我们把参数当作函数的最外层的最前面的*/
-	/*几个变量.*/
-    token_Get(postion,&t_k);
-	if(t_k.type!=TOKEN_TYPE_OP&&t_k.content[0]!='(')
-	{
-		printf("error miss '(' in function args list \n");
-		exit(0);
-	}
-	int type=VAR_TYPE_INT;
-	do
-	{
-        token_Get(postion,&t_k);
-		switch(t_k.type)
-		{
-		case TOKEN_TYPE_SYMBOL:
-		{
-			int i=0;
-			for(i=0; i<f->var_counts; i++)
-			{
-				if(strcmp(t_k.content,f->var_list[i].name)==0)
-				{
-					printf("error the args name conflict!!!\n");
-					exit(0);
-				}
-			}
-			strcpy(f->var_list[f->var_counts].name
-			       , t_k.content);
-			f->var_list[f->var_counts].content.type=type;
-			f->var_list[f->var_counts].layer=0;
-			f->arg_counts++;
-
-			f->var_counts++;
-			type=VAR_TYPE_INT;
-		}
-		break;
-		case TOKEN_TYPE_COMMA:
-			break;
-		case TOKEN_TYPE_RIGHT_PARENTHESIS:
-			goto end;
-			break;
-
-		default:
-			printf("error in function arg list \n");
-			exit(0);
-			break;
-		}
-
-	}
-	while(t_k.type!=TOKEN_TYPE_RIGHT_PARENTHESIS);
-end:
-	;
-
-	int current_layer=0;
+    parse_parameter(f,postion);
 	int scan_pos=*postion;
-	var_parse_local(&scan_pos,f->arg_counts);/*初始化变量模块*/
-    int result =block_Parse(postion,current_layer,-1,-1,FUNC_MEMBER);
+    var_parse_local(&scan_pos);/*初始化变量模块*/
+    int result =block_Parse(postion,0,-1,-1,FUNC_MEMBER);
     if(result!=0)
     {
-        STOP("illegal method define %s",block_GetLastStateStr ());
+        STOP("illegal method define %s\n",block_GetLastStateStr ());
     }
 	return f;
 }
@@ -335,7 +271,7 @@ end:
 void Tina_Run(const char *name)
 {
 	int id=func_get_index_by_name(name);
-	if(id>=0)
+    if(id>0)
 	{
 		func_invoke(id);
 	}
@@ -359,6 +295,7 @@ Function * func_get_current()
 }
 
 Var ScriptFuncArgList[32]= {0};
+
 /*设置脚本函数的参数*/
 void Tina_SetScriptFuncArg(Var arg,int id)
 {
@@ -392,8 +329,8 @@ Var Tina_CallScriptFunc(int func_id)
 //函数编译成字节码
 void func_WriteByteCode(FILE * f)
 {
-    int i=0;
-    for(; i<current_func_index;i++)
+    int i=1;
+    for(; i<=current_func_index;i++)
     {
         fprintf(f,"F %d %s\n",function_list[i].arg_counts,function_list[i].name);
         IL_ListCompile(f,i);
@@ -406,12 +343,18 @@ void func_Load(char *str)
     char func_char[3][32];
     sscanf (str,"%s %s %s",func_char[0],func_char[1],func_char[2]);
     int args=atoi(func_char[1]);
-    CreateFunction(args,func_char[2]);
+    CreateFunctionFromByteCode(args,func_char[2]);
 }
 
 /*将函数的数据清空，以方便下次编译*/
 void func_Dump()
 {
+    int i=1;
+    for(;i<=current_func_index;i++)
+    {
+        IL_FreeAllNode(&(function_list[i].list));
+        function_list[i].arg_counts=0;
+    }
     current_func=NULL;
     current_func_index=0;
     current_list=NULL;

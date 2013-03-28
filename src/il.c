@@ -1097,7 +1097,7 @@ Var IL_CallFunc (int args, int f_index,int mode)
         /*检查执行时刻的参数是否与所对应的函数的参数数目相符*/
         if(f->arg_counts!=args)
         {
-            printf("error,%s  the args count is not match 形式：%d 实际：%d\n",f->name,f->arg_counts,args);
+            printf("error,the index %d %s  the args count is not match p: %d a:%d\n",f_index,f->name,f->arg_counts,args);
             exit(0);
         }
         int i=0;
@@ -1332,4 +1332,18 @@ sscanf (str,"%s %s %s",the_str[0],the_str[1],the_str[2]);
 int tmp_result_index=atoi(the_str[1]);
 int args=atoi(the_str[2]);
 IL_ListInsertListCreator (ELEMENT_TUPLE_CREATOR,tmp_result_index,args);
+}
+
+/*删除一个list中的所有节点*/
+void IL_FreeAllNode(IL_list * list)
+{
+    IL_node * c,*t;
+    t=list->head;
+    while(t)
+    {
+        c=t->next;
+        free(t);
+        t=c;
+    }
+    list->head=NULL;
 }

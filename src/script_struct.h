@@ -73,4 +73,7 @@ void struct_Load(char *str);
 void struct_Dump();
 /*通过指定字符串找到类的id*/
 int struct_GetPlainId(const char * name);
+
+/*返回当前一共有的结构体*/
+int struct_GetCount();
 #endif

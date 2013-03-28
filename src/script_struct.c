@@ -56,7 +56,9 @@ static int  AddMember(int ID,Var value,int accessibility);
 /*环境索引,最初的环境为全局*/
 int env_index =ENV_GLOBAL;
 static int struct_index=0;
-/*粗略实现类的列表,今后改为更为灵活的数据结构*/
+
+
+/*粗略实现 struct原型表,今后改为更为灵活的数据结构*/
 static  struct_info struct_list[30];
 
 /*变量保存的临时池,引用计数为零的变量*/
@@ -556,12 +558,21 @@ void struct_MemberLoad(char *str)
         break;
     }
 }
+/*将指定的原型清空*/
+static void struct_PrototypeClear(int index)
+{
+    struct_list[index].member_count=0;
+}
 
 /*将结构体中的数据清除，方便下次调用*/
 void struct_Dump()
 {
+    int i=1;
+    for( ; i<=struct_GetCount ();i++)
+    {
+        struct_PrototypeClear(i);
+    }
     struct_index=0;
-    script_struct_init();
 }
 
 /*返回当前一共有的结构体*/

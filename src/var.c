@@ -148,14 +148,14 @@ static void local_declare_parse(int offset,int layer,int * pos)
 /*对函数体内的局部变量进行扫描*/
 /*它最终会为每一个函数（除参数外）的局部变量*/
 /*确定其相对索引，并储存在Function的var_list字段中。*/
-void var_parse_local(int *pos,int arg_count)
+void var_parse_local(int *pos)
 {
 	int i;
 	for(i=func_get_current()->arg_counts; i<GLOBAL_VAR_MAX; i++)
 	{
 		func_get_current()->var_list[i].layer=-1;
 	}
-	local_declare_parse(arg_count,0,pos);
+    local_declare_parse(func_get_current()->arg_counts,0,pos);
 }
 
 

@@ -150,6 +150,7 @@ void IL_VectorCreatorLoad(char * str);
 /*从字节码中读入元组构造节点*/
 void IL_TupleCreatorLoad(char * str);
 
-/*返回当前一共有的结构体*/
-int struct_GetCount();
+
+/*删除一个list中的所有节点*/
+void IL_FreeAllNode(IL_list * list);
 #endif

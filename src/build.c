@@ -411,11 +411,48 @@ void Tina_Buid(const char * file)
     {
         STOP("there is no such %s Tina bytecode list file\n",file_name);
     }
+    /*解析作者*/
+    {
+        char author_name[32];
+        char attribute[32];
+        fscanf (f,"%s = %s",attribute,author_name);
+        if(strcmp (attribute,"AUTHOR")!=0)
+        {
+            STOP("invalid tbl file\n");
+        }
+        else
+        {
+            printf("the author is %s\n",author_name);
+        }
+    }
+    /*解析版本号*/
+    {
+        char ver_str[32];
+        char attribute[32];
+        fscanf (f,"%s = %s",attribute,ver_str);
+        if(strcmp (attribute,"VERSION")!=0)
+        {
+            STOP("invalid tbl file\n");
+        }
+        else
+        {
+            int version=atoi(ver_str);
+            if(version !=Tina_GetVersion ())
+            {
+                STOP("the version is not compatible \n");
+            }
+
+        }
+    }
     for(;;)
     {
+        char attribute[32];
         char byte_code_name[32];
-
-        fscanf (f,"%s\n",byte_code_name);
+        fscanf (f,"%s = %s\n",attribute,byte_code_name);
+        if(strcmp (attribute,"BYTE_CODE")!=0)
+        {
+             STOP("invalid tbl file\n");
+        }
         Tina_Compile (byte_code_name);
         if(feof(f)) break;
     }

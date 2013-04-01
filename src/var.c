@@ -28,7 +28,7 @@ PURPOSE.
 #include "il.h"
 #include "script_struct.h"
 #include "script_vec.h"
-
+#include "compile_error.h"
 static int layer_vars_count[128];/*栈层次*/
 static int current_layer;/*当前的栈层次*/
 
@@ -179,7 +179,8 @@ int var_get_local_index(const char *var_name,int layer)
 			return i;
 		}
 	}
-	printf("%s is an undefined symbol\n",var_name);
+    char error_str[128];
+    sprintf(error_str,"%s is an undefined symbol\n",var_name);
 	exit(0);
 	return -3;
 }

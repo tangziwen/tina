@@ -33,6 +33,7 @@ PURPOSE.
 #include "script_struct.h"
 #include "token.h"
 #include "api.h"
+#include "compile_error.h"
 #define MAX_KEYWORD_LIST 18
 #define BYTE_KEYWORD_CONST 0
 #define BYTE_KEYWORD_FUNC 1
@@ -323,9 +324,10 @@ void Tina_Compile(const char *file_name)
 				postion =test_pos;
 				break;
 			default :
-                printf("the pos %d token %d is unknown %s\n",postion,t_k.type,t_k.content);
-				printf("error !!\n");
+            {
+                CompileError_ShowError (postion,"unknown global symbol");
 				exit(0);
+            }
 				break;
 			}
 		}
@@ -348,15 +350,55 @@ void Tina_ExcuteByteCodeList(const char * file)
     {
         STOP("there is no such %s Tina bytecode list file\n",file_name);
     }
+    /*解析作者*/
+    {
+        char author_name[32];
+        char attribute[32];
+        fscanf (f,"%s = %s",attribute,author_name);
+        if(strcmp (attribute,"AUTHOR")!=0)
+        {
+            STOP("invalid tbl file\n");
+        }
+        else
+        {
+            printf("the author is %s\n",author_name);
+        }
+    }
+    /*解析版本号*/
+    {
+        char ver_str[32];
+        char attribute[32];
+        fscanf (f,"%s = %s",attribute,ver_str);
+        if(strcmp (attribute,"VERSION")!=0)
+        {
+            STOP("invalid tbl file\n");
+        }
+        else
+        {
+            int version=atoi(ver_str);
+            if(version !=Tina_GetVersion ())
+            {
+                STOP("the version is not compatible \n");
+            }
+
+        }
+    }
     for(;;)
     {
+        char attribute[32];
         char byte_code_name[32];
-        fscanf (f,"%s\n",byte_code_name);
+        fscanf (f,"%s = %s\n",attribute,byte_code_name);
+        if(strcmp (attribute,"BYTE_CODE")!=0)
+        {
+             STOP("invalid tbl file\n");
+        }
         Tina_Load (byte_code_name);
         if(feof(f)) break;
     }
     Tina_Run ("main");
 }
+
+
 
 /*根据字节码列表文件，逐个编译*/
 void Tina_Buid(const char * file)
@@ -372,8 +414,8 @@ void Tina_Buid(const char * file)
     for(;;)
     {
         char byte_code_name[32];
+
         fscanf (f,"%s\n",byte_code_name);
-        printf("the byte code is %s\n",byte_code_name);
         Tina_Compile (byte_code_name);
         if(feof(f)) break;
     }

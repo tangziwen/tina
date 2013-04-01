@@ -461,7 +461,7 @@ void IL_list_print (FILE *f, Function * func )
 /*根据函数名称打印中间代码*/
 void Tina_PrintIL (FILE* f, const char * func_name )
 {
-    IL_list_print (f, func_get_by_index ( func_get_index_by_name ( func_name ) ) );
+    IL_list_print (f, func_get_by_index ( func_GetIndexByName ( func_name ) ) );
 
 }
 

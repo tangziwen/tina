@@ -484,7 +484,7 @@ void token_Get ( int * pos,TokenInfo * t_k )
 			t_k->type=TOKEN_TYPE_API;
 			break;
 		}
-        else	if ( func_get_index_by_name ( tmp_token ) !=0 )/*检查是否为一个脚本函数*/
+        else	if ( func_GetIndexByName ( tmp_token ) !=0 )/*检查是否为一个脚本函数*/
 		{
 			t_k->type=TOKEN_TYPE_FUNC;
 			break;

@@ -22,6 +22,7 @@ PURPOSE.
 #include "tina.h"
 //#define NDEBUG
 #include "debug.h"
+#include "compile_error.h"
 
 
 
@@ -30,21 +31,17 @@ void SayHello()
     printf("holla you boy\n");
 }
 
-
 /*解释器主函数*/
 /*如果未加说明则解释执行本地的test.tina脚本*/
 int main ( int argc,char * argv[] )
 {
-
-    Tina_Init();
+    Tina_Init(10);
+    Tina_SetErrorMode(TINA_ERROR_STDOUT);
     switch(argc)
     {
     case 1:
     {
         printf("Tina is a dynamic type script language compiler & virtual machine\n");
-        Tina_Load ("a");
-        Tina_Load ("main");
-        Tina_Run ("main");
     }
         break;
     case 3:

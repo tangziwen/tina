@@ -64,7 +64,7 @@ int get_top_priority_RPN();
 int isRPN_StackEmpty();
 
 /*转移栈顶的操作符进入输出队列*/
-void TransferStackTop();
+int TransferStackTop();
 /*向栈中添加列表构造函数*/
 void PushListCreatorToStack(int type,int args);
 /*把输出队列的末尾的元素移入栈中*/

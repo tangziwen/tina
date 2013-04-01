@@ -450,13 +450,13 @@ DEF:
             /*检测是否为一个初始化函数*/
             if(strcmp(module_ContextMangledName(member_name),struct_list[struct_index].name)==0)
             {
-                struct_list[struct_index].initializer_index=func_get_index_by_name(f->name);
+                struct_list[struct_index].initializer_index=func_GetIndexByName(f->name);
             }
             else	/*否则是一个普通的函数*/
             {
                 Var func_ptr;
                 func_ptr.content.type=VAR_TYPE_FUNC;
-                func_ptr.content.var_value.func.func_index=func_get_index_by_name(f->name);
+                func_ptr.content.var_value.func.func_index=func_GetIndexByName(f->name);
                 func_ptr.content.var_value.func.func_type=FUNC_NORMAL;
                 strcpy(func_ptr.name,member_name);
                 AddMember(struct_index,func_ptr,acc);

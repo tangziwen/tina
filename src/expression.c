@@ -29,6 +29,7 @@ PURPOSE.
 #include "module.h"
 #include "const_segment.h"
 #include "script_struct.h"
+#include "compile_error.h"
 #define  OP_ASSCOCIATE_LEFT 1
 #define  OP_ASSCOCIATE_RIGHT 2
 #define LEFT_BRACE_PIORITY -1
@@ -131,13 +132,11 @@ static int IsInteger ( char * str )
 /*在解析表达式时，判断前后的词法单元是否以相兼容的次序相连*/
 static  int IsTokenCompatible(int pre ,int current,int pos)
 {
-
+    int is_error=0;
     /*不允许以运算符作为表达式结尾*/
     if(pre==TOKEN_TYPE_OP && current==TOKEN_TYPE_SEMICOLON)
     {
-
-        printf("error expression in %d\n",pos);
-        exit(0);
+       is_error=1;
     }
 
     /*不允许具有操作数属性的同时出现*/
@@ -145,9 +144,7 @@ static  int IsTokenCompatible(int pre ,int current,int pos)
     {
         if(current==TOKEN_TYPE_NUM||current==TOKEN_TYPE_SELF || current==TOKEN_TYPE_STRUCT_NAME )
         {
-
-            printf("error expression in %d\n",pos);
-            exit(0);
+            is_error=1;
         }
     }
     /*不允许右方括号后直接连接具有算子属性的实体出现*/
@@ -157,24 +154,32 @@ static  int IsTokenCompatible(int pre ,int current,int pos)
         if(current==TOKEN_TYPE_NUM||current==TOKEN_TYPE_SELF || current==TOKEN_TYPE_STRUCT_NAME )
         {
 
-            printf("error expression in %d\n",pos);
-            exit(0);
+            is_error=1;
         }
+    }
+    if(is_error)
+    {
+        CompileError_ShowError (pos,"error expression");
+        exit(0);
+    }else
+    {
+        return 1;
     }
 }
 
 /*解析表达式*/
 void exp_Parse ( int * pos,int mode,int layer )
 {
+    int start_pos;
     is_exp_parsing=1;
     int brace =-1;
+    TokenInfo t_k;
+    token_Get ( pos,&t_k );
+    start_pos=(*pos);/*存储表达式初始的位置*/
     /*记录先前的标记，遇到不可能遇到的类型组合当即报错，使得错误寻找更加准确*/
-    int pre_tk_type=TOKEN_TYPE_NIL;
     while ( 1 )
     {
-        TokenInfo t_k;
         token_Get ( pos,&t_k );
-        IsTokenCompatible(pre_tk_type,t_k.type,*pos);
         switch ( t_k.type )
         {
         case TOKEN_TYPE_SEMICOLON:
@@ -278,7 +283,7 @@ void exp_Parse ( int * pos,int mode,int layer )
             if(next.type==TOKEN_TYPE_OP&& next.content[0]=='(')
             {
 
-                push_func_to_RPN_stack ( func_get_index_by_name ( t_k.content ),ELEMENT_FUNC);
+                push_func_to_RPN_stack ( func_GetIndexByName ( t_k.content ),ELEMENT_FUNC);
                 Element *top =GetRPNStackTop();
                 top->info.func_args=GetArgCount(*pos);
             }
@@ -287,7 +292,7 @@ void exp_Parse ( int * pos,int mode,int layer )
                 /*退化成为一个函数指针常量*/
                 a.content.type=VAR_TYPE_FUNC;
                 /*储存函数索引*/
-                a.content.var_value.func.func_index=func_get_index_by_name(t_k.content);
+                a.content.var_value.func.func_index=func_GetIndexByName(t_k.content);
                 a.content.var_value.func.func_type=FUNC_NORMAL;
                 PutLiteralTo_RPN(ConstSegmentPush (a));
             }
@@ -550,10 +555,10 @@ void exp_Parse ( int * pos,int mode,int layer )
         }
             break;
         default:
-            STOP("illegal expression!");
+            CompileError_ShowError (start_pos,"illegal expression!");
+            exit(0);
             break;
         }
-        pre_tk_type=t_k.type;
     }
 finish_lable:
     ;
@@ -692,11 +697,16 @@ Element  * GetRPNStackTop()
 }
 
 /*转移栈顶的操作符或函数进入输出队列*/
-void TransferStackTop()
+int TransferStackTop()
 {
     RPN_QueueIndex++;
+    if(RPN_StackIndex<=0)
+    {
+        return -1;
+    }
     RPN_Queue[RPN_QueueIndex]=RON_stack[RPN_StackIndex];
     RPN_StackIndex--;
+    return 0;
 }
 /*把输出队列的末尾的元素移入栈中*/
 void TransferQueueEnd ( int type )
@@ -934,7 +944,6 @@ void generate_IL()
             /*向量构造函数*/
         case ELEMENT_VECTOR_CREATOR:
         {
-
             /*向栈前去寻找参数.*/
             Element e =RPN_Queue[i];
             /*然后从栈中抹去参数*/

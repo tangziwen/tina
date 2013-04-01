@@ -13,7 +13,6 @@
 #include "return.h"
 #include "for.h"
 #include "function.h"
-
 /*该字串用于储存最近一次调用的状态信息信息*/
 static char state_str[128];
 int block_Parse(int * pos,int layer,int break_label,int continue_label,int mode)
@@ -22,6 +21,11 @@ int block_Parse(int * pos,int layer,int break_label,int continue_label,int mode)
     int brace =-1;
     /*略过左大括号*/
     token_Get(pos,&t_k);
+    if(t_k.type!=TOKEN_TYPE_LEFT_BRACE)
+    {
+        sprintf(state_str,"invalid block");
+        return -1;
+    }
     /*进入新的层次*/
     layer++;
     while(1)

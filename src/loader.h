@@ -22,5 +22,10 @@ PURPOSE.
 #include <stdlib.h>
 extern char * buffer;
 extern int buffer_size;
+
 void loader_load_buf(const char * file_name);
+/*获得当前被读取的文件名*/
+const char * loader_GetFileName();
+/*输入指定的字符位置，返回其所在当前被读入的buffer的行数*/
+int loader_GetLineNumber(int pos);
 #endif

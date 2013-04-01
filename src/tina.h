@@ -21,7 +21,10 @@ PURPOSE.
 #include "type.h"
 #include "def.h"
 #include "var.h"
-
+#define TINA_ERROR_NONE 0
+#define TINA_ERROR_STDOUT 1
+#define TINA_ERROR_STDERR 2
+#define TINA_ERROR_LOG 4
 /*运行一个函数*/
 void Tina_Run(const char *name);
 
@@ -63,10 +66,14 @@ extern void Tina_ProtypeSetMember(int struct_id,int member_id,Var value);
 /*载入一个字节码文件*/
 void Tina_Load(const char *file_name);
 //初始化tina
-extern void Tina_Init();
+extern void Tina_Init(int ver);
 
 /*载入字节码链表，并执行main 函数*/
 void Tina_ExcuteByteCodeList(const char * file);
 /*根据字节码列表文件，逐个编译*/
 void Tina_Buid(const char * file);
+/*获取当前版本号*/
+extern int Tina_GetVersion();
+/*设置编译器报错级别*/
+extern void Tina_SetErrorMode(int mode_flag);
 #endif

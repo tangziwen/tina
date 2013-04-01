@@ -31,6 +31,7 @@ PURPOSE.
 #include "module.h"
 #include "debug.h"
 #include "block.h"
+#include "compile_error.h"
 /*函数列表*/
 Function function_list[FUNCTION_MAX];
 int current_func_index=0;
@@ -68,7 +69,7 @@ static void CreateFunctionFromByteCode(int args,char *name )
 
 
 
-int func_get_index_by_name(const char * func_name)
+int func_GetIndexByName(const char * func_name)
 {
 	char name[128]= {0};
     int result=0, i;
@@ -230,7 +231,7 @@ Function * func_ParseDef(int *postion )
 	/*获得函数的名字*/
     token_Get(postion,&t_k);
 	/*我们已经预扫描过了函数的声明.现在我们直接通过函数的名字获取该函数的结构*/
-	Function *f =func_get_by_index(func_get_index_by_name(t_k.content));
+    Function *f =func_get_by_index(func_GetIndexByName(t_k.content));
     parse_parameter(f,postion);
     int scan_pos=(*postion);
     var_parse_local(&scan_pos);/*初始化变量模块*/
@@ -238,7 +239,10 @@ Function * func_ParseDef(int *postion )
     int result =block_Parse(postion,0,-1,-1,FUNC_GLOBAL);
     if(result!=0)
     {
-        STOP("illegal function define %s\n",block_GetLastStateStr ());
+        char error_msg[128];
+        sprintf(error_msg,"illegal function define -- %s\n",block_GetLastStateStr ());
+        CompileError_ShowError (*postion,error_msg);
+        exit(0);
     }
     //在函数的结尾处，始终增加一个return
     IL_ListInsertReturn();
@@ -255,14 +259,17 @@ Function * method_parse_def(int *postion,char * class_name )
 	strcat(t_k.content,class_name);
 
 	/*我们已经预扫描过了函数的声明.现在我们直接通过函数的名字获取该函数的结构*/
-	Function *f =func_get_by_index(func_get_index_by_name(t_k.content));
+    Function *f =func_get_by_index(func_GetIndexByName(t_k.content));
     parse_parameter(f,postion);
 	int scan_pos=*postion;
     var_parse_local(&scan_pos);/*初始化变量模块*/
     int result =block_Parse(postion,0,-1,-1,FUNC_MEMBER);
     if(result!=0)
     {
-        STOP("illegal method define %s\n",block_GetLastStateStr ());
+        char error_msg[128];
+        sprintf(error_msg,"illegal method define -- %s\n",block_GetLastStateStr ());
+        CompileError_ShowError (*postion,error_msg);
+        exit(0);
     }
 	return f;
 }
@@ -270,7 +277,7 @@ Function * method_parse_def(int *postion,char * class_name )
 /*运行一个函数*/
 void Tina_Run(const char *name)
 {
-	int id=func_get_index_by_name(name);
+    int id=func_GetIndexByName(name);
     if(id>0)
 	{
 		func_invoke(id);

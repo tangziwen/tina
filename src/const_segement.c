@@ -18,7 +18,7 @@
 #define CONST_TYPE_FUNC 7
 #define CONST_TYPE_API 8
 #define CONST_TYPE_STR 9
-char * const_key_world_list[CONST_TYPE_MAX] ={"i","b","n","m","c","s","r","f","a","str"};
+char * const_key_world_list[CONST_TYPE_MAX] ={"i","b","n","m","c","s","r","f","a","S"};
 
 static int look_up_keyword(char *str)
 {
@@ -97,7 +97,7 @@ for(;i<=const_index;i++)
         break;
     case VAR_TYPE_STR:
     {
-        fprintf(f,"str \"%s\"\n",ConstPool[i].content.var_value.str);
+        fprintf(f,"S \"%s\"\n",ConstPool[i].content.var_value.str);
     }
         break;
     }

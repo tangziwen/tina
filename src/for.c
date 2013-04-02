@@ -44,15 +44,15 @@ void for_parse ( int *pos,int layer ,int mode)
 	label_index+=4;
 	layer+=1;
 
-	IL_node * n1= IL_node_create_jmp ( l1,IL_NODE_JNE );
-	IL_node * n2 = IL_node_create_jmp ( l2,IL_NODE_JMP );
-	IL_node * n3 = IL_node_create_jmp ( l3,IL_NODE_JMP );
-	IL_node * n4 = IL_node_create_jmp ( l4,IL_NODE_JMP );
+	IL_node * n1= IL_node_create_goto ( l1,IL_NODE_JNE );
+	IL_node * n2 = IL_node_create_goto ( l2,IL_NODE_GOTO );
+	IL_node * n3 = IL_node_create_goto ( l3,IL_NODE_GOTO );
+	IL_node * n4 = IL_node_create_goto ( l4,IL_NODE_GOTO );
 	/*创建与第一个跳转对应的标记*/
-	IL_node * lab1= IL_node_create_jmp ( l1,IL_NODE_LAB );
-	IL_node * lab2= IL_node_create_jmp ( l2,IL_NODE_LAB );
-	IL_node * lab3= IL_node_create_jmp ( l3,IL_NODE_LAB );
-	IL_node * lab4= IL_node_create_jmp ( l4,IL_NODE_LAB );
+	IL_node * lab1= IL_node_create_goto ( l1,IL_NODE_LAB );
+	IL_node * lab2= IL_node_create_goto ( l2,IL_NODE_LAB );
+	IL_node * lab3= IL_node_create_goto ( l3,IL_NODE_LAB );
+	IL_node * lab4= IL_node_create_goto ( l4,IL_NODE_LAB );
 	TokenInfo t_k;
     token_Get(pos,&t_k);
 	{

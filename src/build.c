@@ -40,10 +40,10 @@ PURPOSE.
 #define BYTE_KEYWORD_EXP 2
 #define BYTE_KEYWORD_PRINT 3
 #define BYTE_KEYWORD_RETURN 4
-#define BYTE_KEYWORD_CALLFUNC 5
+#define BYTE_KEYWORD_INVOKE_FUNCTION 5
 #define BYTE_KEYWORD_LABEL 6
 #define BYTE_KEYWORD_JE 7
-#define BYTE_KEYWORD_JMP 8
+#define BYTE_KEYWORD_GOTO 8
 #define BYTE_KEYWORD_JNE 9
 #define BYTE_KEYWORD_DYNAMIC 10
 #define BYTE_KEYWORD_STRUCT 11
@@ -54,13 +54,13 @@ PURPOSE.
 #define BYTE_KEYWORD_TUPLE 16
 #define BYTE_KEYWORD_IMPORT 17
 static char * ByteCodeKeyWordList[MAX_KEYWORD_LIST]={"C","F",
-                                                    "EXP","PRNT",
-                                                     "RETRN","CALLF",
-                                                     "LABEL","JE",
-                                                     "JMP","JNE",
-                                                     "DYNAMIC","S",
-                                                     "M","METHOD",
-                                                     "STRUCT_CREATOR","VECTOR","TUPLE","IMPORT"};
+                                                     "E","P",
+                                                     "R","i",
+                                                     "L","JE",
+                                                     "G","JNE",
+                                                     "D","S",
+                                                     "m","M",
+                                                     "c","V","T","I"};
 static void OffsetReset();
 
 static int LookUpByteCodeType(char *str)
@@ -94,13 +94,13 @@ static void ParseByteCodeLine(char *str)
         func_Load(str);
         break;
     case BYTE_KEYWORD_PRINT:
-         IL_PRNTLoad();
+        IL_PRNTLoad();
         break;
     case BYTE_KEYWORD_RETURN:
         IL_RETRNLoad();
         break;
-    case BYTE_KEYWORD_CALLFUNC:
-         IL_CallFuncLoad(str);
+    case BYTE_KEYWORD_INVOKE_FUNCTION:
+        IL_CallFuncLoad(str);
         break;
     case BYTE_KEYWORD_LABEL:
         IL_LableLoad (str);
@@ -108,7 +108,7 @@ static void ParseByteCodeLine(char *str)
     case BYTE_KEYWORD_JE:
         IL_JELoad (str);
         break;
-    case BYTE_KEYWORD_JMP:
+    case BYTE_KEYWORD_GOTO:
         IL_JMPLoad (str);
         break;
     case BYTE_KEYWORD_JNE:
@@ -136,9 +136,9 @@ static void ParseByteCodeLine(char *str)
         IL_TupleCreatorLoad (str);
         break;
     case BYTE_KEYWORD_IMPORT:
-          module_ImportedLoad(str);
+        module_ImportedLoad(str);
 
-         break;
+        break;
     default:
         printf("this kind of byte code not support yet");
         break;
@@ -163,7 +163,7 @@ static void WriteByteCode(const char *file_name)
     char file_tzw[128];
     strcpy (file_tzw,file_name);
     strcat(file_tzw,".tzw");
-    FILE * f=fopen (file_tzw,"w");
+    FILE * f=fopen (file_tzw,"wb");
 
     /*导入写入*/
     module_ImportedCompile( f);
@@ -190,7 +190,7 @@ void Tina_Load(const char *file_name)
     char file_tzw[128];
     strcpy (file_tzw,file_name);
     strcat(file_tzw,".tzw");
-    FILE * f=fopen (file_tzw,"r");
+    FILE * f=fopen (file_tzw,"rb");
     if(f==NULL)
     {
         STOP("INVALID BYTE CODE FILE:%s\n",file_tzw);
@@ -221,7 +221,7 @@ int build_GetUnresolvedOffset()
 }
 int build_GetFunctionOffset()
 {
-return function_offset;
+    return function_offset;
 }
 
 int build_GetConstOffset()
@@ -232,7 +232,7 @@ static void OffsetReset()
 {
     struct_offset=0;
     unresolved_offset=0;
-     function_offset=0;
+    function_offset=0;
     const_offset=0;
 }
 
@@ -242,82 +242,82 @@ void Tina_Compile(const char *file_name)
     strcpy (file_tina,file_name);
     strcat(file_tina,".tina");
     loader_load_buf(file_tina);
-	preprocess(buffer);
+    preprocess(buffer);
 
-	{
+    {
 
-		int postion =0;
-		TokenInfo t_k;
+        int postion =0;
+        TokenInfo t_k;
 
-		/*第一遍扫描,扫描所有的全局函数的声明*/
-		do
-		{
-			/*因为需要更多的信息,所以我们有两个变量控制*/
-			/*步进关系*/
-			int test_pos=postion;
+        /*第一遍扫描,扫描所有的全局函数的声明*/
+        do
+        {
+            /*因为需要更多的信息,所以我们有两个变量控制*/
+            /*步进关系*/
+            int test_pos=postion;
             token_Get(&test_pos,&t_k);
-			switch(t_k.type)
-			{
-				/*发现模块定义标识符，扫描模块的声明*/
-			case TOKEN_TYPE_MODULE:
-				postion =test_pos;
-				module_parse_declare(&postion);
-				break;
-			case TOKEN_TYPE_EOF:
-				break;
-				/*发现全局的函数的定义符号,声明函数*/
-			case TOKEN_TYPE_FUNC_DEF:
-				postion =test_pos;
-				func_ParseDeclare(&postion);
-				break;
-				/*发现全局的类的定义，声明类*/
-			case TOKEN_TYPE_STRUCT:
-				postion=test_pos;
-				struct_ParseDeclare(&postion);
-				token_SkipBlock(&postion);/*略过类定义块*/
-				break;
-			default :
-				postion=test_pos;
-				break;
-			}
-		}
-		while(t_k.type!=TOKEN_TYPE_EOF);
-	}
+            switch(t_k.type)
+            {
+            /*发现模块定义标识符，扫描模块的声明*/
+            case TOKEN_TYPE_MODULE:
+                postion =test_pos;
+                module_parse_declare(&postion);
+                break;
+            case TOKEN_TYPE_EOF:
+                break;
+                /*发现全局的函数的定义符号,声明函数*/
+            case TOKEN_TYPE_FUNC_DEF:
+                postion =test_pos;
+                func_ParseDeclare(&postion);
+                break;
+                /*发现全局的类的定义，声明类*/
+            case TOKEN_TYPE_STRUCT:
+                postion=test_pos;
+                struct_ParseDeclare(&postion);
+                token_SkipBlock(&postion);/*略过类定义块*/
+                break;
+            default :
+                postion=test_pos;
+                break;
+            }
+        }
+        while(t_k.type!=TOKEN_TYPE_EOF);
+    }
 
-	/*第二遍扫描,扫描所有函数以及类的定义*/
-	{
-		int postion =0;
-		TokenInfo t_k;
-		do
-		{
-			/*因为需要更多的信息,所以我们有两个变量控制*/
-			/*步进关系*/
-			int test_pos=postion;
+    /*第二遍扫描,扫描所有函数以及类的定义*/
+    {
+        int postion =0;
+        TokenInfo t_k;
+        do
+        {
+            /*因为需要更多的信息,所以我们有两个变量控制*/
+            /*步进关系*/
+            int test_pos=postion;
             token_Get(&test_pos,&t_k);
-			switch(t_k.type)
-			{
+            switch(t_k.type)
+            {
             case TOKEN_TYPE_EOF:
                 break;
                 /*检查导入*/
-                 case TOKEN_TYPE_IMPORT:
-                     postion =test_pos;
-                     module_ImportParse(&postion);
-                     break;
-				/*插入引用*/
-			case TOKEN_TYPE_USING:
-				postion =test_pos;
-				module_parse_using(&postion);
-				break;
-				/*发现模块标识符，扫描模块内部的声明*/
-			case TOKEN_TYPE_MODULE:
-				postion =test_pos;
-				module_parse_def(&postion);
-				break;
-				/*发现函数的定义符号,定义函数*/
-			case TOKEN_TYPE_FUNC_DEF:
-				postion =test_pos;
+            case TOKEN_TYPE_IMPORT:
+                postion =test_pos;
+                module_ImportParse(&postion);
+                break;
+                /*插入引用*/
+            case TOKEN_TYPE_USING:
+                postion =test_pos;
+                module_parse_using(&postion);
+                break;
+                /*发现模块标识符，扫描模块内部的声明*/
+            case TOKEN_TYPE_MODULE:
+                postion =test_pos;
+                module_parse_def(&postion);
+                break;
+                /*发现函数的定义符号,定义函数*/
+            case TOKEN_TYPE_FUNC_DEF:
+                postion =test_pos;
                 func_ParseDef(&postion);
-				break;
+                break;
 				/*发现类的定义*/
 			case TOKEN_TYPE_STRUCT:
 				struct_ParseDefine(&test_pos);/*解析类*/

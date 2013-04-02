@@ -303,7 +303,7 @@ void IL_ListInsertCall(int type,int tmp_index,int args,int function_index)
 /*打印表达式节点*/
 void IL_PrintExp (FILE *f, IL_node * tmp )
 {
-    fprintf(f,"EXP %d ",tmp->tmp_index);
+    fprintf(f,"E %d ",tmp->tmp_index);
 	switch ( tmp->exp->A.type )
 	{
 	case ELEMENT_VAR:
@@ -349,9 +349,9 @@ void IL_PrintExp (FILE *f, IL_node * tmp )
 
 
 
-void IL_PrintJmp (FILE *f,IL_node *node )
+void IL_PrintGoto (FILE *f,IL_node *node )
 {
-    fprintf (f,"JMP %d\n",node->jmp->label );
+    fprintf (f,"G %d\n",node->jmp->label );
 }
 void IL_PrintJe (FILE *f,IL_node *node )
 {
@@ -363,17 +363,17 @@ void IL_PrintJne (FILE *f,IL_node *node )
 }
 void IL_PrintLab (FILE *f,IL_node *node )
 {
-    fprintf (f,"LABEL %d \n",node->jmp->label );
+    fprintf (f,"L %d \n",node->jmp->label );
 }
 
 void IL_PrintPrnt (FILE *f,IL_node *node )
 {
-    fprintf (f,"PRNT \n" );
+    fprintf (f,"P \n" );
 }
 
 void IL_PrintCallList (FILE *f,IL_node *node )
 {
-    fprintf (f,"CALLF %d %d %d\n",node->tmp_index,node->call->list_id,node->call->args );
+    fprintf (f,"i %d %d %d\n",node->tmp_index,node->call->list_id,node->call->args );
 }
 
 void IL_PrintCallAPI (FILE *f,IL_node *node )
@@ -383,24 +383,24 @@ void IL_PrintCallAPI (FILE *f,IL_node *node )
 
 void IL_PrintCallDynamic (FILE *f,IL_node *node )
 {
-     fprintf (f,"DYNAMIC %d %d %d\n",node->tmp_index,node->call->list_id,node->call->args );
+     fprintf (f,"D %d %d %d\n",node->tmp_index,node->call->list_id,node->call->args );
 }
 
 void IL_PrintVecCreator(FILE *f,IL_node *node )
 {
-    fprintf(f,"VECTOR %d %d\n",node->tmp_index,node->list_creator->init_args);
+    fprintf(f,"V %d %d\n",node->tmp_index,node->list_creator->init_args);
 }
 void IL_PrintTupleCreator(FILE *f,IL_node *node )
 {
-    fprintf(f,"TUPLE %d %d\n",node->tmp_index,node->list_creator->init_args);
+    fprintf(f,"T %d %d\n",node->tmp_index,node->list_creator->init_args);
 }
 void IL_PrintStructCreator(FILE *f,IL_node *node )
 {
- fprintf(f,"STRUCT_CREATOR %d %d %d\n",node->tmp_index,node->struct_creator->id,node->struct_creator->init_args);
+ fprintf(f,"c %d %d %d\n",node->tmp_index,node->struct_creator->id,node->struct_creator->init_args);
 }
 void IL_PrintCallMethod(FILE *f,IL_node *node )
 {
- fprintf(f,"METHOD %d %d\n",node->tmp_index, node->call->args);
+ fprintf(f,"M %d %d\n",node->tmp_index, node->call->args);
 }
 
 /*打印中间代码执行序列*/
@@ -417,8 +417,8 @@ void IL_list_print (FILE *f, Function * func )
 		case IL_NODE_JE:
             IL_PrintJe (f, tmp );
 			break;
-		case IL_NODE_JMP:
-            IL_PrintJmp (f, tmp );
+        case IL_NODE_GOTO:
+            IL_PrintGoto (f, tmp );
 			break;
 		case IL_NODE_JNE:
             IL_PrintJne (f, tmp );
@@ -439,7 +439,7 @@ void IL_list_print (FILE *f, Function * func )
             IL_PrintCallDynamic(f,tmp);
             break;
 		case IL_NODE_RETURN:
-            fprintf ( f,"RETRN\n" );
+            fprintf ( f,"R\n" );
 			break;
         case IL_NODE_VECTOR_CREATOR:
             IL_PrintVecCreator (f,tmp);
@@ -477,7 +477,7 @@ IL_node * IL_node_create_exp ( IL_exp * exp,int tmp_index )
 }
 
 
-IL_node * IL_node_create_jmp ( int label ,int mode )
+IL_node * IL_node_create_goto ( int label ,int mode )
 {
     IL_node * node = ( IL_node * ) malloc ( sizeof ( IL_node ) );
     node->jmp = ( IL_jmp* ) malloc ( sizeof ( IL_jmp ) );
@@ -946,7 +946,7 @@ Var IL_exec ( Function *func )
         set_tmp (tmp->tmp_index,&last_tmp_value,TMP_DEREFER);
         }
             break;
-		case IL_NODE_JMP:
+        case IL_NODE_GOTO:
 		{
             int label=tmp->jmp->label;
             IL_node * node = tmp->next;
@@ -1222,7 +1222,7 @@ void IL_LableLoad(char *str)
     char label_str[2][32];
     sscanf (str,"%s %s",label_str[0],label_str[1]);
     int index=atoi(label_str[1]);
-    IL_ListInsertNode( IL_node_create_jmp(index,IL_NODE_LAB));
+    IL_ListInsertNode( IL_node_create_goto(index,IL_NODE_LAB));
 }
 
 
@@ -1232,7 +1232,7 @@ void IL_JELoad(char *str)
     char JE_str[2][32];
     sscanf (str,"%s %s",JE_str[0],JE_str[1]);
     int index=atoi(JE_str[1]);
-    IL_ListInsertNode(IL_node_create_jmp(index,IL_NODE_JE))   ;
+    IL_ListInsertNode(IL_node_create_goto(index,IL_NODE_JE))   ;
 }
 
 /*从字节码文件中读入无条件跳转节点*/
@@ -1241,7 +1241,7 @@ void IL_JMPLoad(char *str)
     char JMP_str[2][32];
     sscanf (str,"%s %s",JMP_str[0],JMP_str[1]);
     int index=atoi(JMP_str[1]);
-    IL_ListInsertNode( IL_node_create_jmp(index,IL_NODE_JMP));
+    IL_ListInsertNode( IL_node_create_goto(index,IL_NODE_GOTO));
 }
 
 
@@ -1251,7 +1251,7 @@ void IL_JNELoad(char *str)
     char JMP_str[2][32];
     sscanf (str,"%s %s",JMP_str[0],JMP_str[1]);
     int index=atoi(JMP_str[1]);
-    IL_ListInsertNode (IL_node_create_jmp(index,IL_NODE_JNE) );
+    IL_ListInsertNode (IL_node_create_goto(index,IL_NODE_JNE) );
 }
 
 

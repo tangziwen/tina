@@ -47,11 +47,11 @@ void if_parse( int* pos, int layer, int break_label, int continue_label ,int mod
 	int l2 =l1+1;
 	label_index+=2;
 	/*第一个跳转*/
-	IL_node * n1= IL_node_create_jmp(l1,IL_NODE_JE);
-	IL_node * n2 = IL_node_create_jmp(l2,IL_NODE_JMP);
+	IL_node * n1= IL_node_create_goto(l1,IL_NODE_JE);
+	IL_node * n2 = IL_node_create_goto(l2,IL_NODE_GOTO);
 	/*创建与第一个跳转对应的标记*/
-	IL_node * lab1= IL_node_create_jmp(l1,IL_NODE_LAB);
-	IL_node * lab2= IL_node_create_jmp(l2,IL_NODE_LAB);
+	IL_node * lab1= IL_node_create_goto(l1,IL_NODE_LAB);
+	IL_node * lab2= IL_node_create_goto(l2,IL_NODE_LAB);
 	IL_ListInsertNode(n1);
     {
     int result =block_Parse(pos,layer,break_label,continue_label,mode);

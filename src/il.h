@@ -34,7 +34,7 @@ PURPOSE.
 #define IL_NODE_EXP 1 /*表示此节点为一个表达式*/
 #define IL_NODE_JE 2  /*表示此节点为一个成假跳转(等于零跳转),只会向下寻找*/
 #define IL_NODE_JNE 3 /*表示此节点为一个成真跳转(非零跳转),只会向上寻找*/
-#define IL_NODE_JMP 4 /*表示此节点为一个强制跳转,只会向下寻找*/
+#define IL_NODE_GOTO 4 /*表示此节点为一个强制跳转,只会向下寻找*/
 #define IL_NODE_LAB 5 /*表示此节点为一个跳转标记*/
 #define IL_NODE_PRNT 6 /*显示原语*/
 #define IL_NODE_RETURN 7 /*返回节点*/
@@ -67,7 +67,7 @@ extern int label_index;
 
 extern IL_node* IL_node_create_exp(IL_exp * exp, int tmp_index);
 
-extern IL_node * IL_node_create_jmp(int label ,int mode);
+extern IL_node * IL_node_create_goto(int label ,int mode);
 
 extern IL_node * IL_node_create_prnt( );
 

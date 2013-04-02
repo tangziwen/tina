@@ -170,12 +170,11 @@ static  int IsTokenCompatible(int pre ,int current,int pos)
 /*解析表达式*/
 void exp_Parse ( int * pos,int mode,int layer )
 {
-    int start_pos;
+    int start_pos=(*pos);
     is_exp_parsing=1;
     int brace =-1;
     TokenInfo t_k;
-    token_Get ( pos,&t_k );
-    start_pos=(*pos);/*存储表达式初始的位置*/
+    token_Get ( &start_pos,&t_k );/*存储表达式初始的位置*/
     /*记录先前的标记，遇到不可能遇到的类型组合当即报错，使得错误寻找更加准确*/
     while ( 1 )
     {
@@ -700,10 +699,6 @@ Element  * GetRPNStackTop()
 int TransferStackTop()
 {
     RPN_QueueIndex++;
-    if(RPN_StackIndex<=0)
-    {
-        return -1;
-    }
     RPN_Queue[RPN_QueueIndex]=RON_stack[RPN_StackIndex];
     RPN_StackIndex--;
     return 0;

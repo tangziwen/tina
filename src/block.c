@@ -61,7 +61,7 @@ int block_Parse(int * pos,int layer,int break_label,int continue_label,int mode)
                 sprintf(state_str,"error,there is no loop \n");
                 return -1;
             }
-            IL_node * break_node = IL_node_create_jmp ( break_label,IL_NODE_JMP );
+            IL_node * break_node = IL_node_create_goto ( break_label,IL_NODE_GOTO );
             (*pos)=test_pos;
             token_Get(pos,&t_k);
             IL_ListInsertNode(break_node);
@@ -74,7 +74,7 @@ int block_Parse(int * pos,int layer,int break_label,int continue_label,int mode)
                 sprintf(state_str,"error,there is no loop \n");
                 return -1;
             }
-            IL_node * continue_node = IL_node_create_jmp ( continue_label,IL_NODE_JMP );
+            IL_node * continue_node = IL_node_create_goto ( continue_label,IL_NODE_GOTO );
             (*pos)=test_pos;
             token_Get(pos,&t_k);
             IL_ListInsertNode(continue_node);

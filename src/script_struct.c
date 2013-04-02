@@ -492,7 +492,7 @@ static void member_Compile(FILE *f,struct_info * prototype)
     int i=0;
     for(; i<prototype->member_count;i++)
     {
-        fprintf(f,"M %d %s ",prototype->accessibility[i],prototype->member[i].name);
+        fprintf(f,"m %d %s ",prototype->accessibility[i],prototype->member[i].name);
         switch(var_GetType (prototype->member[i]))
         {
         case VAR_TYPE_FUNC:

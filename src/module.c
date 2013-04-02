@@ -281,7 +281,7 @@ void module_ImportedCompile(FILE *f)
     int i=1;
     for( ;i<=import_index;i++)
     {
-        fprintf(f,"IMPORT %s\n",import_list[i]);
+        fprintf(f,"I %s\n",import_list[i]);
     }
 }
 #define UNRESOLVED_LIST_MAX 64

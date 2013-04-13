@@ -31,10 +31,9 @@ PURPOSE.
 #define VAR_TYPE_REAL 6
 #define VAR_TYPE_FUNC 7 /*函数指针类型*/
 #define VAR_TYPE_STRUCT_NAME 8  /*函数名*/
-#define VAR_TYPE_VECTOR 9
-#define VAR_TYPE_CHAR 10 /*字符类型*/
-#define VAR_TYPE_MESSAGE 11
-#define VAR_TYPE_STR 12
+#define VAR_TYPE_CHAR 9 /*字符类型*/
+#define VAR_TYPE_MESSAGE 10
+#define VAR_TYPE_STR 11
 /*null只能作为右操作数,a+null返回a的值*/
 
 

@@ -84,6 +84,14 @@ int block_Parse(int * pos,int layer,int break_label,int continue_label,int mode)
             /*回退一个,解析表达式*/
             exp_Parse(pos,EXP_NORMAL,layer);
             break;
+        case TOKEN_TYPE_CARD:
+            /*回退一个,解析表达式*/
+            exp_Parse(pos,EXP_NORMAL,layer);
+            break;
+        case TOKEN_TYPE_TYPE_OF:
+            /*回退一个,解析表达式*/
+            exp_Parse(pos,EXP_NORMAL,layer);
+            break;
         case TOKEN_TYPE_VAR_DEF:
             (*pos)=test_pos;
             exp_Parse(pos,EXP_NORMAL,layer);

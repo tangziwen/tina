@@ -160,8 +160,6 @@ return return_value;
 Var func_invoke(int index)
 {
 	Var return_value=func_PlainInvoke(index);
-	struct_CleanTmpPool();
-	tuple_CleanTmpPool();
 	return return_value;
 }
 

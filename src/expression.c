@@ -259,12 +259,6 @@ void exp_Parse ( int * pos,int mode,int layer )
             }
         }
             break;
-            /*遇见vector关键字，说明是构造向量的节点*/
-        case TOKEN_TYPE_VECTOR:
-        {
-            PushListCreatorToStack (ELEMENT_VECTOR_CREATOR,GetArgCount(*pos));
-        }
-            break;
             /*遇见tuple关键字，说明是构造向量的节点*/
         case TOKEN_TYPE_TUPLE:
         {
@@ -295,6 +289,22 @@ void exp_Parse ( int * pos,int mode,int layer )
                 a.content.var_value.func.func_type=FUNC_NORMAL;
                 PutLiteralTo_RPN(ConstSegmentPush (a));
             }
+        }
+            break;
+        case TOKEN_TYPE_CARD:
+        {
+            push_func_to_RPN_stack ( 0,ELEMENT_CARD);
+            Element *top =GetRPNStackTop();
+
+            top->info.func_args=1;
+        }
+            break;
+        case TOKEN_TYPE_TYPE_OF:
+        {
+            push_func_to_RPN_stack ( 0,ELEMENT_TYPE_OF);
+            Element *top =GetRPNStackTop();
+
+            top->info.func_args=1;
         }
             break;
         case TOKEN_TYPE_NIL:
@@ -500,9 +510,10 @@ void exp_Parse ( int * pos,int mode,int layer )
                    || RPN_GetStackTopType() ==ELEMENT_FUNC
                    ||RPN_GetStackTopType()==ELEMENT_CALL_BY_PTR
                    ||RPN_GetStackTopType()==ELEMENT_CALL_BY_MEMBER
-                   ||RPN_GetStackTopType()==ELEMENT_VECTOR_CREATOR
                    ||RPN_GetStackTopType()==ELEMENT_TUPLE_CREATOR
                    ||RPN_GetStackTopType()==ELEMENT_STRUCT_CREATOR
+                   ||RPN_GetStackTopType()==ELEMENT_CARD
+                   ||RPN_GetStackTopType()==ELEMENT_TYPE_OF
                    )
                  )
             {
@@ -527,9 +538,10 @@ void exp_Parse ( int * pos,int mode,int layer )
                      || RPN_GetStackTopType() ==ELEMENT_FUNC
                      ||RPN_GetStackTopType()==ELEMENT_CALL_BY_PTR
                      || RPN_GetStackTopType()==ELEMENT_CALL_BY_MEMBER
-                     ||RPN_GetStackTopType()==ELEMENT_VECTOR_CREATOR
                      ||RPN_GetStackTopType()==ELEMENT_TUPLE_CREATOR
                      ||RPN_GetStackTopType()==ELEMENT_STRUCT_CREATOR
+                     ||RPN_GetStackTopType()==ELEMENT_CARD
+                     ||RPN_GetStackTopType()==ELEMENT_TYPE_OF
                      )
                 {
                     TransferStackTop();
@@ -577,6 +589,7 @@ finish_lable:
     }
 
     /*PrintRPN();*/
+
     /*转换成中间码*/
     generate_IL();
     /*重设表达式相关数据,为下次计算做准备*/
@@ -809,6 +822,9 @@ void PrintRPN()
         case ELEMENT_CALL_BY_MEMBER:
             printf("CALL_MEMBER ");
             break;
+        case ELEMENT_CARD:
+            printf("CARD");
+            break;
         default:
             break;
         }
@@ -861,6 +877,26 @@ void generate_IL()
             tmp_index++;
             IL_ListInsertStructCreator(e.index,tmp_index,e.info.func_args);
             /*同时把中间结果写回栈中*/
+            IL_StackIndex++;
+            IL_Stack[IL_StackIndex].type=ELEMENT_TMP;
+            IL_Stack[IL_StackIndex].index=tmp_index;
+        }
+            break;
+        case ELEMENT_CARD:
+        {
+            IL_StackIndex--;/*删除card运算的参数*/
+            tmp_index++;
+            IL_ListInsertCard(tmp_index);
+            IL_StackIndex++;
+            IL_Stack[IL_StackIndex].type=ELEMENT_TMP;
+            IL_Stack[IL_StackIndex].index=tmp_index;
+        }
+            break;
+        case ELEMENT_TYPE_OF:
+        {
+            IL_StackIndex--;/*删除typeof运算的参数*/
+            tmp_index++;
+            IL_ListInsertTypeof(tmp_index);
             IL_StackIndex++;
             IL_Stack[IL_StackIndex].type=ELEMENT_TMP;
             IL_Stack[IL_StackIndex].index=tmp_index;
@@ -930,23 +966,6 @@ void generate_IL()
             /*把结果加入到中间语言执行序列中去*/
             tmp_index++;
             IL_ListInsertCall (FUNC_METHOD,tmp_index,e.info.func_args,-1);
-            /*同时把中间结果写回栈中*/
-            IL_StackIndex++;
-            IL_Stack[IL_StackIndex].type=ELEMENT_TMP;
-            IL_Stack[IL_StackIndex].index=tmp_index;
-        }
-            break;
-            /*向量构造函数*/
-        case ELEMENT_VECTOR_CREATOR:
-        {
-            /*向栈前去寻找参数.*/
-            Element e =RPN_Queue[i];
-            /*然后从栈中抹去参数*/
-            int k=IL_StackIndex-e.info.func_args;
-            IL_StackIndex=k;
-            /*把结果加入到中间语言执行序列中去*/
-            tmp_index++;
-            IL_ListInsertListCreator (ELEMENT_VECTOR_CREATOR,tmp_index,e.info.func_args);
             /*同时把中间结果写回栈中*/
             IL_StackIndex++;
             IL_Stack[IL_StackIndex].type=ELEMENT_TMP;

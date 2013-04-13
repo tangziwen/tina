@@ -27,7 +27,6 @@ PURPOSE.
 #include "api.h"
 #include "return.h"
 #include "script_tuple.h"
-#include "script_vec.h"
 #include "const_segment.h"
 #include "script_struct.h"
 #include "build.h"
@@ -72,10 +71,6 @@ static Var * get_tmp(int index)
 /*获得表中成员*/
 static Var  * GetListElement(Var obj,int index)
 {
-    if(var_GetType (obj)==VAR_TYPE_VECTOR)
-    {
-       return vector_GetValue (obj,index);
-    }else
         if(var_GetType (obj)==VAR_TYPE_TUPLE)
         {
             return tuple_GetValue (obj,index);
@@ -200,6 +195,53 @@ IL_StructCreatorNode *  IL_CreateStructCreator(int id,int init_args)
     node->init_args=init_args;
     return node;
 }
+
+/*往中间代码中插入求势节点*/
+void IL_ListInsertCard(int tmp_index)
+{
+    IL_node * node=IL_CreateNode (tmp_index);
+    node->type=IL_NODE_CARD;
+    if ( func_get_current()->list.head==NULL )
+    {
+        func_get_current()->list.head=node;
+        func_get_current()->list.head->next=NULL;
+    }
+    else
+    {
+        IL_node *tmp=func_get_current()->list.head;
+        while ( tmp->next!=NULL )
+        {
+            tmp=tmp->next;
+        }
+        tmp->next= node;
+        node->pre=tmp;
+        node->next=NULL;
+    }
+}
+
+/*往中间代码中插入求类型节点*/
+void IL_ListInsertTypeof(int tmp_index)
+{
+    IL_node * node=IL_CreateNode (tmp_index);
+    node->type=IL_NODE_TYPE_OF;
+    if ( func_get_current()->list.head==NULL )
+    {
+        func_get_current()->list.head=node;
+        func_get_current()->list.head->next=NULL;
+    }
+    else
+    {
+        IL_node *tmp=func_get_current()->list.head;
+        while ( tmp->next!=NULL )
+        {
+            tmp=tmp->next;
+        }
+        tmp->next= node;
+        node->pre=tmp;
+        node->next=NULL;
+    }
+}
+
 /*像中间代码添加列表构造器中间代码*/
 IL_node * IL_ListInsertStructCreator(int id,int tmp_index,int init_args)
 {
@@ -224,23 +266,20 @@ IL_node * IL_ListInsertStructCreator(int id,int tmp_index,int init_args)
     }
     return node;
 }
+
+
+
+
 /*像中间代码添加列表构造器中间代码*/
 void IL_ListInsertListCreator(int type,int tmp_index,int init_args)
 {
+    if(type!=ELEMENT_TUPLE_CREATOR)
+    {
+         STOP("IL_ListInsertListCreator error!");
+    }
     IL_node * node=IL_CreateNode (tmp_index);
      node->list_creator=IL_CreateListCreator(init_args);
-     switch(type)
-     {
-     case ELEMENT_VECTOR_CREATOR:
-         node->type=IL_NODE_VECTOR_CREATOR;
-         break;
-    case ELEMENT_TUPLE_CREATOR:
-         node->type=IL_NODE_TUPLE_CREATOR;
-         break;
-        default:
-         STOP("IL_ListInsertListCreator error!");
-         break;
-     }
+     node->type=IL_NODE_TUPLE_CREATOR;
     if ( func_get_current()->list.head==NULL )
     {
         func_get_current()->list.head=node;
@@ -258,6 +297,8 @@ void IL_ListInsertListCreator(int type,int tmp_index,int init_args)
         node->next=NULL;
     }
 }
+
+
 
 /*像中间代码添加带列表函数调用代码*/
 void IL_ListInsertCall(int type,int tmp_index,int args,int function_index)
@@ -299,6 +340,10 @@ void IL_ListInsertCall(int type,int tmp_index,int args,int function_index)
         node->next=NULL;
     }
 }
+
+
+
+
 
 /*打印表达式节点*/
 void IL_PrintExp (FILE *f, IL_node * tmp )
@@ -403,6 +448,16 @@ void IL_PrintCallMethod(FILE *f,IL_node *node )
  fprintf(f,"M %d %d\n",node->tmp_index, node->call->args);
 }
 
+void IL_PrintCard(FILE *f,IL_node *node )
+{
+ fprintf(f,"CA %d\n",node->tmp_index);
+}
+
+void IL_PrintTypeOf(FILE *f,IL_node *node)
+{
+ fprintf(f,"t %d\n",node->tmp_index);
+}
+
 /*打印中间代码执行序列*/
 void IL_list_print (FILE *f, Function * func )
 {
@@ -452,6 +507,12 @@ void IL_list_print (FILE *f, Function * func )
             break;
         case IL_NODE_CALL_METHOD:
             IL_PrintCallMethod(f,tmp);
+            break;
+        case IL_NODE_CARD:
+            IL_PrintCard(f,tmp);
+            break;
+        case IL_NODE_TYPE_OF:
+            IL_PrintTypeOf(f,tmp);
             break;
 		}
 		tmp=tmp->next;
@@ -511,10 +572,9 @@ static Var * IL_rt_Evaluate ( IL_element element )
         /*从常量段寻找*/
         Var* src=ConstSegmentGetVar (element.index);
         result=src ;
-        if(var_GetType (*src)==VAR_TYPE_STR)/*如果是向量字面量，则拷贝一个副本*/
+        if(var_GetType (*src)==VAR_TYPE_STR)/*如果是字符串字面量，则拷贝一个副本*/
         {
-          result->content.var_value.handle_value=  vector_CreateByString(src->content.var_value.str);
-          result->content.type=VAR_TYPE_VECTOR;
+          (*result)=  tuple_CreateByString (src->content.var_value.str);
         }
     }
         break;
@@ -754,14 +814,6 @@ static void rt_eval_assign ( IL_node *tmp ,int mode)
     int l_t=var_GetType(*l_value);
     int r_t=var_GetType(*r_value);
 
-    if(r_t==VAR_TYPE_OBJ || r_t==VAR_TYPE_TUPLE || r_t==VAR_TYPE_VECTOR)
-    {
-        RefCountIncrease(r_t,var_getHandle (*r_value));
-    }
-    if(l_t==VAR_TYPE_OBJ || l_t==VAR_TYPE_TUPLE || l_t==VAR_TYPE_VECTOR)
-    {
-        RefCountDecrease(l_t,var_getHandle (*l_value));
-    }
     (*l_value)= assign_get(*l_value,*r_value,mode);
     set_tmp(tmp->tmp_index,l_value,TMP_ARITH);
     last_tmp_value=(*l_value);
@@ -839,41 +891,39 @@ void ExecPrintNode(Var the_var)
 	switch ( the_var.content.type )
 	{
 	case VAR_TYPE_INT:
-        printf ( "%d\n",var_GetInt (the_var));
+        printf ( "%d",var_GetInt (the_var));
 		break;
 	case VAR_TYPE_REAL:
-        printf ( "%g\n",var_GetDouble (the_var));
+        printf ( "%g",var_GetDouble (the_var));
 		break;
 	case VAR_TYPE_BOOL:
         if ( var_GetBool (the_var)!=0 )
 		{
-			printf ( "true\n" );
+            printf ( "true" );
 		}
 		else
 		{
-			printf ( "false\n" );
+            printf ( "false" );
 		}
 		break;
     case VAR_TYPE_MESSAGE:
-        printf ( "%s\n",var_GetMsg (the_var));
+        printf ( "%s",var_GetMsg (the_var));
 		break;
     case VAR_TYPE_OBJ:
-        printf ( "handle %d \n",var_getHandle (the_var));
+        printf ( "handle %d ",var_getHandle (the_var));
 		break;
 	case VAR_TYPE_NILL:
-		printf("NILL\n");
+        printf("NILL");
 		break;
     case VAR_TYPE_CHAR:
-        printf("%c\n",var_GetChar (the_var));
-        break;
-    case VAR_TYPE_VECTOR:
-        vector_Print(the_var);
+        printf("%c",var_GetChar (the_var));
         break;
     case VAR_TYPE_TUPLE:
-        printf("tuple %d\n",var_getHandle (the_var));
+        /*打印一个元组的所有成员*/
+        tuple_print(the_var);
         break;
 	default:
-		printf("print doesn't support,type: %d \n",var_GetType(the_var));
+        printf("print doesn't support,type: %d",var_GetType(the_var));
 		break;
 	}
 }
@@ -903,20 +953,7 @@ Var IL_exec ( Function *func )
 			break;
         case IL_NODE_NILL:
             break;
-        case IL_NODE_VECTOR_CREATOR:
-        {
-            IL_node * i=tmp->pre;
-            int c=tmp->list_creator->init_args;
-            Var init_var[c];
-            for(;c>0;c--)
-            {
-                init_var[c-1]=(* get_tmp (i->tmp_index));
-                i=i->pre;
-            }
-        last_tmp_value= the_vector_creator(tmp->list_creator->init_args,init_var);
-        set_tmp (tmp->tmp_index,&last_tmp_value,TMP_DEREFER);
-        }
-            break;
+
         case IL_NODE_STRUCT_CREATOR:
         {
             IL_node * i=tmp->pre;
@@ -1015,6 +1052,20 @@ Var IL_exec ( Function *func )
             set_tmp (tmp->tmp_index,&last_tmp_value,TMP_ARITH);
         }
             break;
+        case IL_NODE_CARD:
+        {
+            int card=tuple_GetCard(last_tmp_value);
+            var_SetInt (&last_tmp_value,card);
+            set_tmp (tmp->tmp_index,&last_tmp_value,TMP_ARITH);
+        }
+            break;
+        case IL_NODE_TYPE_OF:
+        {
+            int type_of_var=var_GetType (last_tmp_value);
+            var_SetInt (&last_tmp_value,type_of_var);
+            set_tmp (tmp->tmp_index,&last_tmp_value,TMP_ARITH);
+        }
+            break;
         case IL_NODE_JNE:
         {
             int can_jmp=0;
@@ -1108,11 +1159,6 @@ Var IL_CallFunc (int args, int f_index,int mode)
         {
             Var source=arg_list[i];
             int r_t=var_GetType(source);
-            /*为函数的参数赋值*/
-            if(r_t==VAR_TYPE_TUPLE  || r_t==VAR_TYPE_VECTOR|| r_t==VAR_TYPE_OBJ)/*若右值为引用型引用计数自增*/
-            {
-                RefCountIncrease(r_t,var_getHandle (source));
-            }
             vm_rt_stack_var_set ( i,source);
         }
         /*保存当前的表环境*/
@@ -1312,17 +1358,6 @@ void IL_StructCreatorLoad(char * str)
 }
 
 
-/*从字节码中读入向量构造节点*/
-void IL_VectorCreatorLoad(char * str)
-{
-char the_str[3][32];
-sscanf (str,"%s %s %s",the_str[0],the_str[1],the_str[2]);
-int tmp_result_index=atoi(the_str[1]);
-int args=atoi(the_str[2]);
-IL_ListInsertListCreator (ELEMENT_VECTOR_CREATOR,tmp_result_index,args);
-}
-
-
 
 /*从字节码中读入元组构造节点*/
 void IL_TupleCreatorLoad(char * str)
@@ -1333,6 +1368,26 @@ int tmp_result_index=atoi(the_str[1]);
 int args=atoi(the_str[2]);
 IL_ListInsertListCreator (ELEMENT_TUPLE_CREATOR,tmp_result_index,args);
 }
+
+
+/*从字节码中读入求势节点*/
+void IL_CardLoad(char * str)
+{
+char the_str[2][32];
+sscanf (str,"%s %s",the_str[0],the_str[1]);
+int tmp_result_index=atoi(the_str[1]);
+IL_ListInsertCard (tmp_result_index);
+}
+
+/*从字节码中读入类型节点*/
+void IL_TypeOfLoad(char * str)
+{
+char the_str[2][32];
+sscanf (str,"%s %s",the_str[0],the_str[1]);
+int tmp_result_index=atoi(the_str[1]);
+IL_ListInsertTypeof (tmp_result_index);
+}
+
 
 /*删除一个list中的所有节点*/
 void IL_FreeAllNode(IL_list * list)

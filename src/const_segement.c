@@ -81,7 +81,7 @@ for(;i<=const_index;i++)
         fprintf(f,"s %d\n",var_GetStructId(ConstPool[i]));
         break;
     case VAR_TYPE_CHAR :
-        fprintf(f,"c %c\n",var_GetChar(ConstPool[i]));
+        fprintf(f,"c %d\n",var_GetChar(ConstPool[i]));
         break;
     case VAR_TYPE_MESSAGE :
         fprintf(f,"m %s\n",var_GetMsg(ConstPool[i]));

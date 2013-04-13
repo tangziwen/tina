@@ -19,6 +19,5 @@ extern void Tina_Init(int ver)
     version=ver;
     INIT(script_struct);
     INIT(script_tuple);
-    INIT(script_vector);
     INIT(vm);
 }

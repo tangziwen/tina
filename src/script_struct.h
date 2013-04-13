@@ -34,8 +34,6 @@ typedef struct struct_chunk_t
 {
 	int ref_count;/*引用计数器*/
 	Var member[100];
-	struct struct_chunk_t *tmp_pre;
-	struct struct_chunk_t * tmp_next;
 	int member_count;
 } struct_chunk;
 

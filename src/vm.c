@@ -26,7 +26,6 @@ PURPOSE.
 #include <string.h>
 #include "script_struct.h"
 #include "script_tuple.h"
-#include "script_vec.h"
 #define MAX_LOCAL_VAR 1024
 #define MAX_LAYER 128
 /*栈区用于在真正运行时分配局部变量*/
@@ -38,8 +37,6 @@ static int current_layer=0;
 
 /*清除当前层所有的局部变量的值,
 这些局部变量将被设为Nil类型
-
-
 */
 void CleanCurrentLocalVar()
 {
@@ -48,10 +45,6 @@ void CleanCurrentLocalVar()
 	{
 		/*如果临时变量维护一个引用,则在清空局部变量时,使引用计数亦减一*/
 		int t=var_GetType(local_var[i]);
-        if(t==VAR_TYPE_TUPLE || t == VAR_TYPE_OBJ)
-		{
-            RefCountDecrease(t,var_getHandle (local_var[i]));
-		}
 		var_SetNil( &(local_var[i] ));
 	}
 }
@@ -127,42 +120,4 @@ void vm_RTstackPop()
 {
 	current_layer--;
 	current_offset-=vm_stack_layer[current_layer];
-}
-void RefCountDecrease(int type,void * handle)
-{
-
-	switch(type)
-	{
-    case VAR_TYPE_TUPLE:
-        TupleRefCountDecrease(handle);
-		break;
-	case VAR_TYPE_OBJ:
-		StructRefCountDecrease(handle);
-		break;
-    case VAR_TYPE_VECTOR:
-        VectorRefCountDecrease(handle);
-        break;
-	default:
-		STOP("error ref type");
-		break;
-	}
-}
-
-void RefCountIncrease(int type,void *handle)
-{
-	switch(type)
-	{
-    case VAR_TYPE_TUPLE:
-        TupleRefCountIncrease(handle);
-		break;
-	case VAR_TYPE_OBJ:
-		StructRefCountIncrease(handle);
-		break;
-    case VAR_TYPE_VECTOR:
-        VectorRefCountIncrease(handle);
-        break;
-	default:
-		STOP("error ref type");
-		break;
-	}
 }

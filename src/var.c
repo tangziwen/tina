@@ -27,7 +27,6 @@ PURPOSE.
 #include "function.h"
 #include "il.h"
 #include "script_struct.h"
-#include "script_vec.h"
 #include "compile_error.h"
 static int layer_vars_count[128];/*栈层次*/
 static int current_layer;/*当前的栈层次*/
@@ -455,9 +454,6 @@ double var_get_value(Var a)
 		break;
     case VAR_TYPE_CHAR:
         return a.content.var_value.char_value;
-        break;
-    case VAR_TYPE_VECTOR:
-        return 0;
         break;
 	default:
         printf("other type's not support yet %d \n",a.content.type);

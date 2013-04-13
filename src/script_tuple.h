@@ -33,4 +33,10 @@ void TupleRefCountDecrease(void * ptr);
 Var the_tuple_creator(int size,Var init_arg[]);
 /*清除数组临时对象池*/
 void tuple_CleanTmpPool();
+/*打印一个元组的所有成员*/
+void tuple_print(Var vec);
+/*以指定字符串作为资源，创建一个元组，该元组的各个维度为字符串中的各字符，成员包括末尾的终结符*/
+Var tuple_CreateByString(const char * str);
+/*获取容器的基数*/
+int tuple_GetCard(Var tuple);
 #endif /* TINA_ARRAY_H*/

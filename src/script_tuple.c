@@ -28,11 +28,10 @@ typedef struct tuple_chunk_t
     int tuple_size;
 	int ref_count;
 	Var * var_handle;
-    struct tuple_chunk_t *tmp_next;
-    struct tuple_chunk_t *tmp_pre;
 } tuple_chunk;
-/*临时数组对象*/
-static tuple_chunk * TupleTmpPool=NULL;
+
+
+
 
 
 /*创建数组*/
@@ -42,10 +41,6 @@ static tuple_chunk * CreateTuple(int tuple_size)
     new_array->tuple_size=tuple_size;
     new_array->var_handle= malloc(sizeof(Var) * tuple_size);
 	new_array->ref_count=0;
-
-    new_array->tmp_next=TupleTmpPool;
-	new_array->tmp_pre=NULL;
-    TupleTmpPool=new_array;
 	Var * array= ( Var * ) new_array->var_handle;
 	{
 		int i;
@@ -57,6 +52,10 @@ static tuple_chunk * CreateTuple(int tuple_size)
 	}
 	return new_array;
 }
+
+
+
+
 
 
 /*获得数组指定元素的值*/
@@ -105,98 +104,58 @@ Var the_tuple_creator(int size,Var init_arg[])
     return result;
 }
 
-/*获取数组的长度*/
-static void getTupleLength()
-{
-	Var result;
-	result.content.type=VAR_TYPE_INT;
-	if(API_GetArgCount()!=1)
-	{
-        printf("the \" tuple_size \" function only need one args!!\n");
-		exit(0);
-	}
-    Var  the_tuple_var = API_argument_list[0];
-    if(the_tuple_var.content.type!=VAR_TYPE_TUPLE)
-	{
-        printf("tuple_size only support array type!\n");
-		exit(0);
-	}
-    tuple_chunk * a=var_getHandle (the_tuple_var);
-    var_SetInt (&result,a->tuple_size);
-	Tina_API_SetReturn ( result );
-}
-
-
-static void free_array(tuple_chunk * ptr)
-{
-	test(
-		printf("free array  %d\n",ptr);
-	);
-	/*数组的成员可能也是对象或数组的引用,
-	因此我们要判断出来,并使其指向的对象的引用计数器自减
-	*/
-{	int i=0;
-    for(;i<ptr->tuple_size;i++)
-	{
-		int t=var_GetType(ptr->var_handle[i]);
-        if(t==VAR_TYPE_TUPLE || t==VAR_TYPE_OBJ ||t==VAR_TYPE_VECTOR)
-		{
-            RefCountDecrease(t,var_getHandle (ptr->var_handle[i]));
-		}
-	}
-}
-	free(ptr);
-}
-
-
-void TupleRefCountIncrease(void * ptr)
-{
-    tuple_chunk * obj=(tuple_chunk*)ptr;
-	if(obj->ref_count==0)
-	{
-        if(TupleTmpPool==obj)
-		{
-            TupleTmpPool=obj->tmp_next;
-		}
-		else
-		{
-            tuple_chunk*pre=obj->tmp_pre;
-            tuple_chunk*next=obj->tmp_next;
-			if(pre)
-			{
-				pre->tmp_next=next;
-			}
-			if(next)
-			{
-				next->tmp_pre=pre;
-			}
-		}
-	}
-	obj->ref_count++;
-}
-
-/*清除数组临时对象池*/
-void tuple_CleanTmpPool()
-{
-    tuple_chunk * node=TupleTmpPool;
-	while(node)
-	{
-        tuple_chunk * next=node->tmp_next;
-		free_array(node);
-		node=next;
-	}
-}
-
-void TupleRefCountDecrease(void * ptr)
-{
-    tuple_chunk * obj=(tuple_chunk*)ptr;
-	obj->ref_count--;
-	if(obj->ref_count<=0)
-	{
-		free_array(obj);
-	}
-}
 
 void script_tuple_init()
 {
+
+
+
+}
+
+/*以指定字符串作为资源，创建一个向量，该向量的各个维度为字符串中的各字符，成员包括末尾的终结符*/
+Var  tuple_CreateByString(const char * str)
+{
+    int str_size=strlen(str)+1;
+    tuple_chunk * new_tuple=CreateTuple (str_size);
+    Var obj;
+    obj.content.var_value.handle_value=new_tuple;
+    obj.content.type=VAR_TYPE_TUPLE;
+    int i=0;
+    for(;i<str_size;i++)
+    {
+        Var ch;
+        var_SetChar(&ch,str[i]);
+        tuple_SetValue(obj,i+1,ch);
+    }
+    return obj;
+}
+
+
+/*获取容器的基数*/
+int tuple_GetCard(Var tuple)
+{
+    if(var_GetType (tuple)!=VAR_TYPE_TUPLE)
+    {
+        STOP("the 'card' only use for the tuple value");
+    }
+return ((tuple_chunk *)tuple.content.var_value.handle_value)->tuple_size;
+}
+
+
+
+/*打印一个元组的所有成员*/
+void tuple_print(Var vec)
+{
+    if(var_GetType (vec)!=VAR_TYPE_TUPLE)
+    {
+        STOP("the obj is not a tuple");
+    }
+    tuple_chunk *the_vec= var_getHandle (vec);
+    int i=1;
+    int vec_size=the_vec->tuple_size;
+    for(;i<vec_size+1;i++)
+    {
+        var_Print (*tuple_GetValue (vec,i));
+        printf(" ");
+    }
 }

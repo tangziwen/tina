@@ -27,10 +27,9 @@ PURPOSE.
 #include "assert.h"
 #include "function.h"
 #include "module.h"
-#include "script_vec.h"
 
 
-#define KEYWORD_MAX 25
+#define KEYWORD_MAX 26
 #define KEYWORD_IF 0
 #define KEYWORD_WHILE 1
 #define KEYWORD_VAR 2
@@ -53,124 +52,125 @@ PURPOSE.
 #define KEYWORD_MODULE 19
 #define KEYWORD_USING 20
 #define KEYWORD_DELETE 21
-#define KEYWORD_VECTOR 22
-#define KEYWORD_TUPLE 23
-#define KEYWORD_IMPORT 24
+#define KEYWORD_TUPLE 22
+#define KEYWORD_IMPORT 23
+#define KEYWORD_CARD 24
+#define KEYWORD_TYPEOF 25
 static char pre_is_dot=0;
 static char * key_word_list[KEYWORD_MAX]=
 {
-	"if","while","var","else","print","true",
+    "if","while","var","else","print","true",
     "false","function","return","and","or","for","break","continue","struct","self","nil"
-    ,"private","sealed","module","using","delete","vector","tuple","import"
+    ,"private","sealed","module","using","delete","tuple","import","card","typeof"
 };
 
 static int lookup_keyword ( char * _str )
 {
-	int i=0;
-	for ( i=0; i<KEYWORD_MAX; i++ )
-	{
-		if ( strcmp ( key_word_list[i],_str ) ==0 )
-		{
-			return i;
-		}
-	}
-	return -1;
+    int i=0;
+    for ( i=0; i<KEYWORD_MAX; i++ )
+    {
+        if ( strcmp ( key_word_list[i],_str ) ==0 )
+        {
+            return i;
+        }
+    }
+    return -1;
 }
 /*判断一个字符是否为操作符*/
 static int is_op ( char a )
 {
-	if (a=='.' || a=='+'|| a== '-'|| a== '*' || a== '/' || a== '(' ||a== '=' || a=='>' ||a=='<' || a=='[')
-	{
+    if (a=='.' || a=='+'|| a== '-'|| a== '*' || a== '/' || a== '(' ||a== '=' || a=='>' ||a=='<' || a=='[')
+    {
 
-		return 1;
-	}
+        return 1;
+    }
 
-	else
-		return 0;
+    else
+        return 0;
 }
 /*判断一个字符是否为操作符*/
 static int is_op_withoutdot ( char a )
 {
-	if (a=='+'|| a== '-'|| a== '*' || a== '/' || a== '(' ||a== '=' || a=='>' ||a=='<' || a=='[')
-	{
+    if (a=='+'|| a== '-'|| a== '*' || a== '/' || a== '(' ||a== '=' || a=='>' ||a=='<' || a=='[')
+    {
 
-		return 1;
-	}
+        return 1;
+    }
 
-	else
-		return 0;
+    else
+        return 0;
 }
 
 /*判断一个序列是否为复合运算符*/
 static int is_compo_op ( char *a,TokenInfo * t_k )
 {
-	if ( a[0]=='>'&& a[1]=='=' )
-	{
-		t_k->type=TOKEN_TYPE_OP;
-		t_k->content[0]=OP_LARGE_OR_EQUAL;
-		t_k->content[1]='\0';
-		return 1;
-	}
-	if ( a[0]=='<'&& a[1]=='=' )
-	{
-		t_k->type=TOKEN_TYPE_OP;
-		t_k->content[0]=OP_LESS_OR_EQUAL;
-		t_k->content[1]='\0';
-		return 1;
-	}
-	if ( a[0]=='='&& a[1]=='=' )
-	{
-		t_k->type=TOKEN_TYPE_OP;
-		t_k->content[0]=OP_EQUAL;
-		t_k->content[1]='\0';
-		return 1;
-	}
+    if ( a[0]=='>'&& a[1]=='=' )
+    {
+        t_k->type=TOKEN_TYPE_OP;
+        t_k->content[0]=OP_LARGE_OR_EQUAL;
+        t_k->content[1]='\0';
+        return 1;
+    }
+    if ( a[0]=='<'&& a[1]=='=' )
+    {
+        t_k->type=TOKEN_TYPE_OP;
+        t_k->content[0]=OP_LESS_OR_EQUAL;
+        t_k->content[1]='\0';
+        return 1;
+    }
+    if ( a[0]=='='&& a[1]=='=' )
+    {
+        t_k->type=TOKEN_TYPE_OP;
+        t_k->content[0]=OP_EQUAL;
+        t_k->content[1]='\0';
+        return 1;
+    }
 
-	if ( a[0]=='+'&& a[1]=='=' )
-	{
-		t_k->type=TOKEN_TYPE_OP;
-		t_k->content[0]=OP_ASSIGN_PLUS;
-		t_k->content[1]='\0';
+    if ( a[0]=='+'&& a[1]=='=' )
+    {
+        t_k->type=TOKEN_TYPE_OP;
+        t_k->content[0]=OP_ASSIGN_PLUS;
+        t_k->content[1]='\0';
 
-		return 1;
-	}
-	if ( a[0]=='-'&& a[1]=='=' )
-	{
-		t_k->type=TOKEN_TYPE_OP;
-		t_k->content[0]=OP_ASSIGN_MINUS;
-		t_k->content[1]='\0';
-		return 1;
-	}
-	if ( a[0]=='*'&&a[1]=='=' )
-	{
-		t_k->type=TOKEN_TYPE_OP;
-		t_k->content[0]=OP_ASSIGN_MULTIPLE;
-		t_k->content[1]='\0';
-		return 1;
-	}
-	if ( a[0]=='/'&&a[1]=='=' )
-	{
-		t_k->type=TOKEN_TYPE_OP;
-		t_k->content[0]= OP_ASSIGN_DIVIDE;
-		t_k->content[1]='\0';
-		return 1;
-	}
-	if ( a[0]=='!'&&a[1]=='=' )
-	{
-		t_k->type=TOKEN_TYPE_OP;
-		t_k->content[0]= OP_NOT_EQUAL;
-		t_k->content[1]='\0';
-		return 1;
-	}
-	return 0;
+        return 1;
+    }
+    if ( a[0]=='-'&& a[1]=='=' )
+    {
+        t_k->type=TOKEN_TYPE_OP;
+        t_k->content[0]=OP_ASSIGN_MINUS;
+        t_k->content[1]='\0';
+        return 1;
+    }
+    if ( a[0]=='*'&&a[1]=='=' )
+    {
+        t_k->type=TOKEN_TYPE_OP;
+        t_k->content[0]=OP_ASSIGN_MULTIPLE;
+        t_k->content[1]='\0';
+        return 1;
+    }
+    if ( a[0]=='/'&&a[1]=='=' )
+    {
+        t_k->type=TOKEN_TYPE_OP;
+        t_k->content[0]= OP_ASSIGN_DIVIDE;
+        t_k->content[1]='\0';
+        return 1;
+    }
+    if ( a[0]=='!'&&a[1]=='=' )
+    {
+        t_k->type=TOKEN_TYPE_OP;
+        t_k->content[0]= OP_NOT_EQUAL;
+        t_k->content[1]='\0';
+        return 1;
+    }
+    return 0;
 }
 
 /*从指定位置开始向后跳过空白符，*/
 /*直到遇到其他的字符，并返回第一个遇见的字符的位置*/
 static int skip_space(int pos)
 {
-	for( ; isspace(buffer[pos]); pos ++);
-	return pos;
+    for( ; isspace(buffer[pos]); pos ++);
+    return pos;
 }
 static int escape_char(int c)
 {
@@ -198,8 +198,8 @@ static int escape_char(int c)
         return '\v';
         break;
     case '\\':
-    return '\\';
-    break;
+        return '\\';
+        break;
     case '?':
         return '\?';
         break;
@@ -223,353 +223,350 @@ static int escape_char(int c)
 我们假设整个待输入的缓存中的词法是无错的(即不存在无效的词法单元)*/
 void token_Get ( int * pos,TokenInfo * t_k )
 {
-	static int pre_tk_type=TOKEN_TYPE_INVALID;
-	if ( t_k==NULL )
-	{
-		return;
-	}
-	/*刷新t_k的字符串的内容*/
-	{
-		int i=0;
-		for ( i=0; i<TOKEN_NAME_SIZE-1; i++ )
-		{
-			t_k->content[i]=1;
-		}
-		t_k->content[i+1]='\0';
-	}
-	/*临时储存词法标记的字符串*/
-	char tmp_token[TOKEN_NAME_SIZE];
-	/*临时字符串清零*/
-	{
-		int i;
-		for ( i =0; i<TOKEN_NAME_SIZE; i++ )
-		{
-			tmp_token[i]='\0';
-		}
-	}
-	int postion= ( *pos );
-	/*检测是否已经到了文件尾*/
-	if ( postion>=buffer_size )
-	{
-		t_k->type =TOKEN_TYPE_EOF;
-		pre_tk_type=t_k->type;
-		return;
-	}
-	/*删除前导空白符（回车，换行，空格..）*/
-	while ( isspace ( buffer[postion] ) )
-	{
-		postion++;
-		/*这时亦有可能到达文件尾*/
-		if ( postion>=buffer_size )
-		{
-			t_k->type=TOKEN_TYPE_EOF;
-			pre_tk_type=t_k->type;
-			return ;
-		}
-	}
-	/*检查复合运算符*/
-	if ( is_compo_op ( buffer+postion,t_k ) )
-	{
-		postion+=2;
-		( *pos ) =postion;
-		return;
-	}
-	/*检查引用标记*/
-	if ( buffer[postion]=='&' )
-	{
-		postion++;
-		( *pos ) =postion;
-		t_k->type=TOKEN_TYPE_REF;
-		t_k->content[0]='&';
-		t_k->content[1]='\0';
-		pre_tk_type=t_k->type;
-		return;
-	}
-	if(buffer[postion]==']')
-	{
-		postion++;
-		( *pos ) =postion;
-		t_k->type=TOKEN_TYPE_RIGHT_BRACKET;
-		t_k->content[0]=']';
-		t_k->content[1]='\0';
-		pre_tk_type=t_k->type;
-		return;
+    static int pre_tk_type=TOKEN_TYPE_INVALID;
+    if ( t_k==NULL )
+    {
+        return;
+    }
+    /*刷新t_k的字符串的内容*/
+    {
+        int i=0;
+        for ( i=0; i<TOKEN_NAME_SIZE-1; i++ )
+        {
+            t_k->content[i]=1;
+        }
+        t_k->content[i+1]='\0';
+    }
+    /*临时储存词法标记的字符串*/
+    char tmp_token[TOKEN_NAME_SIZE];
+    /*临时字符串清零*/
+    {
+        int i;
+        for ( i =0; i<TOKEN_NAME_SIZE; i++ )
+        {
+            tmp_token[i]='\0';
+        }
+    }
+    int postion= ( *pos );
+    /*检测是否已经到了文件尾*/
+    if ( postion>=buffer_size )
+    {
+        t_k->type =TOKEN_TYPE_EOF;
+        pre_tk_type=t_k->type;
+        return;
+    }
+    /*删除前导空白符（回车，换行，空格..）*/
+    while ( isspace ( buffer[postion] ) )
+    {
+        postion++;
+        /*这时亦有可能到达文件尾*/
+        if ( postion>=buffer_size )
+        {
+            t_k->type=TOKEN_TYPE_EOF;
+            pre_tk_type=t_k->type;
+            return ;
+        }
+    }
+    /*检查复合运算符*/
+    if ( is_compo_op ( buffer+postion,t_k ) )
+    {
+        postion+=2;
+        ( *pos ) =postion;
+        return;
+    }
+    /*检查引用标记*/
+    if ( buffer[postion]=='&' )
+    {
+        postion++;
+        ( *pos ) =postion;
+        t_k->type=TOKEN_TYPE_REF;
+        t_k->content[0]='&';
+        t_k->content[1]='\0';
+        pre_tk_type=t_k->type;
+        return;
+    }
+    if(buffer[postion]==']')
+    {
+        postion++;
+        ( *pos ) =postion;
+        t_k->type=TOKEN_TYPE_RIGHT_BRACKET;
+        t_k->content[0]=']';
+        t_k->content[1]='\0';
+        pre_tk_type=t_k->type;
+        return;
 
-	}
-	/*检查运算符*/
-	if ( is_op ( buffer[postion] ) )
-	{
-		t_k->type=TOKEN_TYPE_OP;
-		t_k->content[0]=buffer[postion];
-		t_k->content[1]='\0';
+    }
+    /*检查运算符*/
+    if ( is_op ( buffer[postion] ) )
+    {
+        t_k->type=TOKEN_TYPE_OP;
+        t_k->content[0]=buffer[postion];
+        t_k->content[1]='\0';
 
-		/*考虑出现负常量，如-123.123*/
+        /*考虑出现负常量，如-123.123*/
         if( pre_tk_type!=TOKEN_TYPE_NUM&&pre_tk_type!= TOKEN_TYPE_FUNC&& pre_tk_type!=TOKEN_TYPE_API&& pre_tk_type!=TOKEN_TYPE_MESSAGE&&buffer[postion]=='-')
-		{
-			int tes_pos=postion+1;
-			if(isdigit (buffer [skip_space(tes_pos)]))
-			{
-				postion=skip_space(tes_pos);
-				t_k->content[0]='-';
-				t_k->content[1]='\0';
-				int i=0;
-				char tmp_token[32];
-				for(; i<32; i++) tmp_token[i]='\0';
-				i=0;
-				while ( !isspace ( buffer[postion] ) &&
-						!is_op_withoutdot ( buffer[postion] )
-						&&buffer[postion]!=';'
-						&&buffer[postion]!='{'
-						&&buffer[postion]!='}'
-						&&buffer[postion]!=','
-						&&buffer[postion]!=')'
-						&&buffer[postion]!=']'
-						&&buffer[postion]!='&'
-						&&!is_compo_op(buffer+postion,t_k)
-				      )
-				{
-					tmp_token[i]=buffer[postion];
-					i++;
-					postion++;
-				}
-				/*把数字拷入*/
-				strcat(t_k->content,tmp_token);
-				t_k->type=TOKEN_TYPE_NUM;
-				pre_tk_type=t_k->type;
-				( *pos ) =postion;
-				return;
-			}
-		}
-		if(buffer[postion]=='.')
-		{
-			extern int is_exp_parsing;
+        {
+            int tes_pos=postion+1;
+            if(isdigit (buffer [skip_space(tes_pos)]))
+            {
+                postion=skip_space(tes_pos);
+                t_k->content[0]='-';
+                t_k->content[1]='\0';
+                int i=0;
+                char tmp_token[32];
+                for(; i<32; i++) tmp_token[i]='\0';
+                i=0;
+                while ( !isspace ( buffer[postion] ) &&
+                        !is_op_withoutdot ( buffer[postion] )
+                        &&buffer[postion]!=';'
+                        &&buffer[postion]!='{'
+                        &&buffer[postion]!='}'
+                        &&buffer[postion]!=','
+                        &&buffer[postion]!=')'
+                        &&buffer[postion]!=']'
+                        &&buffer[postion]!='&'
+                        &&!is_compo_op(buffer+postion,t_k)
+                        )
+                {
+                    tmp_token[i]=buffer[postion];
+                    i++;
+                    postion++;
+                }
+                /*把数字拷入*/
+                strcat(t_k->content,tmp_token);
+                t_k->type=TOKEN_TYPE_NUM;
+                pre_tk_type=t_k->type;
+                ( *pos ) =postion;
+                return;
+            }
+        }
+        if(buffer[postion]=='.')
+        {
+            extern int is_exp_parsing;
             if(is_exp_parsing==1)
-			{
-				pre_is_dot=1;
-			}
-		}
-		postion++;
-		( *pos ) =postion;
-		return ;
-	}
-	/*检查括号*/
-	/**/
-	if ( buffer[postion]==')' )
-	{
-		t_k->type=TOKEN_TYPE_RIGHT_PARENTHESIS;
-		t_k->content[0]=')';
-		t_k->content[1]='\0';
-		postion++;
-		( *pos ) =postion;
-		pre_tk_type=t_k->type;
-		return;
-	}
+            {
+                pre_is_dot=1;
+            }
+        }
+        postion++;
+        ( *pos ) =postion;
+        return ;
+    }
+    /*检查括号*/
+    /**/
+    if ( buffer[postion]==')' )
+    {
+        t_k->type=TOKEN_TYPE_RIGHT_PARENTHESIS;
+        t_k->content[0]=')';
+        t_k->content[1]='\0';
+        postion++;
+        ( *pos ) =postion;
+        pre_tk_type=t_k->type;
+        return;
+    }
 
-	if ( buffer[postion]=='{' )
-	{
-		t_k->type=TOKEN_TYPE_LEFT_BRACE;
-		t_k->content[0]='{';
-		t_k->content[1]='\0';
-		postion++;
-		( *pos ) =postion;
-		pre_tk_type=t_k->type;
-		return;
-	}
-	if ( buffer[postion]=='}' )
-	{
-		t_k->type=TOKEN_TYPE_RIGHT_BRACE;
-		t_k->content[0]='}';
-		t_k->content[1]='\0';
-		postion++;
-		( *pos ) =postion;
-		pre_tk_type=t_k->type;
-		return;
-	}
-	/*检查分号*/
-	if ( buffer[postion]==';' )
-	{
-		t_k->type=TOKEN_TYPE_SEMICOLON;
-		t_k->content[0]=';';
-		t_k->content[1]='\0';
-		postion++;
-		( *pos ) =postion;
-		pre_tk_type=t_k->type;
-		return;
-	}
-	/*检查逗号*/
-	if ( buffer[postion]==',' )
-	{
-		t_k->type=TOKEN_TYPE_COMMA;
-		t_k->content[0]=',';
-		t_k->content[1]='\0';
-		postion++;
-		( *pos ) =postion;
-		pre_tk_type=t_k->type;
-		return;
-	}
-	if(isdigit(buffer[postion]))
-	{
-		int i=0;
-		while ( !isspace ( buffer[postion] ) &&
-				!is_op_withoutdot(buffer[postion] )
-				&&buffer[postion]!=';'
-				&&buffer[postion]!='{'
-				&&buffer[postion]!='}'
-				&&buffer[postion]!=','
-				&&buffer[postion]!=')'
-				&&buffer[postion]!=']'
-				&&buffer[postion]!='&'
-				&&!is_compo_op(buffer+postion,t_k)
-		      )
-		{
-			tmp_token[i]=buffer[postion];
-			i++;
-			postion++;
-		}
-		tmp_token[i]='\0';
-		{
-			t_k->type= TOKEN_TYPE_NUM;
-			strcpy ( t_k->content,tmp_token );
-			( *pos ) =postion;
-			pre_tk_type=t_k->type;
-			return;
-		}
+    if ( buffer[postion]=='{' )
+    {
+        t_k->type=TOKEN_TYPE_LEFT_BRACE;
+        t_k->content[0]='{';
+        t_k->content[1]='\0';
+        postion++;
+        ( *pos ) =postion;
+        pre_tk_type=t_k->type;
+        return;
+    }
+    if ( buffer[postion]=='}' )
+    {
+        t_k->type=TOKEN_TYPE_RIGHT_BRACE;
+        t_k->content[0]='}';
+        t_k->content[1]='\0';
+        postion++;
+        ( *pos ) =postion;
+        pre_tk_type=t_k->type;
+        return;
+    }
+    /*检查分号*/
+    if ( buffer[postion]==';' )
+    {
+        t_k->type=TOKEN_TYPE_SEMICOLON;
+        t_k->content[0]=';';
+        t_k->content[1]='\0';
+        postion++;
+        ( *pos ) =postion;
+        pre_tk_type=t_k->type;
+        return;
+    }
+    /*检查逗号*/
+    if ( buffer[postion]==',' )
+    {
+        t_k->type=TOKEN_TYPE_COMMA;
+        t_k->content[0]=',';
+        t_k->content[1]='\0';
+        postion++;
+        ( *pos ) =postion;
+        pre_tk_type=t_k->type;
+        return;
+    }
+    if(isdigit(buffer[postion]))
+    {
+        int i=0;
+        while ( !isspace ( buffer[postion] ) &&
+                !is_op_withoutdot(buffer[postion] )
+                &&buffer[postion]!=';'
+                &&buffer[postion]!='{'
+                &&buffer[postion]!='}'
+                &&buffer[postion]!=','
+                &&buffer[postion]!=')'
+                &&buffer[postion]!=']'
+                &&buffer[postion]!='&'
+                &&!is_compo_op(buffer+postion,t_k)
+                )
+        {
+            tmp_token[i]=buffer[postion];
+            i++;
+            postion++;
+        }
+        tmp_token[i]='\0';
+        {
+            t_k->type= TOKEN_TYPE_NUM;
+            strcpy ( t_k->content,tmp_token );
+            ( *pos ) =postion;
+            pre_tk_type=t_k->type;
+            return;
+        }
 
-	}
-	/*如果遇到了字母*/
-	if ( isalpha ( buffer[postion] ) )
-	{
-		int i=0;
-		while ( !isspace ( buffer[postion] ) &&
-				!is_op ( buffer[postion] )
-				&&buffer[postion]!=';'
-				&&buffer[postion]!='{'
-				&&buffer[postion]!='}'
-				&&buffer[postion]!=','
-				&&buffer[postion]!=')'
-				&&buffer[postion]!=']'
-				&&buffer[postion]!='&'
-				&&!is_compo_op(buffer+postion,t_k)
-		      )
-		{
-			tmp_token[i]=buffer[postion];
-			i++;
-			postion++;
-		}
+    }
+    /*如果遇到了字母*/
+    if ( isalpha ( buffer[postion] ) )
+    {
+        int i=0;
+        while ( !isspace ( buffer[postion] ) &&
+                !is_op ( buffer[postion] )
+                &&buffer[postion]!=';'
+                &&buffer[postion]!='{'
+                &&buffer[postion]!='}'
+                &&buffer[postion]!=','
+                &&buffer[postion]!=')'
+                &&buffer[postion]!=']'
+                &&buffer[postion]!='&'
+                &&!is_compo_op(buffer+postion,t_k)
+                )
+        {
+            tmp_token[i]=buffer[postion];
+            i++;
+            postion++;
+        }
 
-		tmp_token[i]='\0';
-		int tmp =lookup_keyword ( tmp_token );
-		strcpy ( t_k->content,tmp_token );
-		/*检查是否为一个关键字*/
+        tmp_token[i]='\0';
+        int tmp =lookup_keyword ( tmp_token );
+        strcpy ( t_k->content,tmp_token );
+        /*检查是否为一个关键字*/
         switch (tmp)
-		{
-		case -1:/*不是一个关键字*/
-			/*判断是否为一个引用成员运算*/
-		{
-			extern int is_exp_parsing;
+        {
+        case -1:/*不是一个关键字*/
+            /*判断是否为一个引用成员运算*/
+        {
+            extern int is_exp_parsing;
             /*如果之前遇到 "."运算符，则此处为一个消息.*/
             if(pre_is_dot==1 &&is_exp_parsing==1)
-			{
-				t_k->str=malloc(strlen(tmp_token)+1);
-				strcpy(t_k->str,tmp_token);
+            {
+                t_k->str=malloc(strlen(tmp_token)+1);
+                strcpy(t_k->str,tmp_token);
                 t_k->type=TOKEN_TYPE_MESSAGE;
-				pre_is_dot=0;
-				break;
-			}
-		}
+                pre_is_dot=0;
+                break;
+            }
+        }
 
-		/*检查是否为一个API函数*/
-		if ( API_Search ( tmp_token ) >=0)
-		{
-			t_k->type=TOKEN_TYPE_API;
-			break;
-		}
-        else	if ( func_GetIndexByName ( tmp_token ) !=0 )/*检查是否为一个脚本函数*/
-		{
-			t_k->type=TOKEN_TYPE_FUNC;
-			break;
-		}
-        else if( get_class_id(tmp_token)!=0) /*检查是否为一个结构体名称*/
-		{
-			t_k->type=TOKEN_TYPE_STRUCT_NAME;
-			break;
-		}
-		else
-		{
-			/*若都不是,则为一个自定义标识符*/
-			t_k->type=TOKEN_TYPE_SYMBOL;
-			break;
-		}
-		break;
-		case KEYWORD_IF:
-			t_k->type=TOKEN_TYPE_IF;
-			break;
-		case KEYWORD_WHILE:
-			t_k->type=TOKEN_TYPE_WHILE;
-			break;
-		case KEYWORD_ELSE:
-			t_k->type=TOKEN_TYPE_ELSE;
-			break;
-		case KEYWORD_PRINT:
-			t_k->type=TOKEN_TYPE_PRINT;
-			break;
-		case KEYWORD_VAR:
-			t_k->type=TOKEN_TYPE_VAR_DEF;
-			break;
-		case KEYWORD_TRUE:
-			t_k->type=TOKEN_TYPE_TRUE;
-			break;
-		case KEYWORD_FALSE:
-			t_k->type=TOKEN_TYPE_FALSE;
-			break;
-		case KEYWORD_FUNC_DEF:
-			t_k->type=TOKEN_TYPE_FUNC_DEF;
-			break;
-		case KEYWORD_RETURN:
-			t_k->type=TOKEN_TYPE_RETURN;
-			break;
-		case KEYWORD_AND:
-			t_k->type=TOKEN_TYPE_OP;
-			t_k->content[0]=OP_AND;
-			t_k->content[1]='\0';
-			break;
-		case KEYWORD_OR:
-			t_k->type=TOKEN_TYPE_OP;
-			t_k->content[0]=OP_OR;
-			t_k->content[1]='\0';
-			break;
-		case KEYWORD_FOR:
-			t_k->type=TOKEN_TYPE_FOR;
-			break;
-		case KEYWORD_BREAK:
-			t_k->type=TOKEN_TYPE_BREAK;
-			break;
-		case KEYWORD_CONTINUE:
-			t_k->type=TOKEN_TYPE_CONTINUE;
-			break;
-		case KEYWORD_STRUCT:
-			t_k->type=TOKEN_TYPE_STRUCT;
-			break;
-		case KEYWORD_SELF:
-			t_k->type=TOKEN_TYPE_SELF;
-			break;
-		case KEYWORD_NIL:
-			t_k->type=TOKEN_TYPE_NIL;
-			break;
-		case KEYWORD_PRIVATE:
-			t_k->type=TOKEN_TYPE_PRIVATE;
-			break;
-		case KEYWORD_MODULE:
-			t_k->type=TOKEN_TYPE_MODULE;
-			break;
-		case KEYWORD_USING:
-			t_k->type=TOKEN_TYPE_USING;
-			break;
-		case KEYWORD_DELETE:
-			t_k->type=TOKEN_TYPE_DELETE;
-			break;
-        case KEYWORD_VECTOR:
-            t_k->type=TOKEN_TYPE_VECTOR;
+            /*检查是否为一个API函数*/
+            if ( API_Search ( tmp_token ) >=0)
+            {
+                t_k->type=TOKEN_TYPE_API;
+                break;
+            }
+            else	if ( func_GetIndexByName ( tmp_token ) !=0 )/*检查是否为一个脚本函数*/
+            {
+                t_k->type=TOKEN_TYPE_FUNC;
+                break;
+            }
+            else if( get_class_id(tmp_token)!=0) /*检查是否为一个结构体名称*/
+            {
+                t_k->type=TOKEN_TYPE_STRUCT_NAME;
+                break;
+            }
+            else
+            {
+                /*若都不是,则为一个自定义标识符*/
+                t_k->type=TOKEN_TYPE_SYMBOL;
+                break;
+            }
+            break;
+        case KEYWORD_IF:
+            t_k->type=TOKEN_TYPE_IF;
+            break;
+        case KEYWORD_WHILE:
+            t_k->type=TOKEN_TYPE_WHILE;
+            break;
+        case KEYWORD_ELSE:
+            t_k->type=TOKEN_TYPE_ELSE;
+            break;
+        case KEYWORD_PRINT:
+            t_k->type=TOKEN_TYPE_PRINT;
+            break;
+        case KEYWORD_VAR:
+            t_k->type=TOKEN_TYPE_VAR_DEF;
+            break;
+        case KEYWORD_TRUE:
+            t_k->type=TOKEN_TYPE_TRUE;
+            break;
+        case KEYWORD_FALSE:
+            t_k->type=TOKEN_TYPE_FALSE;
+            break;
+        case KEYWORD_FUNC_DEF:
+            t_k->type=TOKEN_TYPE_FUNC_DEF;
+            break;
+        case KEYWORD_RETURN:
+            t_k->type=TOKEN_TYPE_RETURN;
+            break;
+        case KEYWORD_AND:
+            t_k->type=TOKEN_TYPE_OP;
+            t_k->content[0]=OP_AND;
+            t_k->content[1]='\0';
+            break;
+        case KEYWORD_OR:
+            t_k->type=TOKEN_TYPE_OP;
+            t_k->content[0]=OP_OR;
+            t_k->content[1]='\0';
+            break;
+        case KEYWORD_FOR:
+            t_k->type=TOKEN_TYPE_FOR;
+            break;
+        case KEYWORD_BREAK:
+            t_k->type=TOKEN_TYPE_BREAK;
+            break;
+        case KEYWORD_CONTINUE:
+            t_k->type=TOKEN_TYPE_CONTINUE;
+            break;
+        case KEYWORD_STRUCT:
+            t_k->type=TOKEN_TYPE_STRUCT;
+            break;
+        case KEYWORD_SELF:
+            t_k->type=TOKEN_TYPE_SELF;
+            break;
+        case KEYWORD_NIL:
+            t_k->type=TOKEN_TYPE_NIL;
+            break;
+        case KEYWORD_PRIVATE:
+            t_k->type=TOKEN_TYPE_PRIVATE;
+            break;
+        case KEYWORD_MODULE:
+            t_k->type=TOKEN_TYPE_MODULE;
+            break;
+        case KEYWORD_USING:
+            t_k->type=TOKEN_TYPE_USING;
+            break;
+        case KEYWORD_DELETE:
+            t_k->type=TOKEN_TYPE_DELETE;
             break;
         case KEYWORD_TUPLE:
             t_k->type=TOKEN_TYPE_TUPLE;
@@ -577,16 +574,22 @@ void token_Get ( int * pos,TokenInfo * t_k )
         case KEYWORD_IMPORT:
             t_k->type=TOKEN_TYPE_IMPORT;
             break;
-		default :
-			break;
-		}
+        case KEYWORD_CARD:
+            t_k->type=TOKEN_TYPE_CARD;
+            break;
+        case KEYWORD_TYPEOF:
+            t_k->type=TOKEN_TYPE_TYPE_OF;
+            break;
+        default :
+            break;
+        }
 
-		pre_tk_type=t_k->type;
-		( *pos ) =postion;
-		return ;
+        pre_tk_type=t_k->type;
+        ( *pos ) =postion;
+        return ;
 
-	}
-	else
+    }
+    else
 	{
         /*字符串字面量?*/
 		if ( buffer[postion]=='"' )

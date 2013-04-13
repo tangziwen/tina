@@ -42,6 +42,9 @@ int main ( int argc,char * argv[] )
     case 1:
     {
         printf("Tina is a dynamic type script language compiler & virtual machine\n");
+        Tina_Load("main");
+        Tina_Run ("main");
+
     }
         break;
     case 3:

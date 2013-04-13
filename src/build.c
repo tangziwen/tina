@@ -34,7 +34,7 @@ PURPOSE.
 #include "token.h"
 #include "api.h"
 #include "compile_error.h"
-#define MAX_KEYWORD_LIST 18
+#define MAX_KEYWORD_LIST 20
 #define BYTE_KEYWORD_CONST 0
 #define BYTE_KEYWORD_FUNC 1
 #define BYTE_KEYWORD_EXP 2
@@ -53,6 +53,8 @@ PURPOSE.
 #define BYTE_KEYWORD_VECTOR 15
 #define BYTE_KEYWORD_TUPLE 16
 #define BYTE_KEYWORD_IMPORT 17
+#define BYTE_KEYWORD_CARD 18
+#define BYTE_KEYWORD_TYPE_OF 19
 static char * ByteCodeKeyWordList[MAX_KEYWORD_LIST]={"C","F",
                                                      "E","P",
                                                      "R","i",
@@ -60,7 +62,9 @@ static char * ByteCodeKeyWordList[MAX_KEYWORD_LIST]={"C","F",
                                                      "G","JNE",
                                                      "D","S",
                                                      "m","M",
-                                                     "c","V","T","I"};
+                                                     "c","V",
+                                                     "T","I",
+                                                     "CA","t"};
 static void OffsetReset();
 
 static int LookUpByteCodeType(char *str)
@@ -129,15 +133,17 @@ static void ParseByteCodeLine(char *str)
     case BYTE_KEYWORD_STRUCT_CREATOR:
         IL_StructCreatorLoad(str);
         break;
-    case BYTE_KEYWORD_VECTOR:
-        IL_VectorCreatorLoad (str);
-        break;
     case BYTE_KEYWORD_TUPLE:
         IL_TupleCreatorLoad (str);
         break;
     case BYTE_KEYWORD_IMPORT:
         module_ImportedLoad(str);
-
+        break;
+    case BYTE_KEYWORD_CARD:
+        IL_CardLoad(str);
+        break;
+    case BYTE_KEYWORD_TYPE_OF:
+        IL_TypeOfLoad(str);
         break;
     default:
         printf("this kind of byte code not support yet");

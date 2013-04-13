@@ -47,6 +47,10 @@ PURPOSE.
 #define IL_NODE_NILL 14 /*空节点，无实际意义*/
 #define IL_NODE_STRUCT_CREATOR 15 /*结构体构造器*/
 #define IL_NODE_CALL_METHOD 16 /*调用一个动态的方法，可能是LIST也可能是API，将由虚拟机在运行时判定*/
+#define IL_NODE_CARD 17 /*容器求势节点*/
+#define IL_NODE_TYPE_OF 18
+
+
 
 #define ELEMENT_VAR 1
 #define ELEMENT_LITERAL 2
@@ -57,9 +61,10 @@ PURPOSE.
 #define ELEMENT_CALL_BY_PTR 7
 #define ELEMENT_CALL_BY_MEMBER 8
 #define ELEMENT_SELF 9
-#define ELEMENT_VECTOR_CREATOR 10
-#define ELEMENT_TUPLE_CREATOR 11
-#define ELEMENT_STRUCT_CREATOR 12
+#define ELEMENT_TUPLE_CREATOR 10
+#define ELEMENT_STRUCT_CREATOR 11
+#define ELEMENT_CARD 12
+#define ELEMENT_TYPE_OF 13
 /*当前的标签数*/
 extern int label_index;
 
@@ -108,6 +113,23 @@ void IL_ListInsertListCreator(int type,int tmp_index,int init_args);
 
 /*像中间代码添加列表构造器中间代码*/
 IL_node * IL_ListInsertStructCreator(int id,int tmp_index,int init_args);
+
+/*往中间代码中插入求势节点*/
+void IL_ListInsertCard(int tmp_index);
+
+/*往中间代码中插入求类型节点*/
+void IL_ListInsertTypeof(int tmp_index);
+
+
+
+
+
+
+
+
+
+
+
 /*向节点中添加*/
 IL_node * IL_CreateNode(int tmp_index);
 /*将函数所在中间代码节点编译到指定字节码文件中*/
@@ -150,6 +172,12 @@ void IL_VectorCreatorLoad(char * str);
 /*从字节码中读入元组构造节点*/
 void IL_TupleCreatorLoad(char * str);
 
+
+
+/*从字节码中读入类型节点*/
+void IL_TypeOfLoad(char * str);
+/*从字节码中读入求势节点*/
+void IL_CardLoad(char * str);
 
 /*删除一个list中的所有节点*/
 void IL_FreeAllNode(IL_list * list);

@@ -61,8 +61,6 @@ static int struct_index=0;
 /*粗略实现 struct原型表,今后改为更为灵活的数据结构*/
 static  struct_info struct_list[30];
 
-/*变量保存的临时池,引用计数为零的变量*/
-static struct_chunk * StructTmpPool;
 
 /*创建一个对象，传入该对象对应的原型的ID，并传入构造函数所需的参数(如果有的话)*/
 Var  struct_Create(int id,Var init_arg[],int args)
@@ -148,17 +146,7 @@ int get_class_id(const char * name)
     }
     return result;
 }
-/*清空临时对象池*/
-void struct_CleanTmpPool()
-{
-	struct_chunk * node=StructTmpPool;
-	while(node)
-	{
-		struct_chunk * next=node->tmp_next;
-		free_struct(node);
-		node=next;
-	}
-}
+
 /*获得类的名字*/
 const char * struct_get_name(int ID)
 {
@@ -202,37 +190,6 @@ extern void Tina_ProtypeSetMember(int struct_id,int member_id,Var value)
     struct_list[struct_id].member[member_id]=value;
 }
 
-/*引用计数自增一*/
-void StructRefCountIncrease(void * handle)
-{
-	struct_chunk * obj=(struct_chunk *) handle;
-	/*将对象从临时池中取走*/
-	if(obj->ref_count==0)
-	{
-		if(StructTmpPool==obj)
-		{
-			StructTmpPool=obj->tmp_next;
-		}
-		else
-		{
-			struct_chunk*pre=obj->tmp_pre;
-			struct_chunk*next=obj->tmp_next;
-			if(pre)
-			{
-				pre->tmp_next=next;
-			}
-			if(next)
-			{
-				next->tmp_pre=pre;
-			}
-		}
-	}
-	obj->ref_count++;
-	test(
-		printf("increase %d\n",obj->ref_count);
-	);
-
-}
 /*销毁一个结构体*/
 static void free_struct(struct_chunk * obj)
 {
@@ -249,31 +206,11 @@ static void free_struct(struct_chunk * obj)
 		{
 
 			int type=var_GetType(obj->member[i]);
-			if(type==VAR_TYPE_TUPLE || type ==VAR_TYPE_OBJ)
-			{
-                RefCountDecrease(type,obj->member[i].content.var_value.handle_value);
-			}
 		}
 	}
 	free(obj);
 }
 
-
-/*引用计数自减一*/
-void StructRefCountDecrease(void * handle)
-{
-	struct_chunk * obj=(struct_chunk *) handle;
-	obj->ref_count--;
-	test(
-		printf("decrease %d\n",obj->ref_count);
-	);
-
-	if(obj->ref_count<=0)
-	{
-
-		free_struct(obj);
-	}
-}
 
 
 /*创建一个类的实体*/
@@ -286,11 +223,7 @@ void *  create_instance(int ID)
 	{
         new_obj->member[i]=struct_list[ID].member[i];
 	}
-	/*加入临时对象池之中*/
-	new_obj->tmp_pre=NULL;
-	new_obj->tmp_next=StructTmpPool;
     new_obj->member_count=struct_list[ID].member_count;
-	StructTmpPool=new_obj;
 	/*引用计数初始化*/
 	new_obj->ref_count=0;
 	return new_obj;
@@ -376,7 +309,6 @@ void struct_ParseDeclare(int * pos)
 /*扫描类*/
 void struct_ParseDefine(int * pos)
 {
-
     TokenInfo t_k;
     token_Get ( pos,&t_k );/*获取类的名字*/
     char class_name [128]= {0};
@@ -492,7 +424,7 @@ static void member_Compile(FILE *f,struct_info * prototype)
     int i=0;
     for(; i<prototype->member_count;i++)
     {
-        fprintf(f,"m %d %s ",prototype->accessibility[i],prototype->member[i].name);
+        fprintf(f,"M %d %s ",prototype->accessibility[i],prototype->member[i].name);
         switch(var_GetType (prototype->member[i]))
         {
         case VAR_TYPE_FUNC:

@@ -48,8 +48,6 @@ static void set_tmp(int index,Var * var,int type)
     {
         free(current_list->tmp_var_list[index].result);
     }
-
-
     if(type==TMP_ARITH)/*如果当前的结果是算术类型，把值给拷下来*/
     {
         current_list->tmp_var_list[index].result=malloc(sizeof(Var));
@@ -182,12 +180,6 @@ IL_node * IL_CreateNode(int tmp_index)
 }
 
 
-IL_ListCreatorNode *  IL_CreateListCreator(int init_args)
-{
-    IL_ListCreatorNode * node =malloc (sizeof(IL_ListCreatorNode));
-    node->init_args=init_args;
-    return node;
-}
 IL_StructCreatorNode *  IL_CreateStructCreator(int id,int init_args)
 {
     IL_StructCreatorNode * node =malloc (sizeof(IL_StructCreatorNode));
@@ -271,14 +263,13 @@ IL_node * IL_ListInsertStructCreator(int id,int tmp_index,int init_args)
 
 
 /*像中间代码添加列表构造器中间代码*/
-void IL_ListInsertListCreator(int type,int tmp_index,int init_args)
+void IL_ListInsertListCreator(int type,int tmp_index)
 {
     if(type!=ELEMENT_TUPLE_CREATOR)
     {
          STOP("IL_ListInsertListCreator error!");
     }
     IL_node * node=IL_CreateNode (tmp_index);
-     node->list_creator=IL_CreateListCreator(init_args);
      node->type=IL_NODE_TUPLE_CREATOR;
     if ( func_get_current()->list.head==NULL )
     {
@@ -431,13 +422,9 @@ void IL_PrintCallDynamic (FILE *f,IL_node *node )
      fprintf (f,"D %d %d %d\n",node->tmp_index,node->call->list_id,node->call->args );
 }
 
-void IL_PrintVecCreator(FILE *f,IL_node *node )
-{
-    fprintf(f,"V %d %d\n",node->tmp_index,node->list_creator->init_args);
-}
 void IL_PrintTupleCreator(FILE *f,IL_node *node )
 {
-    fprintf(f,"T %d %d\n",node->tmp_index,node->list_creator->init_args);
+    fprintf(f,"T %d\n",node->tmp_index);
 }
 void IL_PrintStructCreator(FILE *f,IL_node *node )
 {
@@ -496,9 +483,6 @@ void IL_list_print (FILE *f, Function * func )
 		case IL_NODE_RETURN:
             fprintf ( f,"R\n" );
 			break;
-        case IL_NODE_VECTOR_CREATOR:
-            IL_PrintVecCreator (f,tmp);
-            break;
         case IL_NODE_TUPLE_CREATOR:
             IL_PrintTupleCreator (f,tmp);
             break;
@@ -811,8 +795,6 @@ static void rt_eval_assign ( IL_node *tmp ,int mode)
 	}
     Var * l_value=IL_rt_Evaluate (tmp->exp->A);
     Var * r_value=IL_rt_Evaluate (tmp->exp->B);
-    int l_t=var_GetType(*l_value);
-    int r_t=var_GetType(*r_value);
 
     (*l_value)= assign_get(*l_value,*r_value,mode);
     set_tmp(tmp->tmp_index,l_value,TMP_ARITH);
@@ -932,8 +914,7 @@ void ExecPrintNode(Var the_var)
 Var IL_exec ( Function *func )
 {
 	/*记录当前函数所需的变量数量,为计算其嵌套调用函数时,虚拟机变量的偏移量*/
-
-	vm_SetLayerVarAmount(vm_GetCurrentLayer() ,func->var_counts);
+    vm_SetLayerVarAmount(vm_GetCurrentLayer() ,func->var_counts);
     IL_node * tmp;
     tmp=func->list.head;
 	current_list=&func->list;
@@ -969,17 +950,8 @@ Var IL_exec ( Function *func )
         }
             break;
         case IL_NODE_TUPLE_CREATOR:
-
         {
-            IL_node * i=tmp->pre;
-            int c=tmp->list_creator->init_args;
-            Var init_var[c];
-            for(;c>0;c--)
-            {
-                init_var[c-1]= (*get_tmp (i->tmp_index));
-                i=i->pre;
-            }
-        last_tmp_value= the_tuple_creator (tmp->list_creator->init_args,init_var);
+        last_tmp_value= tuple_CreateBySize (var_GetInt (last_tmp_value));
         set_tmp (tmp->tmp_index,&last_tmp_value,TMP_DEREFER);
         }
             break;
@@ -1145,21 +1117,32 @@ Var IL_CallFunc (int args, int f_index,int mode)
     if(mode==FUNC_NORMAL)/*普通的脚本函数调用*/
     {
         Function * f =func_get_by_index ( f_index);
-        /*检查执行时刻的参数是否与所对应的函数的参数数目相符*/
-        if(f->arg_counts!=args)
-        {
-            printf("error,the index %d %s  the args count is not match p: %d a:%d\n",f_index,f->name,f->arg_counts,args);
-            exit(0);
-        }
+
         int i=0;
         vm_RTstackPush();
-        for ( i=0;
-                i<args;
-                i++)
+        if(f->is_var_arg==0)
         {
-            Var source=arg_list[i];
-            int r_t=var_GetType(source);
-            vm_rt_stack_var_set ( i,source);
+            /*检查执行时刻的参数是否与所对应的函数的参数数目相符*/
+            if(f->arg_counts!=args)
+            {
+                printf("error,the index %d %s  the args count is not match p: %d a:%d\n",f_index,f->name,f->arg_counts,args);
+                exit(0);
+            }
+            for ( i=0;
+                  i<args;
+                  i++)
+            {
+                Var source=arg_list[i];
+                vm_rt_stack_var_set ( i,source);
+            }
+        }
+        else/*不定长参数*/
+        {
+            if(args==0)/*带有变长参数的函数，不允许出现无参数的情况*/
+            {
+                STOP("the variable argument list shall not be empty.");
+            }
+            vm_rt_stack_var_set ( 0,tuple_CreateByList(args,arg_list));
         }
         /*保存当前的表环境*/
         IL_list * old_list =current_list;
@@ -1366,7 +1349,7 @@ char the_str[3][32];
 sscanf (str,"%s %s %s",the_str[0],the_str[1],the_str[2]);
 int tmp_result_index=atoi(the_str[1]);
 int args=atoi(the_str[2]);
-IL_ListInsertListCreator (ELEMENT_TUPLE_CREATOR,tmp_result_index,args);
+IL_ListInsertListCreator (ELEMENT_TUPLE_CREATOR,tmp_result_index);
 }
 
 

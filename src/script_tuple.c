@@ -70,7 +70,15 @@ Var *tuple_GetValue(Var array_obj,int index )
 	}
 	else
 	{
-        STOP("tuple getter: index out of bound!");
+        if(abs(index)<a->tuple_size+1&& index<0)
+        {
+            Var * the_tuple =a->var_handle;
+            return  & (the_tuple[a->tuple_size+index]);
+        }
+        else
+        {
+            STOP("tuple getter: index out of bound!");
+        }
 	}
 }
 
@@ -81,33 +89,55 @@ void tuple_SetValue(Var array_obj,int index ,Var new_value)
     a=(tuple_chunk *)var_getHandle (array_obj);
     if(index <a->tuple_size+1 && index>0)
 	{
-		Var * array =a->var_handle;
-        array[index-1]=new_value;
+        Var * the_tuple =a->var_handle;
+        the_tuple[index-1]=new_value;
 	}
 	else
 	{
-        STOP("tuple setter: index out of bound!");
+        if(abs(index)<a->tuple_size+1&& index<0)
+        {
+            Var * the_tuple =a->var_handle;
+            the_tuple[a->tuple_size+index]=new_value;
+        }
+        else
+        {
+            STOP("tuple getter: index out of bound!");
+        }
 	}
 }
 
-Var the_tuple_creator(int size,Var init_arg[])
+Var tuple_CreateByList(int size,Var init_arg[])
+{
+        Var result;
+        result.content.type=VAR_TYPE_TUPLE;
+        tuple_chunk * new_obj = CreateTuple(size);
+        result.content.var_value.handle_value=new_obj;
+        int i=0;
+        for(;i<size;i++)
+        {
+            tuple_SetValue (result,i+1,init_arg[i]);
+        }
+        return result;
+}
+
+Var tuple_CreateBySize(int size)
 {
     Var result;
     result.content.type=VAR_TYPE_TUPLE;
    tuple_chunk * new_obj = CreateTuple(size);
     result.content.var_value.handle_value=new_obj;
+    Var a;
+    var_SetInt (&a,0);
     int i=0;
     for(;i<size;i++)
     {
-        tuple_SetValue (result,i+1,init_arg[i]);
+        tuple_SetValue (result,i+1,a);
     }
     return result;
 }
 
-
 void script_tuple_init()
 {
-
 
 
 }

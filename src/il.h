@@ -42,13 +42,12 @@ PURPOSE.
 #define IL_NODE_CALL_LIST 9 /*调用一个list*/
 #define IL_NODE_CALL_API 10 /*调用一个API函数*/
 #define IL_NODE_CALL_DYNAMIC 11 /*调用一个动态的过程，可能是LIST也可能是API，将由虚拟机在运行时判定*/
-#define IL_NODE_VECTOR_CREATOR 12 /*向量构造器节点*/
-#define IL_NODE_TUPLE_CREATOR 13
-#define IL_NODE_NILL 14 /*空节点，无实际意义*/
-#define IL_NODE_STRUCT_CREATOR 15 /*结构体构造器*/
-#define IL_NODE_CALL_METHOD 16 /*调用一个动态的方法，可能是LIST也可能是API，将由虚拟机在运行时判定*/
-#define IL_NODE_CARD 17 /*容器求势节点*/
-#define IL_NODE_TYPE_OF 18
+#define IL_NODE_TUPLE_CREATOR 12
+#define IL_NODE_NILL 13 /*空节点，无实际意义*/
+#define IL_NODE_STRUCT_CREATOR 14 /*结构体构造器*/
+#define IL_NODE_CALL_METHOD 15 /*调用一个动态的方法，可能是LIST也可能是API，将由虚拟机在运行时判定*/
+#define IL_NODE_CARD 16 /*容器求势节点*/
+#define IL_NODE_TYPE_OF 17
 
 
 
@@ -109,7 +108,7 @@ void IL_ListInsertReturn();
 void IL_ListInsertCall(int type,int tmp_index, int args, int function_index);
 
 /*像中间代码添加列表构造器中间代码*/
-void IL_ListInsertListCreator(int type,int tmp_index,int init_args);
+void IL_ListInsertListCreator(int type, int tmp_index);
 
 /*像中间代码添加列表构造器中间代码*/
 IL_node * IL_ListInsertStructCreator(int id,int tmp_index,int init_args);

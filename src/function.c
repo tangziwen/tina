@@ -54,10 +54,12 @@ static int plain_get_index_by_name(const  char * func_name)
 }
 
 
-static void CreateFunctionFromByteCode(int args,char *name )
+static void CreateFunctionFromByteCode(int args , int var_count,int is_var_args,char *name )
 {
     current_func_index++;
     function_list[current_func_index].arg_counts=args;
+    function_list[current_func_index].var_counts=var_count;
+   function_list[current_func_index].is_var_arg=  is_var_args;
     if(plain_get_index_by_name(name)!=0)
     {
         STOP("function name conflict %s\n",name);
@@ -179,9 +181,34 @@ static void parse_parameter(Function *f,int *postion)
         printf("error miss '(' in function args list \n");
         exit(0);
     }
-    int type=VAR_TYPE_INT;
+    int test_pos=(*postion);
+    token_Get(&test_pos,&t_k);
+    if(t_k.type==TOKEN_TYPE_VAR_ARG)//不定长参数?
+    {
+        (*postion)=test_pos;
+        token_Get(postion,&t_k);
+        if(t_k.type!=TOKEN_TYPE_SYMBOL)
+        {
+            STOP("var arg error");
+        }
+        strcpy(f->var_list[f->var_counts].name
+               , t_k.content);
+        f->var_list[f->var_counts].content.type=VAR_TYPE_INT;
+        f->var_list[f->var_counts].layer=0;
+        f->arg_counts++;
+        f->var_counts++;
+        f->is_var_arg=1;
+        token_Get(postion,&t_k);
+        if(t_k.type!=TOKEN_TYPE_RIGHT_PARENTHESIS)
+        {
+            STOP("var arg error");
+        }
+    return;
+    }
+    f->is_var_arg=0;
     do
     {
+
         token_Get(postion,&t_k);
         switch(t_k.type)
         {
@@ -198,11 +225,10 @@ static void parse_parameter(Function *f,int *postion)
             }
             strcpy(f->var_list[f->var_counts].name
                    , t_k.content);
-            f->var_list[f->var_counts].content.type=type;
+            f->var_list[f->var_counts].content.type=VAR_TYPE_INT;
             f->var_list[f->var_counts].layer=0;
             f->arg_counts++;
             f->var_counts++;
-            type=VAR_TYPE_INT;
         }
         break;
         case TOKEN_TYPE_COMMA:
@@ -337,7 +363,7 @@ void func_WriteByteCode(FILE * f)
     int i=1;
     for(; i<=current_func_index;i++)
     {
-        fprintf(f,"F %d %s\n",function_list[i].arg_counts,function_list[i].name);
+        fprintf(f,"F %d %d %d %s\n",function_list[i].arg_counts,function_list[i].var_counts,function_list[i].is_var_arg,function_list[i].name);
         IL_ListCompile(f,i);
     }
 }
@@ -345,10 +371,13 @@ void func_WriteByteCode(FILE * f)
 /*从字节码中载入函数定义*/
 void func_Load(char *str)
 {
-    char func_char[3][32];
-    sscanf (str,"%s %s %s",func_char[0],func_char[1],func_char[2]);
+    char func_char[5][32];
+    sscanf (str,"%s %s %s %s %s",func_char[0],func_char[1],func_char[2],func_char[3],func_char[4]);
     int args=atoi(func_char[1]);
-    CreateFunctionFromByteCode(args,func_char[2]);
+    int var_count=atoi(func_char[2]);
+    int is_var_args=atoi(func_char[3]);
+
+    CreateFunctionFromByteCode(args,var_count,is_var_args,func_char[4]);
 }
 
 /*将函数的数据清空，以方便下次编译*/

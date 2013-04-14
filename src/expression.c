@@ -119,7 +119,7 @@ static int IsInteger ( char * str )
     int i=0;
     while ( str[i]!='\0' )
     {
-        if ( str[i]>'9' || str[i]<'0' )
+        if (str[i]=='.')
         {
             return -1;
         }
@@ -170,11 +170,13 @@ static  int IsTokenCompatible(int pre ,int current,int pos)
 /*解析表达式*/
 void exp_Parse ( int * pos,int mode,int layer )
 {
+
     int start_pos=(*pos);
     is_exp_parsing=1;
     int brace =-1;
     TokenInfo t_k;
     token_Get ( &start_pos,&t_k );/*存储表达式初始的位置*/
+    token_dump();
     /*记录先前的标记，遇到不可能遇到的类型组合当即报错，使得错误寻找更加准确*/
     while ( 1 )
     {
@@ -262,7 +264,14 @@ void exp_Parse ( int * pos,int mode,int layer )
             /*遇见tuple关键字，说明是构造向量的节点*/
         case TOKEN_TYPE_TUPLE:
         {
-            PushListCreatorToStack (ELEMENT_TUPLE_CREATOR,GetArgCount(*pos));
+            push_func_to_RPN_stack ( 0,ELEMENT_TUPLE_CREATOR);
+            Element *top =GetRPNStackTop();
+            top->info.func_args=GetArgCount(*pos);
+            if(top->info.func_args!=1)
+            {
+                CompileError_ShowError (start_pos,"illegal tuple argument amount");
+                exit(0);
+            }
         }
             break;
         case TOKEN_TYPE_FUNC:
@@ -296,7 +305,12 @@ void exp_Parse ( int * pos,int mode,int layer )
             push_func_to_RPN_stack ( 0,ELEMENT_CARD);
             Element *top =GetRPNStackTop();
 
-            top->info.func_args=1;
+            top->info.func_args=GetArgCount(*pos);
+            if(top->info.func_args!=1)
+            {
+                CompileError_ShowError (start_pos,"illegal card argument amount");
+                exit(0);
+            }
         }
             break;
         case TOKEN_TYPE_TYPE_OF:
@@ -304,7 +318,12 @@ void exp_Parse ( int * pos,int mode,int layer )
             push_func_to_RPN_stack ( 0,ELEMENT_TYPE_OF);
             Element *top =GetRPNStackTop();
 
-            top->info.func_args=1;
+            top->info.func_args=GetArgCount(*pos);
+            if(top->info.func_args!=1)
+            {
+                CompileError_ShowError (start_pos,"illegal typeof argument amount");
+                exit(0);
+            }
         }
             break;
         case TOKEN_TYPE_NIL:
@@ -477,8 +496,7 @@ void exp_Parse ( int * pos,int mode,int layer )
             /*遇到右小括号后*/
         case TOKEN_TYPE_RIGHT_PARENTHESIS:
         {
-            /*用这个变量检测是否放入了运算符*/
-            int i=0;
+
 
             if(mode==EXP_CONTROL)
             {
@@ -489,11 +507,26 @@ void exp_Parse ( int * pos,int mode,int layer )
                     goto finish_lable;
                 }
             }
+            /*检测是否放入了运算符*/
+            int i=0;
             /*把左小括号 之后的所有运算符放入逆波兰队列中*/
-            while ( get_top_priority_RPN() !=LEFT_PARENTHESIS_PIORITY && RPN_GetStackTopType() ==ELEMENT_OP )
+            for( ; ;)
             {
-                TransferStackTop();
-                i++;
+                int priority=get_top_priority_RPN();
+                if(priority==0)
+                {
+                    CompileError_ShowError (start_pos,"illegal expression!");
+                    exit(0);
+                }
+                if(priority!=LEFT_PARENTHESIS_PIORITY && RPN_GetStackTopType() ==ELEMENT_OP )
+                {
+                    TransferStackTop();
+                    i++;
+                }
+                else
+                {
+                    break;
+                }
             }
             /*删除左括号*/
             RemoveRPN_StackTop();
@@ -555,10 +588,22 @@ void exp_Parse ( int * pos,int mode,int layer )
             /*用这个变量检测是否放入了运算符*/
             int i=0;
             /*把左方括号之前的所有运算符放入逆波兰队列中*/
-            while ( get_top_priority_RPN() !=LEFT_BRACE_PIORITY && RPN_GetStackTopType() ==ELEMENT_OP )
+
+            for( ; ;)
             {
-                TransferStackTop();
-                i++;
+                int priority=get_top_priority_RPN();
+                if(priority==0)
+                {
+                    CompileError_ShowError (start_pos,"illegal expression!");
+                    exit(0);
+                }
+                if(priority!=LEFT_BRACE_PIORITY && RPN_GetStackTopType() ==ELEMENT_OP )
+                {
+                    TransferStackTop();
+                    i++;
+                }
+                else
+                {break;}
             }
             /*删除左方号括，并将数组运算符*/
             RemoveRPN_StackTop();
@@ -576,7 +621,12 @@ finish_lable:
     /*当符号栈内不为空,则全部的放入逆波兰队列中*/
     while ( !isRPN_StackEmpty() )
     {
-        TransferStackTop();
+        int result=TransferStackTop();
+        if(result!=0)
+        {
+            CompileError_ShowError (start_pos,"illegal expression!");
+            exit(0);
+        }
     }
     /*把单个的变量a变为a+NULL的形式*/
     if ( GetRPNQueueTail() ==ELEMENT_VAR|| GetRPNQueueTail() == ELEMENT_LITERAL )
@@ -588,10 +638,14 @@ finish_lable:
         TransferStackTop();
     }
 
-    /*PrintRPN();*/
-
+    /**/
+PrintRPN();
     /*转换成中间码*/
-    generate_IL();
+    if(generate_IL()!=0)
+    {
+        CompileError_ShowError (start_pos,"illegal expression!");
+        exit(0);
+    }
     /*重设表达式相关数据,为下次计算做准备*/
     exp_reset();
     is_exp_parsing=0;
@@ -686,7 +740,14 @@ int RPN_GetStackTopType()
 /*获得逆波兰表达式辅助栈栈顶的运算符的优先级*/
 int get_top_priority_RPN()
 {
+    if(RPN_StackIndex<0)
+    {
+        return 0;
+    }
+    else
+    {
     return GetOpPriority ( RON_stack[RPN_StackIndex].op );
+    }
 }
 
 /*检测逆波兰表达式的栈是否为空栈是否为空*/
@@ -711,6 +772,11 @@ Element  * GetRPNStackTop()
 /*转移栈顶的操作符或函数进入输出队列*/
 int TransferStackTop()
 {
+    /*栈已经为空*/
+    if(RPN_StackIndex<0)
+    {
+        return -1;
+    }
     RPN_QueueIndex++;
     RPN_Queue[RPN_QueueIndex]=RON_stack[RPN_StackIndex];
     RPN_StackIndex--;
@@ -835,8 +901,27 @@ void PrintRPN()
 static Element IL_Stack[32];
 static int IL_StackIndex=-1;
 
+static insert_tmp_back(int  tmp_index)
+{
+    /*同时把中间结果写回栈中*/
+    IL_StackIndex++;
+    IL_Stack[IL_StackIndex].type=ELEMENT_TMP;
+    IL_Stack[IL_StackIndex].index=tmp_index;
+}
+static int check_il_stack()
+{
+      if(IL_StackIndex<0)
+      {
+          return -1;
+      }
+      else
+      {
+          return 0;
+      }
+}
+
 /*根据以求得的逆波兰表达式生成四元式的中间代码*/
-void generate_IL()
+int generate_IL()
 {
     /*临时变量索引*/
     int tmp_index=-1;
@@ -875,11 +960,9 @@ void generate_IL()
             IL_StackIndex=k;
             /*把结果加入到中间语言执行序列中去*/
             tmp_index++;
+            insert_tmp_back(tmp_index);
             IL_ListInsertStructCreator(e.index,tmp_index,e.info.func_args);
-            /*同时把中间结果写回栈中*/
-            IL_StackIndex++;
-            IL_Stack[IL_StackIndex].type=ELEMENT_TMP;
-            IL_Stack[IL_StackIndex].index=tmp_index;
+
         }
             break;
         case ELEMENT_CARD:
@@ -887,9 +970,7 @@ void generate_IL()
             IL_StackIndex--;/*删除card运算的参数*/
             tmp_index++;
             IL_ListInsertCard(tmp_index);
-            IL_StackIndex++;
-            IL_Stack[IL_StackIndex].type=ELEMENT_TMP;
-            IL_Stack[IL_StackIndex].index=tmp_index;
+            insert_tmp_back(tmp_index);
         }
             break;
         case ELEMENT_TYPE_OF:
@@ -897,9 +978,7 @@ void generate_IL()
             IL_StackIndex--;/*删除typeof运算的参数*/
             tmp_index++;
             IL_ListInsertTypeof(tmp_index);
-            IL_StackIndex++;
-            IL_Stack[IL_StackIndex].type=ELEMENT_TMP;
-            IL_Stack[IL_StackIndex].index=tmp_index;
+            insert_tmp_back(tmp_index);
         }
             break;
             /*遇见API其地位等同于操作符*/
@@ -914,10 +993,7 @@ void generate_IL()
             /*把结果加入到中间语言执行序列中去*/
             tmp_index++;
             IL_ListInsertCall (FUNC_API,tmp_index,e.info.func_args,e.index);
-            /*同时把中间结果写回栈中*/
-            IL_StackIndex++;
-            IL_Stack[IL_StackIndex].type=ELEMENT_TMP;
-            IL_Stack[IL_StackIndex].index=tmp_index;
+            insert_tmp_back(tmp_index);
         }
             break;
             /*遇见FUNC其地位等同于操作符*/
@@ -933,10 +1009,7 @@ void generate_IL()
             /*把结果加入到中间语言执行序列中去*/
             tmp_index++;
             IL_ListInsertCall (FUNC_NORMAL,tmp_index,e.info.func_args,e.index);
-            /*同时把中间结果写回栈中*/
-            IL_StackIndex++;
-            IL_Stack[IL_StackIndex].type=ELEMENT_TMP;
-            IL_Stack[IL_StackIndex].index=tmp_index;
+            insert_tmp_back(tmp_index);
         }
             break;
             /*遇见脚本中的函数指针调用*/
@@ -950,10 +1023,7 @@ void generate_IL()
             /*把结果加入到中间语言执行序列中去*/
             tmp_index++;
             IL_ListInsertCall (FUNC_DYNAMIC,tmp_index,e.info.func_args,RPN_Queue[i].index);
-            /*同时把中间结果写回栈中*/
-            IL_StackIndex++;
-            IL_Stack[IL_StackIndex].type=ELEMENT_TMP;
-            IL_Stack[IL_StackIndex].index=tmp_index;
+            insert_tmp_back(tmp_index);
         }
             break;
         case ELEMENT_CALL_BY_MEMBER:
@@ -966,10 +1036,7 @@ void generate_IL()
             /*把结果加入到中间语言执行序列中去*/
             tmp_index++;
             IL_ListInsertCall (FUNC_METHOD,tmp_index,e.info.func_args,-1);
-            /*同时把中间结果写回栈中*/
-            IL_StackIndex++;
-            IL_Stack[IL_StackIndex].type=ELEMENT_TMP;
-            IL_Stack[IL_StackIndex].index=tmp_index;
+            insert_tmp_back(tmp_index);
         }
             break;
             /*元组构造函数*/
@@ -982,20 +1049,25 @@ void generate_IL()
             IL_StackIndex=k;
             /*把结果加入到中间语言执行序列中去*/
             tmp_index++;
-            IL_ListInsertListCreator (ELEMENT_TUPLE_CREATOR,tmp_index,e.info.func_args);
-            /*同时把中间结果写回栈中*/
-            IL_StackIndex++;
-            IL_Stack[IL_StackIndex].type=ELEMENT_TMP;
-            IL_Stack[IL_StackIndex].index=tmp_index;
+            IL_ListInsertListCreator (ELEMENT_TUPLE_CREATOR,tmp_index);
+            insert_tmp_back(tmp_index);
         }
             break;
             /*遇见操作符,则从中间栈中中取出两个数,并加入到中间语言执行序列之中*/
         case ELEMENT_OP:
+            if(check_il_stack()==-1)
+            {
+                return -1;
+            }
             /*注意从栈中取出的顺序与计算顺序相反,先取b再取a*/
             B.type=IL_Stack[IL_StackIndex].type;
             B.index=IL_Stack[IL_StackIndex].index;
             B.info=IL_Stack[IL_StackIndex].info;
             IL_StackIndex--;
+            if(check_il_stack()==-1)
+            {
+                return -1;
+            }
             A.type=IL_Stack[IL_StackIndex].type;
             A.index=IL_Stack[IL_StackIndex].index;
             A.info=IL_Stack[IL_StackIndex].info;
@@ -1003,13 +1075,11 @@ void generate_IL()
             /*把结果加入到中间语言执行序列中去*/
             tmp_index++;
             IL_ListInsertEXP ( IL_exp_create( RPN_Queue[i].op,A,B ),tmp_index);
-            /*同时把中间结果写回栈中*/
-            IL_StackIndex++;
-            IL_Stack[IL_StackIndex].type=ELEMENT_TMP;
-            IL_Stack[IL_StackIndex].index=tmp_index;
+            insert_tmp_back(tmp_index);
             break;
         }
     }
+    return 0;
 }
 
 

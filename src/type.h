@@ -126,11 +126,6 @@ typedef struct IL_call_list_t
     int list_id;//调用的列表索引号.
 }IL_CallNode;
 
-/*列表构造器*/
-typedef struct IL_list_creator_t
-{
-    int init_args;/*初始化的参数*/
-} IL_ListCreatorNode;
 
 /*结构体构造器*/
 typedef struct IL_struct_creator_t
@@ -180,7 +175,6 @@ typedef struct IL_node_t
         IL_return * retrn;
         IL_CallNode * call;
         IL_ListNode * list_element;
-        IL_ListCreatorNode * list_creator;
         IL_StructCreatorNode * struct_creator;
     };
     struct IL_node_t * next;
@@ -213,6 +207,7 @@ typedef struct
     int var_counts;
     int arg_counts;
     char name[TOKEN_NAME_SIZE];
+    int is_var_arg;
 } Function;
 
 

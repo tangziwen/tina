@@ -92,7 +92,6 @@ Var *  vm_rt_stack_var_get_ptr(int the_index)
 void vm_rt_stack_var_set ( int the_index,Var source )
 {
 	int dist_the_index=vm_GetAbs(the_index);
-	int r_t=var_GetType(source);
 	local_var[dist_the_index]=source;
 }
 
@@ -107,17 +106,23 @@ int vm_GetAbs ( int the_index )
 {
 	return ( current_offset+the_index );
 }
+
+
+
 /*运行时的栈加深*/
 void vm_RTstackPush()
 {
-	current_offset+=vm_stack_layer[current_layer];
+    current_offset+=(vm_stack_layer[current_layer]+1);
 	current_layer++;
 
 }
+
+
+
 
 /*运行时的栈弹出(销毁)*/
 void vm_RTstackPop()
 {
 	current_layer--;
-	current_offset-=vm_stack_layer[current_layer];
+    current_offset-=(vm_stack_layer[current_layer]+1);
 }

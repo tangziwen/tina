@@ -1,6 +1,6 @@
 #include "tina.h"
 #include "compile_error.h"
-static int version=0;
+static int version=20;/*小数点后两位*/
 
 
 

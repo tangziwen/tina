@@ -60,7 +60,7 @@ PURPOSE.
 #define TOKEN_TYPE_FUNC_DEF 20
 #define TOKEN_TYPE_FUNC 21 //用户定义的脚本函数
 #define TOKEN_TYPE_RETURN 22 //返回
-#define TOKEN_TYPE_REF 23 //引用标记
+#define TOKEN_TYPE_VAR_ARG 23 //引用标记
 #define TOKEN_TYPE_RIGHT_BRACKET 24 //右方括号
 #define TOKEN_TYPE_FOR  25//for语句
 #define TOKEN_TYPE_BREAK 26 //break 语句
@@ -92,5 +92,7 @@ void token_skip_block(int * pos);
 
 //带断言的解析词法标记,如果不符合规定的词法类型,则中断,并抛出一个错误的信息
 void token_get_assert(int * pos,TokenInfo * t_k,int type, char * info );
+
+void token_dump();
 #endif
 

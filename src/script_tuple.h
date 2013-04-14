@@ -30,7 +30,7 @@ void tuple_SetValue(Var array_obj,int index ,Var new_value);
 void TupleRefCountIncrease(void * ptr);
 void TupleRefCountDecrease(void * ptr);
 /*元组构造器*/
-Var the_tuple_creator(int size,Var init_arg[]);
+Var tuple_CreateByList(int size,Var init_arg[]);
 /*清除数组临时对象池*/
 void tuple_CleanTmpPool();
 /*打印一个元组的所有成员*/
@@ -39,4 +39,7 @@ void tuple_print(Var vec);
 Var tuple_CreateByString(const char * str);
 /*获取容器的基数*/
 int tuple_GetCard(Var tuple);
+
+
+Var tuple_CreateBySize(int size);
 #endif /* TINA_ARRAY_H*/

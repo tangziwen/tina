@@ -64,6 +64,8 @@ static char * key_word_list[KEYWORD_MAX]=
     ,"private","sealed","module","using","delete","tuple","import","card","typeof"
 };
 
+
+
 static int lookup_keyword ( char * _str )
 {
     int i=0;
@@ -217,13 +219,18 @@ static int escape_char(int c)
         break;
     }
 }
-
+ static int pre_tk_type=TOKEN_TYPE_INVALID;
+void token_dump()
+{
+    printf("dump\n");
+pre_tk_type=TOKEN_TYPE_INVALID;
+}
 /*从当前位置(pos)解析一个词法标记，并将词法标记的相关信息存储进t_k所指向的TokenInfo对象里
 解析之后，当前位置会向后跳跃一个词法标记
 我们假设整个待输入的缓存中的词法是无错的(即不存在无效的词法单元)*/
 void token_Get ( int * pos,TokenInfo * t_k )
 {
-    static int pre_tk_type=TOKEN_TYPE_INVALID;
+
     if ( t_k==NULL )
     {
         return;
@@ -272,14 +279,15 @@ void token_Get ( int * pos,TokenInfo * t_k )
     {
         postion+=2;
         ( *pos ) =postion;
+        pre_tk_type=t_k->type;
         return;
     }
-    /*检查引用标记*/
+    /*检查不定长参数标记*/
     if ( buffer[postion]=='&' )
     {
         postion++;
         ( *pos ) =postion;
-        t_k->type=TOKEN_TYPE_REF;
+        t_k->type=TOKEN_TYPE_VAR_ARG;
         t_k->content[0]='&';
         t_k->content[1]='\0';
         pre_tk_type=t_k->type;
@@ -302,42 +310,50 @@ void token_Get ( int * pos,TokenInfo * t_k )
         t_k->type=TOKEN_TYPE_OP;
         t_k->content[0]=buffer[postion];
         t_k->content[1]='\0';
-
         /*考虑出现负常量，如-123.123*/
-        if( pre_tk_type!=TOKEN_TYPE_NUM&&pre_tk_type!= TOKEN_TYPE_FUNC&& pre_tk_type!=TOKEN_TYPE_API&& pre_tk_type!=TOKEN_TYPE_MESSAGE&&buffer[postion]=='-')
+        if(buffer[postion]=='-')
         {
-            int tes_pos=postion+1;
-            if(isdigit (buffer [skip_space(tes_pos)]))
+            if(pre_tk_type!=TOKEN_TYPE_NUM&&pre_tk_type!= TOKEN_TYPE_FUNC
+            && pre_tk_type!=TOKEN_TYPE_API&& pre_tk_type!=TOKEN_TYPE_MESSAGE)
             {
-                postion=skip_space(tes_pos);
-                t_k->content[0]='-';
-                t_k->content[1]='\0';
-                int i=0;
-                char tmp_token[32];
-                for(; i<32; i++) tmp_token[i]='\0';
-                i=0;
-                while ( !isspace ( buffer[postion] ) &&
-                        !is_op_withoutdot ( buffer[postion] )
-                        &&buffer[postion]!=';'
-                        &&buffer[postion]!='{'
-                        &&buffer[postion]!='}'
-                        &&buffer[postion]!=','
-                        &&buffer[postion]!=')'
-                        &&buffer[postion]!=']'
-                        &&buffer[postion]!='&'
-                        &&!is_compo_op(buffer+postion,t_k)
-                        )
+                int tes_pos=postion+1;
+                if(isdigit (buffer [skip_space(tes_pos)]))
                 {
-                    tmp_token[i]=buffer[postion];
-                    i++;
-                    postion++;
+                    postion=skip_space(tes_pos);
+                    t_k->content[0]='-';
+                    t_k->content[1]='\0';
+                    int i=0;
+                    char tmp_token[32];
+                    for(; i<32; i++) tmp_token[i]='\0';
+                    i=0;
+                    while ( !isspace ( buffer[postion] ) &&
+                            !is_op_withoutdot ( buffer[postion] )
+                            &&buffer[postion]!=';'
+                            &&buffer[postion]!='{'
+                            &&buffer[postion]!='}'
+                            &&buffer[postion]!=','
+                            &&buffer[postion]!=')'
+                            &&buffer[postion]!=']'
+                            &&buffer[postion]!='&'
+                            &&!is_compo_op(buffer+postion,t_k)
+                            )
+                    {
+                        tmp_token[i]=buffer[postion];
+                        i++;
+                        postion++;
+                    }
+                    /*把数字拷入*/
+                    strcat(t_k->content,tmp_token);
+                    t_k->type=TOKEN_TYPE_NUM;
+                    pre_tk_type=t_k->type;
+                    ( *pos ) =postion;
+                    // STOP("%s",t_k->content);
+                    return;
                 }
-                /*把数字拷入*/
-                strcat(t_k->content,tmp_token);
-                t_k->type=TOKEN_TYPE_NUM;
-                pre_tk_type=t_k->type;
-                ( *pos ) =postion;
-                return;
+            }
+            else
+            {
+                printf("the pre_tk_type is %d \n",pre_tk_type);
             }
         }
         if(buffer[postion]=='.')
@@ -350,6 +366,7 @@ void token_Get ( int * pos,TokenInfo * t_k )
         }
         postion++;
         ( *pos ) =postion;
+        pre_tk_type=t_k->type;
         return ;
     }
     /*检查括号*/
@@ -612,6 +629,7 @@ void token_Get ( int * pos,TokenInfo * t_k )
 			postion=i;
 			postion++;
 			( *pos ) =postion;
+            pre_tk_type=t_k->type;
 			return ;
 		}
         else
@@ -636,6 +654,7 @@ void token_Get ( int * pos,TokenInfo * t_k )
                 }
                 postion++;
                 (*pos)=postion;
+                pre_tk_type=t_k->type;
             }
 	}
 }

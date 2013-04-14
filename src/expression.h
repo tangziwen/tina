@@ -80,7 +80,7 @@ int GetOpPriority( char op);
 void PrintRPN();
 
 /*生成中间代码*/
-void generate_IL();
+int generate_IL();
 /*重设计算表达式的各种数据及变量,为下次计算做准备*/
 void exp_reset();
 

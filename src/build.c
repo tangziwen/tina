@@ -128,6 +128,7 @@ static void ParseByteCodeLine(char *str)
         struct_MemberLoad(str);
         break;
     case BYTE_KEYWORD_METHOD:
+
         IL_MethodCallLoad(str);
         break;
     case BYTE_KEYWORD_STRUCT_CREATOR:
@@ -175,7 +176,6 @@ static void WriteByteCode(const char *file_name)
     module_ImportedCompile( f);
     //常量写入
     ConstSegmentWrite(f);
-
     //结构体写入
     struct_WriteByteCode(f);
 

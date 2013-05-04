@@ -67,11 +67,15 @@ Var  struct_Create(int id,Var init_arg[],int args)
 {
 	Var result;
 	result.content.type=VAR_TYPE_OBJ;
-    result.content.var_value.handle_value=create_instance(id);
-    result.class_id=id;
+    result.content.var_value.struct_obj.handle_value=create_instance(id);
+    var_SetObjId (&result,id);
 	/*若存在初始化函数,则调用它*/
     if(struct_list[id].initializer_index>=0)
 	{
+        if(struct_list[id].initializer_acc==STRUCT_PRIVATE && env_index!=id)
+        {
+            STOP("private initializer only can be assigned inside\n");
+        }
 		int old_env =env_index;
 		env_index=id;/*环境索引改变为类内部*/
 		/*函数栈压入*/
@@ -163,11 +167,12 @@ static void create_type(int ID,const char * name)
 
 
 /*创建一个结构体原型,返回其索引*/
-extern int Tina_CreateProtype( const char * name,int index)
+extern int Tina_CreateProtype( const char * name,int index,int initial_acc)
 {
     struct_index++;
 	create_type(struct_index,name);
     struct_list[struct_index].initializer_index=index;
+    struct_list[struct_index].initializer_acc=initial_acc;
     return struct_index;
 }
 
@@ -249,7 +254,7 @@ static int  AddMember(int ID,Var value,int accessibility)
             struct_list[ID].accessibility[i]=accessibility;
 			return i;
 		}
-	}
+    }
     struct_list[ID].accessibility[struct_list[ID].member_count]=accessibility;
     struct_list[ID].member[struct_list[ID].member_count]=value;
     struct_list[ID].member_count++;
@@ -383,6 +388,7 @@ DEF:
             if(strcmp(module_ContextMangledName(member_name),struct_list[struct_index].name)==0)
             {
                 struct_list[struct_index].initializer_index=func_GetIndexByName(f->name);
+                struct_list[struct_index].initializer_acc=acc;
             }
             else	/*否则是一个普通的函数*/
             {
@@ -424,7 +430,7 @@ static void member_Compile(FILE *f,struct_info * prototype)
     int i=0;
     for(; i<prototype->member_count;i++)
     {
-        fprintf(f,"M %d %s ",prototype->accessibility[i],prototype->member[i].name);
+        fprintf(f,"m %d %s ",prototype->accessibility[i],prototype->member[i].name);
         switch(var_GetType (prototype->member[i]))
         {
         case VAR_TYPE_FUNC:
@@ -443,7 +449,7 @@ void struct_WriteByteCode(FILE *f)
     int i=1;
     for( ; i<=struct_index;i++)
     {
-        fprintf(f,"S %d %s\n",struct_list[i].initializer_index,struct_list[i].name);
+        fprintf(f,"S %d %d %s\n",struct_list[i].initializer_index,struct_list[i].initializer_acc,struct_list[i].name);
         /*将成员写入字节码中*/
         member_Compile(f,&(struct_list[i] ));
     }
@@ -451,15 +457,16 @@ void struct_WriteByteCode(FILE *f)
 /*从字节码中读入结构体信息*/
 void struct_Load(char *str)
 {
-    char struct_str[3][32];
-    sscanf (str,"%s %s %s",struct_str[0],struct_str[1],struct_str[2]);
+    char struct_str[4][32];
+    sscanf (str,"%s %s %s %s",struct_str[0],struct_str[1],struct_str[2],struct_str[3]);
     int init_index=atoi(struct_str[1]);
     if(init_index>=0)
     {
         init_index+=build_GetFunctionOffset();
     }
-    int id=Tina_CreateProtype(struct_str[2],init_index);
-    module_CheckUnresolvedAtomListt( struct_str[2], id);
+    int initializer_acc=atoi(struct_str[2]);
+    int id=Tina_CreateProtype(struct_str[3],init_index,initializer_acc);
+    module_CheckUnresolvedAtomListt( struct_str[3], id);
 }
 
 /*从字节码中读入成员信息*/
@@ -490,11 +497,16 @@ void struct_MemberLoad(char *str)
         break;
     }
 }
+
+
+
 /*将指定的原型清空*/
 static void struct_PrototypeClear(int index)
 {
     struct_list[index].member_count=0;
 }
+
+
 
 /*将结构体中的数据清除，方便下次调用*/
 void struct_Dump()

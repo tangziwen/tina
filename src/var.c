@@ -180,7 +180,7 @@ int var_get_local_index(const char *var_name,int layer)
 	}
     char error_str[128];
     sprintf(error_str,"%s is an undefined symbol\n",var_name);
-	exit(0);
+    STOP("%s\n",error_str);
 	return -3;
 }
 
@@ -208,12 +208,12 @@ Var* var_point_to(Var a,Var b)
     if(a.content.type==VAR_TYPE_OBJ && b.content.type==VAR_TYPE_MESSAGE)
 	{
 		/*找不到成员*/
-        if(get_index_of_member(a.class_id,b.content.var_value.str)==-1)
+        if(get_index_of_member(var_GetObjId(&a),b.content.var_value.str)==-1)
 		{
-            printf("there is no such member which's called \"%s\" in type \"%s\" \n",b.content.var_value.str,struct_get_name(a.class_id));
+            printf("there is no such member which's called \"%s\" in type \"%s\" \n",b.content.var_value.str,struct_get_name(var_GetObjId(&a)));
 			exit(0);
 		}
-        result = GetObjectMemberAddress(a.content.var_value.handle_value,get_index_of_member(a.class_id,b.content.var_value.str));
+        result = GetObjectMemberAddress(a.content.var_value.struct_obj.handle_value,get_index_of_member(var_GetObjId(&a),b.content.var_value.str));
 	}
 
 	/*类的静态成员访问*/
@@ -767,6 +767,11 @@ char * var_GetMsg(Var a)
     return a.content.var_value.str;
 }
 
+int var_GetObjId(Var *a)
+{
+    return a->content.var_value.struct_obj.struct_id;
+}
+
 
 /*设置Var变量的整数值，如果其不为整数，类型将会强制转换*/
 void var_SetInt(Var *a,int value)
@@ -831,7 +836,10 @@ void var_SetMsg(Var *a,char *str)
  a->content.type=VAR_TYPE_MESSAGE;
 }
 
-
+void var_SetObjId(Var *a,int id)
+{
+     a->content.var_value.struct_obj.struct_id=id;
+}
 
 
 

@@ -57,6 +57,10 @@ static int plain_get_index_by_name(const  char * func_name)
 static void CreateFunctionFromByteCode(int args , int var_count,int is_var_args,char *name )
 {
     current_func_index++;
+    if(strcmp (name,"add")==0)
+    {
+       // STOP("the index is %d\n",current_func_index);
+    }
     function_list[current_func_index].arg_counts=args;
     function_list[current_func_index].var_counts=var_count;
    function_list[current_func_index].is_var_arg=  is_var_args;

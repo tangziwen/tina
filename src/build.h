@@ -19,7 +19,8 @@ PURPOSE.
 #ifndef TINA_BUILD_H
 #define TINA_BUILD_H
 #include "def.h"
-
+#define TINA_BUILD_ON_THE_FLY 0
+#define TINA_BUILD_COMPILE 1
 void Tina_Compile(const char * file_name);
 /*载入字节码链表，并执行main 函数*/
 void Tina_ExcuteByteCodeList(const char * file);

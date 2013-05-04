@@ -31,7 +31,8 @@ void Tina_Run(const char *name);
 //通过指定一个tina脚本文件并将其编译为中间代码,放入内存中以便运行
 void Tina_Compile(const char * file_name);
 
-
+/*载入标准库*/
+void Tina_LoadStdLib();
 /*向脚本注册一个API*/
 int Tina_API_Register( const char * func_name,void (*func_ptr)(),int tag);
 
@@ -50,7 +51,7 @@ int Tina_FuncGetCount();
 void Tina_PrintIL(FILE*f,const char * func_name);
 
 /*创建一个结构体原型,返回其索引*/
-extern int Tina_CreateProtype(const char * name, int index);
+extern int Tina_CreateProtype(const char * name, int index, int initial_acc);
 
 
 /*为指定结构体原型添加成员,并指定其值.

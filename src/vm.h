@@ -45,9 +45,6 @@ void vm_RTstackPush();
 
 void vm_RTstackPop();
 
-void RefCountDecrease(int type,void * handle);
-
-void RefCountIncrease(int type,void *handle);
 
 
 void CleanCurrentLocalVar();

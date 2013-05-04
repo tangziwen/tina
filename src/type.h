@@ -55,6 +55,11 @@ struct func_info
 };
 
 
+struct struct_info
+{
+    void * handle_value;
+    int struct_id;
+};
 
 struct element_info
 {
@@ -68,6 +73,7 @@ union var_value_t {
     void * handle_value;
     int bool_value;
     struct func_info func;
+    struct struct_info struct_obj;
     char *str;
     char char_value;
     struct element_info element;
@@ -85,7 +91,6 @@ typedef struct
 {
     char name[TOKEN_NAME_SIZE];
     struct var_content content;
-    int class_id;
     int layer;//变量所在的层数
 } Var;
 

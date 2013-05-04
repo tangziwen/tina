@@ -27,17 +27,14 @@ PURPOSE.
 #define VAR_TYPE_INT 1
 #define VAR_TYPE_OBJ 2
 #define VAR_TYPE_BOOL 3
-#define VAR_TYPE_TUPLE 5 /*元组类型*/
-#define VAR_TYPE_REAL 6
-#define VAR_TYPE_FUNC 7 /*函数指针类型*/
-#define VAR_TYPE_STRUCT_NAME 8  /*函数名*/
-#define VAR_TYPE_CHAR 9 /*字符类型*/
-#define VAR_TYPE_MESSAGE 10
-#define VAR_TYPE_STR 11
+#define VAR_TYPE_TUPLE 4 /*元组类型*/
+#define VAR_TYPE_REAL 5
+#define VAR_TYPE_FUNC 6 /*函数指针类型*/
+#define VAR_TYPE_STRUCT_NAME 7  /*结构名*/
+#define VAR_TYPE_CHAR 8 /*字符类型*/
+#define VAR_TYPE_MESSAGE 9
+#define VAR_TYPE_STR 10
 /*null只能作为右操作数,a+null返回a的值*/
-
-
-
 
 /*/通过名字查找当前被扫描函数的局部变量的索引/通过变量获得它的类型名称.*/
 int var_get_local_index(const char *var_name,int layer);
@@ -106,6 +103,8 @@ void * var_getHandle(Var a);
 int var_GetStructId(Var a);
 /*获得变量的消息*/
 char * var_GetMsg(Var a);
+/*获得对象的ID*/
+int var_GetObjId(Var *a);
 /*设置Var变量的实数值，如果其不为实数，类型将会强制转换*/
 void var_SetReal(Var *a,double value);
 /*设置Var变量的整数值，如果其不为整数，类型将会强制转换*/
@@ -122,4 +121,6 @@ void var_SetAPI(Var *a ,int API_index);
 void var_SetChar(Var *a,int ch);
 /*设置Var变量的字符值，如果其不为字符，类型将会强制转换*/
 void var_SetMsg(Var *a,char *str);
+/*设置Var的ID值*/
+void var_SetObjId(Var *a,int id);
 #endif

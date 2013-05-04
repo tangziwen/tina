@@ -23,32 +23,29 @@ PURPOSE.
 //#define NDEBUG
 #include "debug.h"
 #include "compile_error.h"
-
-
-
-void SayHello()
-{
-    printf("holla you boy\n");
-}
-
 /*解释器主函数*/
-/*如果未加说明则解释执行本地的test.tina脚本*/
 int main ( int argc,char * argv[] )
 {
-    Tina_Init(10);
+    Tina_Init(20);
     Tina_SetErrorMode(TINA_ERROR_STDOUT);
+
+    Tina_LoadStdLib();
     switch(argc)
     {
     case 1:
     {
         printf("Tina is a dynamic type script language compiler & virtual machine\n");
-        Tina_Load ("main");
-        Tina_Run ("main");
     }
         break;
+    case 2:
+    {
+        Tina_Load(argv[1]);
+        Tina_Run ("main");
+        break;
+    }
     case 3:
     {
-        /*单个文件编译*/
+        /*文件编译*/
         if(strcmp (argv[1],"-c")==0||strcmp (argv[1],"--compile")==0)
         {
             Tina_Compile(argv[2]);
@@ -58,19 +55,6 @@ int main ( int argc,char * argv[] )
         if(strcmp (argv[1],"-x")==0 ||strcmp (argv[1],"--excute")==0)
         {
             Tina_ExcuteByteCodeList(argv[2]);
-            break;
-        }
-        /*单个字节码文件执行*/
-        if(strcmp (argv[1],"-r") ==0||strcmp (argv[1],"--run")==0)
-        {
-            Tina_Load (argv[2]);
-            Tina_Run ("main");
-            break;
-        }
-        /*文件链编译*/
-        if(strcmp (argv[1],"-b") ==0||strcmp (argv[1],"--build")==0)
-        {
-            Tina_Buid (argv[2]);
             break;
         }
         STOP("INVALID ARG");

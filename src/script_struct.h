@@ -27,6 +27,7 @@ typedef struct
 	char accessibility[100];//访问性
 	int member_count;
 	int initializer_index;
+    int initializer_acc;
 	int api_index;
 } struct_info;
 

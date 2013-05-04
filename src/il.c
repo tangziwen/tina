@@ -615,20 +615,27 @@ static void rt_eval_point_to(IL_node *tmp)
     value_a=IL_rt_Evaluate ( tmp->exp->A );
     value_b=IL_rt_Evaluate ( tmp->exp->B );
     if(value_a->content.type==VAR_TYPE_STRUCT_NAME) /*类成员*/
-	{
+    {
+        /*判断访问性*/
+        int acc=get_accessbility_of_member(value_a->content.var_value.struct_id,get_index_of_member(value_a->content.var_value.struct_id,var_GetMsg(*value_b)));
+        if(acc!=STRUCT_PUBLIC && env_index != value_a->content.var_value.struct_id)/*非公有且在外部*/
+        {
+            printf("private member cannot be assinged outside\n");
+            exit(0);
+        }
         result =var_point_to (* value_a,*value_b);
 		/*类成员，self指针失效，同时环境索引变为全局*/
-		self_ptr.class_id=env_index;
+        var_SetObjId (&self_ptr,env_index);
 		self_ptr.content.type=VAR_TYPE_NILL;
 	}
 	else /*对象成员*/
 	{
 
 		/*判断访问性*/
-        int acc=get_accessbility_of_member(value_a->class_id,get_index_of_member(value_a->class_id,var_GetMsg(*value_b)));
-        if(acc!=STRUCT_PUBLIC && env_index != value_a->class_id)/*非公有且在外部*/
+        int acc=get_accessbility_of_member(var_GetObjId(value_a),get_index_of_member(var_GetObjId(value_a),var_GetMsg(*value_b)));
+        if(acc!=STRUCT_PUBLIC && env_index != var_GetObjId(value_a))/*非公有且在外部*/
 		{
-			printf("private or sealed member cannot be assinged outside\n");
+            printf("private member cannot be assinged outside\n");
 			exit(0);
 		}
         result=var_point_to ( *value_a,*value_b );
@@ -1240,7 +1247,8 @@ void IL_CallFuncLoad(char * str)
     char func_str[4][32];
     sscanf (str,"%s %s %s %s",func_str[0],func_str[1],func_str[2],func_str[3]);
     int tmp_result_index=atoi(func_str[1]);
-    int call_list=atoi(func_str[2]);
+    int call_list=atoi(func_str[2])+build_GetFunctionOffset ();
+    printf("the call list is %d\n",call_list);
     int arg=atoi(func_str[3]);
     IL_ListInsertCall (FUNC_NORMAL,tmp_result_index,arg,call_list);
 }

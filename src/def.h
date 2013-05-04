@@ -25,6 +25,8 @@ PURPOSE.
 #include <stdlib.h>
 #include <stdio.h>
 #define PLATFORM_WINDOWS 0
+#define TINA_BUILD_ON_THE_FLY 0
+#define TINA_BUILD_COMPILE 1
 /*#define PLATFORM_LINUX*/
 /*#define PLATFORM_MAC*/
 #define INIT( A ) {   extern void    A##_init();    A##_init();  }
